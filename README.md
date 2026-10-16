@@ -24,3 +24,16 @@ rewind/
 ```
 
 Musiken och klippen kommer från Deezers öppna API, som inte kräver någon nyckel.
+
+## Kom igång
+
+### Backend
+
+Kräver .NET SDK 10. Exakt version står i `global.json`.
+
+```bash
+cd backend
+dotnet run --project src/Rewind.Api
+```
+
+API:et svarar på `http://localhost:5080`, och `/health` visar att det är igång. Testerna körs med `dotnet test` i samma mapp.

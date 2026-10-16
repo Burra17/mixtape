@@ -1,0 +1,3 @@
+# Radslut är LF i repot och vid utcheckning, oavsett operativsystem.
+# Annars checkar git ut CRLF på Windows, medan dotnet format och Prettier vill ha LF.
+* text=auto eol=lf

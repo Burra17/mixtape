@@ -29,3 +29,7 @@ pnpm-debug.log*
 .idea/
 .DS_Store
 Thumbs.db
+
+# --- Claude Code ---
+# Lokala inställningar och launch.json för webbläsarpanelen
+.claude/
