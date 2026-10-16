@@ -2,6 +2,8 @@
 
 React, TypeScript, Vite, Tailwind, Zustand och `@microsoft/signalr`. Reglerna som gäller hela repot står i [../CLAUDE.md](../CLAUDE.md).
 
+Routern är `react-router` version 8, och allt importeras från `'react-router'`. Det paket som hette `react-router-dom` i äldre versioner finns inte längre.
+
 ## Två skärmar
 
 Samma app har två användare med olika förutsättningar:

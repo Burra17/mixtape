@@ -1,0 +1,14 @@
+@import 'tailwindcss';
+
+/* Appens färger. Komponenterna använder dem via klasser som bg-surface och text-accent. */
+@theme {
+  --color-background: #14121c;
+  --color-surface: #221e2e;
+  --color-foreground: #f4f1fa;
+  --color-muted: #a39cb5;
+  --color-accent: #ff5a7a;
+}
+
+body {
+  @apply bg-background text-foreground antialiased;
+}
