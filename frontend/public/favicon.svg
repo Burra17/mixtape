@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Samma färger som accent och background i src/index.css. En SVG-fil kan inte läsa CSS-variablerna. -->
+  <rect x="2" y="7" width="28" height="18" rx="3" fill="#ff5a7a" />
+  <rect x="6" y="11" width="20" height="7" rx="1.5" fill="#14121c" />
+  <circle cx="11" cy="14.5" r="2" fill="#ff5a7a" />
+  <circle cx="21" cy="14.5" r="2" fill="#ff5a7a" />
+  <path d="M9 25l2-4h10l2 4z" fill="#14121c" />
+</svg>

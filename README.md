@@ -39,3 +39,19 @@ dotnet run --project src/Mixtape.Api
 ```
 
 API:et svarar på `http://localhost:5080`, och `/health` visar att det är igång. Testerna körs med `dotnet test` i samma mapp.
+
+### Frontend
+
+Kräver Node i versionen i `frontend/.nvmrc`, och yarn classic (1.x).
+
+```bash
+cd frontend
+yarn install
+yarn dev
+```
+
+Vite skriver ut två adresser. `Local` (`http://localhost:5173`) öppnas på laptopen, och `Network` (till exempel `http://192.168.x.x:5173`) öppnas i mobilen på samma wifi. Backenden måste köra samtidigt, eftersom Vite skickar vidare `/gamehub` till den.
+
+Kommer mobilen inte åt sidan: första gången Node lyssnar på nätverket frågar Windows-brandväggen om åtkomst. Tillåt den för privata nätverk. Har frågan redan avvisats, eller är wifi-nätverket inställt som offentligt, ändras det under Windows-inställningarna för nätverk och brandvägg.
+
+Före en PR körs `yarn format:check`, `yarn lint` och `yarn build`.
