@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Mixtape.Api/Mixtape.Api.csproj" />
+    <Project Path="src/Mixtape.Application/Mixtape.Application.csproj" />
+    <Project Path="src/Mixtape.Domain/Mixtape.Domain.csproj" />
+    <Project Path="src/Mixtape.Infrastructure/Mixtape.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Mixtape.Tests/Mixtape.Tests.csproj" />
+  </Folder>
+</Solution>

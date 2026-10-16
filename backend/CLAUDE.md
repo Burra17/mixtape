@@ -12,11 +12,11 @@ Beroenden pekar inåt mot Domain, som inte beror på någonting:
 
 | Projekt | Innehåll |
 |---|---|
-| `Rewind.Domain` | `GameRoom`, `Player` och spelreglerna. Ingen I/O, inga ramverk. |
-| `Rewind.Application` | En handler per kommando, interfacen som Infrastructure implementerar (`IGameRoomRepository`, `IMusicCatalog`, `IPromptProvider`), och DTO:erna. |
-| `Rewind.Infrastructure` | Rum i minnet, Deezer-klienten, promptbanken och bakgrundstjänster. |
-| `Rewind.Api` | `Program.cs`, `GameHub`, de få HTTP-endpoints som finns, och kopplingen av DI. |
-| `Rewind.Tests` | NUnit. |
+| `Mixtape.Domain` | `GameRoom`, `Player` och spelreglerna. Ingen I/O, inga ramverk. |
+| `Mixtape.Application` | En handler per kommando, interfacen som Infrastructure implementerar (`IGameRoomRepository`, `IMusicCatalog`, `IPromptProvider`), och DTO:erna. |
+| `Mixtape.Infrastructure` | Rum i minnet, Deezer-klienten, promptbanken och bakgrundstjänster. |
+| `Mixtape.Api` | `Program.cs`, `GameHub`, de få HTTP-endpoints som finns, och kopplingen av DI. |
+| `Mixtape.Tests` | NUnit. |
 
 Varje lager registrerar sina tjänster i en egen `Add<Lager>()`-metod, och `Program.cs` anropar dem.
 
