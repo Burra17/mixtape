@@ -2,7 +2,7 @@
 
 React, TypeScript, Vite, Tailwind, Zustand och `@microsoft/signalr`. Reglerna som gäller hela repot står i [../CLAUDE.md](../CLAUDE.md).
 
-Routern är `react-router` version 8, och allt importeras från `'react-router'`. Det paket som hette `react-router-dom` i äldre versioner finns inte längre.
+Routern är `react-router` version 8, och allt importeras från `'react-router'`. `react-router-dom` har ingen version 8, så det paketet används inte.
 
 ## Två skärmar
 
@@ -19,7 +19,8 @@ Webbläsaren spelar inte upp ljud förrän någon har klickat på sidan. Klicket
 src/
   features/<fas>/     lobby, submitting, playing, voting, revealing, gameOver
     components/       komponenter för både TV och mobil i den här fasen
-  views/              hostView och playerView: tunna skal som väljer fas utifrån serverns state
+  router.tsx          en route per vy
+  views/              en vy per route. hostView och playerView är tunna skal som väljer fas utifrån serverns state
   services/hub/       anslutningen, hubContract.ts och alla anrop till hubben
   store/              Zustand-storen
   shared/components/  komponenter som används av flera faser

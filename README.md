@@ -52,6 +52,6 @@ yarn dev
 
 Vite skriver ut två adresser. `Local` (`http://localhost:5173`) öppnas på laptopen, och `Network` (till exempel `http://192.168.x.x:5173`) öppnas i mobilen på samma wifi. Backenden måste köra samtidigt, eftersom Vite skickar vidare `/gamehub` till den.
 
-Kommer mobilen inte åt sidan: första gången Node lyssnar på nätverket frågar Windows-brandväggen om åtkomst. Tillåt den för privata nätverk.
+Kommer mobilen inte åt sidan: första gången Node lyssnar på nätverket frågar Windows-brandväggen om åtkomst. Tillåt den för privata nätverk. Har frågan redan avvisats, eller är wifi-nätverket inställt som offentligt, ändras det under Windows-inställningarna för nätverk och brandvägg.
 
-Före en PR körs samma kontroller som i CI: `yarn format:check`, `yarn lint` och `yarn build`.
+Före en PR körs `yarn format:check`, `yarn lint` och `yarn build`.
