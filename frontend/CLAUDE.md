@@ -15,7 +15,7 @@ Webbläsaren spelar inte upp ljud förrän någon har klickat på sidan. Klicket
 
 ```text
 src/
-  features/<fas>/     lobby, submit, playback, vote, reveal, gameOver
+  features/<fas>/     lobby, submitting, playing, voting, revealing, gameOver
     components/       komponenter för både TV och mobil i den här fasen
   views/              hostView och playerView: tunna skal som väljer fas utifrån serverns state
   services/hub/       anslutningen, hubContract.ts och alla anrop till hubben
@@ -23,7 +23,7 @@ src/
   shared/components/  komponenter som används av flera faser
 ```
 
-En ticket om en fas berör bara den fasens mapp. Behöver en andra fas en komponent flyttas den till `shared/components/`. Flytta, kopiera inte.
+Mapparna heter som faserna i `Phase` nedan, så att fasen i serverns state och mappen med dess komponenter har samma namn. En ticket om en fas berör bara den fasens mapp. Behöver en andra fas en komponent flyttas den till `shared/components/`. Flytta, kopiera inte.
 
 Skapa mappar när de fylls, inte i förväg.
 

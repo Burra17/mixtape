@@ -4,7 +4,11 @@
 
 ## Lager
 
-Beroenden pekar inåt: Api → Infrastructure → Application → Domain. Domain beror inte på någonting.
+Beroenden pekar inåt mot Domain, som inte beror på någonting:
+
+- Application → Domain
+- Infrastructure → Application
+- Api → Application och Infrastructure. Hubben anropar handlers i Application, och Infrastructure refereras bara för att koppla ihop DI.
 
 | Projekt | Innehåll |
 |---|---|
@@ -20,7 +24,7 @@ Varje lager registrerar sina tjänster i en egen `Add<Lager>()`-metod, och `Prog
 
 `GameRoom` äger sitt state. Domänobjekten har inga publika setters, och reglerna nås via metoder som `SubmitTrack` och `Vote`. Varje metod börjar med att kontrollera fasen.
 
-En regel som säger nej ger ett `Result`-fel, till exempel "inte i den här fasen", "namnet är upptaget" eller "du kan inte rösta på dig själv". Undantag används för det som inte borde hända, alltså buggar. Ett `Result`-fel blir ett meddelande till spelaren. Ett undantag blir ett fel i loggen.
+En regel som säger nej ger ett fel i `Result` (eller `Result<T>` när det lyckade utfallet har ett värde), till exempel "inte i den här fasen", "namnet är upptaget" eller "du kan inte rösta på dig själv". Undantag används för det som inte borde hända, alltså buggar. Ett `Result`-fel blir ett meddelande till spelaren. Ett undantag blir ett fel i loggen.
 
 ## Handlers
 
