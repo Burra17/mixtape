@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Rewind.Infrastructure;
+namespace Mixtape.Infrastructure;
 
 public static class DependencyInjection
 {

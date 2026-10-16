@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Rewind är ett partyspel för en kväll med kompisar: Aux Cord Battles. TV:n visar en prompt, alla väljer en låt i mobilen, låtarna spelas anonymt och alla röstar. Spelreglerna står i [README.md](README.md).
+Mixtape är en samling musikspel för en kväll med kompisar. Det första spelläget är Aux Cord Battles: TV:n visar en prompt, alla väljer en låt i mobilen, låtarna spelas anonymt och alla röstar. Fler spellägen kan komma senare, men de byggs när de behövs. Spelreglerna står i [README.md](README.md).
 
 Allt körs lokalt. Laptopen kör backenden, visar spelet och spelar musiken. Mobilerna ansluter via wifi. Det finns ingen deploy.
 

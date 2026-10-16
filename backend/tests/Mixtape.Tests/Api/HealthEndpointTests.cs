@@ -1,7 +1,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
 
-namespace Rewind.Tests.Api;
+namespace Mixtape.Tests.Api;
 
 public sealed class HealthEndpointTests
 {

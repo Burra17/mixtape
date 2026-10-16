@@ -1,5 +1,5 @@
-using Rewind.Application;
-using Rewind.Infrastructure;
+using Mixtape.Application;
+using Mixtape.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 

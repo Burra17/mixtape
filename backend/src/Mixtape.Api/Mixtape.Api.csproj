@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <ProjectReference Include="..\Mixtape.Application\Mixtape.Application.csproj" />
+    <ProjectReference Include="..\Mixtape.Infrastructure\Mixtape.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

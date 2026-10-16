@@ -1,8 +1,10 @@
-# Rewind
+# Mixtape
 
-Ett partyspel där spelarna tävlar om att välja den bästa låten till en prompt. TV:n visar spelet och spelar musiken, och mobilerna är handkontroller.
+Musikspel för en kväll med kompisar. TV:n visar spelet och spelar musiken, och mobilerna är handkontroller.
 
-## Så spelar man
+## Aux Cord Battles
+
+Det första spelläget. Spelarna tävlar om att välja den bästa låten till en prompt.
 
 3–8 spelare går med genom att skanna QR-koden på TV:n. Varje runda har fyra faser:
 
@@ -18,7 +20,7 @@ I lobbyn väljer värden antalet rundor (3, 5 eller 8, standard 5) och klipplän
 ## Struktur
 
 ```text
-rewind/
+mixtape/
 ├── backend/    .NET 10, Clean Architecture, Minimal API och SignalR
 └── frontend/   React, TypeScript, Vite, Tailwind och Zustand
 ```
@@ -33,7 +35,7 @@ Kräver .NET SDK 10.0.401 eller en nyare 10.0-version, enligt `global.json`.
 
 ```bash
 cd backend
-dotnet run --project src/Rewind.Api
+dotnet run --project src/Mixtape.Api
 ```
 
 API:et svarar på `http://localhost:5080`, och `/health` visar att det är igång. Testerna körs med `dotnet test` i samma mapp.
