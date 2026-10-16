@@ -1,6 +1,6 @@
 # Mixtape
 
-Musikspel för en kväll med kompisar. TV:n visar spelet och spelar musiken, och mobilerna är handkontroller.
+En samling musikspel för en kväll med kompisar. TV:n visar spelet och spelar musiken, och mobilerna är handkontroller.
 
 ## Aux Cord Battles
 
