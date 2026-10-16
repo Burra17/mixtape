@@ -30,7 +30,7 @@ Det här gäller både backend och frontend, och en ändring som bryter mot det 
 
 ## Versioner
 
-`global.json` låser .NET SDK, `.nvmrc` låser Node och `yarn.lock` låser paketen. Pakethanteraren är yarn, så att `yarn.lock` förblir den enda lockfilen.
+`global.json` håller .NET SDK på version 10 (10.0.401 eller en nyare 10.0-version), `.nvmrc` låser Node och `yarn.lock` låser paketen. Pakethanteraren är yarn, så att `yarn.lock` förblir den enda lockfilen.
 
 ## Arbetsflöde
 

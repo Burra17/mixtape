@@ -31,5 +31,5 @@ pnpm-debug.log*
 Thumbs.db
 
 # --- Claude Code ---
-# Lokala inställningar och launch.json för webbläsarpanelen
+# Claude Codes mapp hålls helt utanför repot
 .claude/

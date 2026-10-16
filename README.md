@@ -29,7 +29,7 @@ Musiken och klippen kommer från Deezers öppna API, som inte kräver någon nyc
 
 ### Backend
 
-Kräver .NET SDK 10. Exakt version står i `global.json`.
+Kräver .NET SDK 10.0.401 eller en nyare 10.0-version, enligt `global.json`.
 
 ```bash
 cd backend
