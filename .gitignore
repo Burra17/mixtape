@@ -29,3 +29,7 @@ pnpm-debug.log*
 .idea/
 .DS_Store
 Thumbs.db
+
+# --- Claude Code ---
+# Claude Codes mapp hålls helt utanför repot
+.claude/

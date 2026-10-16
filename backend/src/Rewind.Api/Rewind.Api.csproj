@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <ProjectReference Include="..\Rewind.Application\Rewind.Application.csproj" />
+    <ProjectReference Include="..\Rewind.Infrastructure\Rewind.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

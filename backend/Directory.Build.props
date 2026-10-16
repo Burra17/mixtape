@@ -1,0 +1,15 @@
+<Project>
+  <!-- Gäller alla projekt under backend/, så att inställningarna står på ett ställe. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Stilreglerna i .editorconfig kontrolleras vid bygget, inte bara i editorn. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- IDE0005 (onödiga using) rapporteras bara i bygget när XML-dokumentation genereras.
+         Vi skriver ingen XML-dokumentation, så varningen om saknade kommentarer stängs av. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+</Project>
