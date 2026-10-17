@@ -1,14 +1,58 @@
 @import 'tailwindcss';
+/* standard.css har både vikt- och breddaxeln, så rubrikerna kan bli extra breda. */
+@import '@fontsource-variable/archivo/standard.css';
 
-/* Appens färger. Komponenterna använder dem via klasser som bg-surface och text-accent. */
+/* Stilen är platt: färgfält, svarta ramar och hårda skuggor. Komponenterna använder färgerna via klasser som bg-paper och text-signal. */
 @theme {
-  --color-background: #14121c;
-  --color-surface: #221e2e;
-  --color-foreground: #f4f1fa;
-  --color-muted: #a39cb5;
-  --color-accent: #ff5a7a;
+  --color-paper: #f2ece0;
+  --color-card: #fbf8f1;
+  --color-ink: #1c191a;
+  --color-muted: #5b544e;
+  --color-signal: #ffe500;
+
+  /* Spelarfärgerna, med kassettetiketternas ränder som förebild. Alla klarar vit text (minst 4,5:1) och syns mot paper (minst 3:1). */
+  --color-player-1: #c83a1e;
+  --color-player-2: #1f5bd6;
+  --color-player-3: #b54d00;
+  --color-player-4: #b01f72;
+  --color-player-5: #00754a;
+  --color-player-6: #7a3cd6;
+  --color-player-7: #00727e;
+  --color-player-8: #7a5a12;
+
+  --font-sans: 'Archivo Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --tracking-label: 0.12em;
+
+  /* Skarpa hörn på storskärmen. Mobilens knappar och fält får den lilla radien. */
+  --radius-control: 6px;
+
+  /* Djup skapas med en förskjuten svart skugga, aldrig med glöd eller oskärpa. */
+  --shadow-hard: 4px 4px 0 var(--color-ink);
+  --shadow-hard-pressed: 2px 2px 0 var(--color-ink);
+
+  --animate-marquee: marquee 22s linear infinite;
+  --animate-reel: spin 3.2s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+}
+
+/* Rubrikstilen: Archivo i full bredd och vikt, i versaler. */
+@utility text-display {
+  font-stretch: 125%;
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.88;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 
 body {
-  @apply bg-background text-foreground antialiased;
+  @apply bg-paper font-sans text-ink antialiased;
 }

@@ -1,17 +1,25 @@
+import { Label } from '../shared/components/label.tsx';
 import { LinkButton } from '../shared/components/linkButton.tsx';
+import { Marquee } from '../shared/components/marquee.tsx';
+import { Reels } from '../shared/components/reels.tsx';
 
-// Landningssidan för den som skriver in adressen för hand. TV:n och mobilerna går annars direkt till sina vyer.
+// Landningssidan för den som skriver in adressen för hand. Laptopen och mobilerna går annars direkt till sina vyer.
 export const StartView = () => (
-  <main className='flex min-h-dvh flex-col items-center justify-center gap-10 p-6 text-center'>
-    <div>
-      <h1 className='text-6xl font-bold tracking-tight'>Mixtape</h1>
-      <p className='mt-3 text-lg text-muted'>Musikspel för en kväll med kompisar</p>
-    </div>
-    <nav className='flex w-full max-w-xs flex-col gap-4'>
-      <LinkButton to='/host' variant='primary'>
-        Starta på TV:n
-      </LinkButton>
-      <LinkButton to='/join'>Gå med i ett spel</LinkButton>
-    </nav>
-  </main>
+  <div className='flex min-h-dvh flex-col'>
+    <Marquee text='Mixtape • Musikspel för en kväll med kompisar' />
+    <main className='flex flex-1 flex-col justify-center gap-8 px-6 py-12 lg:px-[6vw]'>
+      <div className='flex items-center gap-4'>
+        <Reels />
+        <Label>Sida A · Aux Cord Battles</Label>
+      </div>
+      <h1 className='text-[clamp(3.5rem,11vw,10rem)] text-display'>Mixtape</h1>
+      <p className='max-w-[40ch] text-lg font-medium lg:text-2xl'>Välj den bästa låten till ögonblicket. Rösta fram kvällens DJ.</p>
+      <nav className='flex flex-col gap-4 sm:flex-row'>
+        <LinkButton to='/host' variant='primary'>
+          Starta ett spel
+        </LinkButton>
+        <LinkButton to='/join'>Gå med i ett spel</LinkButton>
+      </nav>
+    </main>
+  </div>
 );

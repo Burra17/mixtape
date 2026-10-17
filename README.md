@@ -1,17 +1,17 @@
 # Mixtape
 
-En samling musikspel för en kväll med kompisar. TV:n visar spelet och spelar musiken, och mobilerna är handkontroller.
+En samling musikspel för en kväll med kompisar. Storskärmen visar spelet och spelar musiken, och mobilerna är handkontroller.
 
 ## Aux Cord Battles
 
 Det första spelläget. Spelarna tävlar om att välja den bästa låten till en prompt.
 
-3–8 spelare går med genom att skanna QR-koden på TV:n. Varje runda har fyra faser:
+3–8 spelare går med genom att skanna QR-koden på storskärmen. Varje runda har fyra faser:
 
-1. **Inskick (45 s).** TV:n visar en prompt, till exempel "Låten som spelas när du inser att du gått på fel tåg". Alla söker fram en låt i mobilen och skickar in den. Ett inskickat bidrag är låst. Har någon redan valt samma låt får man välja en annan.
-2. **Uppspelning.** TV:n spelar ett klipp av varje bidrag i slumpad ordning och visar omslag, titel och artist, men inte vem som valde låten.
+1. **Inskick (45 s).** Storskärmen visar en prompt, till exempel "Låten som spelas när du inser att du gått på fel tåg". Alla söker fram en låt i mobilen och skickar in den. Ett inskickat bidrag är låst. Har någon redan valt samma låt får man välja en annan.
+2. **Uppspelning.** Storskärmen spelar ett klipp av varje bidrag i slumpad ordning och visar omslag, titel och artist, men inte vem som valde låten.
 3. **Röstning (20 s).** Alla röstar på sin favorit, men inte på sin egen. Den som inte skickade in får också rösta.
-4. **Avslöjande.** TV:n visar vem som valde vad. Varje röst ger 1 poäng.
+4. **Avslöjande.** Storskärmen visar vem som valde vad. Varje röst ger 1 poäng.
 
 Faserna går vidare så fort alla är klara. Kommer färre än två bidrag in hoppas rundan över.
 
