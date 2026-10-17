@@ -1,0 +1,76 @@
+name: CI
+
+# PR-körningen är grinden. Körningen på main visar i efterhand om något ändå tagit sig förbi den.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Jobben läser bara kod. Utan raden ärver GITHUB_TOKEN repots standardrättigheter, som kan innefatta skrivning.
+permissions:
+  contents: read
+
+# En ny push till en PR gör den förra körningen ointressant. På main avbryts ingenting, så att varje commit får ett facit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Båda jobben körs på varje PR, utan paths-filter. Ett obligatoriskt jobb som hoppas över fastnar som "pending" och blockerar merge.
+# Jobbens id är namnen som branch protection kräver. De har inget name:, så att checken alltid heter som id:t.
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+
+      # --frozen-lockfile: CI får inte skriva om yarn.lock och bygga något annat än det som finns lokalt.
+      - name: Installera beroenden
+        run: yarn install --frozen-lockfile
+
+      - name: Format
+        run: yarn format:check
+
+      # !cancelled() kör steget även när ett tidigare fallit, så att alla fel syns i samma varv.
+      - name: Lint
+        if: '!cancelled()'
+        run: yarn lint
+
+      - name: Bygg
+        if: '!cancelled()'
+        run: yarn build
+
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Återställ paket
+        run: dotnet restore
+
+      - name: Format
+        run: dotnet format --verify-no-changes --no-restore
+
+      - name: Bygg
+        if: '!cancelled()'
+        run: dotnet build --no-restore
+
+      - name: Test
+        if: '!cancelled()'
+        run: dotnet test --no-build

@@ -54,4 +54,4 @@ Vite skriver ut två adresser. `Local` (`http://localhost:5173`) öppnas på lap
 
 Kommer mobilen inte åt sidan: första gången Node lyssnar på nätverket frågar Windows-brandväggen om åtkomst. Tillåt den för privata nätverk. Har frågan redan avvisats, eller är wifi-nätverket inställt som offentligt, ändras det under Windows-inställningarna för nätverk och brandvägg.
 
-Före en PR körs `yarn format:check`, `yarn lint` och `yarn build`.
+Före en PR körs `yarn format:check`, `yarn lint` och `yarn build`. CI kör samma kontroller, och för backenden `dotnet format --verify-no-changes`, `dotnet build` och `dotnet test`.
