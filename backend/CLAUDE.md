@@ -47,6 +47,7 @@ Läs tiden från en injicerad `TimeProvider`. Faserna har deadlines och rum rens
 - `GameHub : Hub<IGameClient>`, så att eventnamn är kompileringsfel och inte stavfel.
 - Servern skickar ögonblicksbilder av state (`LobbyUpdated`, `GameStateUpdated`), inte små ändrings-events. Den som återansluter behöver då bara den senaste bilden.
 - Events och DTO:er är `record`.
+- Metoderna i `GameHub` och `IGameClient` har inget `Async`-suffix. SignalR använder metodnamnet som det står som namnet i kontraktet, så `PingAsync` skulle bli det klienten anropar.
 
 ## C#-stil
 
