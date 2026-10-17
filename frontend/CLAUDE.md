@@ -40,9 +40,18 @@ hubb-event → store → komponent → hubbanrop via services/hub → server
 - Hubbens events skriver serverns ögonblicksbild till storen. Komponenterna läser ur storen med selectors.
 - Klienten håller bara UI-state, som texten i ett sökfält. Faser, poäng och regler kommer från servern.
 
-## Styling
+## Stil
 
-Tailwind-klasser direkt i JSX. Färger och typsnitt definieras som tema-variabler en gång i `index.css`, och komponenterna använder dem via klassnamn.
+Riktningen är vald i #31, med We Are Rewind som förebild: varmt off-white, svart text och en gul signalfärg. Stilen är platt, med färgfält, svarta ramar och hårda skuggor. Djup skapas med en förskjuten svart skugga (`shadow-[4px_4px_0_var(--color-ink)]`), inte med glöd, mjuka övertoningar eller oskärpa. Det är det som skiljer stilen från generisk AI-design.
+
+- **Färger:** `paper` (bakgrund), `card` (ytor), `ink` (text och ramar), `muted` (sekundär text) och `signal` (gult, sparsamt: rumskod, prompt, primärknappens text). Spelarna har `player-1` till `player-8`, och namnet står alltid bredvid färgen. Alla färger är tema-variabler i `index.css`, och komponenterna använder dem via klasser som `bg-paper` och `text-signal`.
+- **Typografi:** Archivo genomgående. Rubriker, rumskoden och prompten använder `text-display` (full bredd, vikt 900, versaler). Brödtext är vanlig Archivo.
+- **Etiketter:** `<Label>` skriver `[RUMSKOD]` i versaler med hakparentes. Använd den för rubriker på paneler och statusrader.
+- **Former:** skarpa hörn och 2 px svarta ramar på stor skärm. På mobilen får knappar och fält en liten radie (`rounded-md`), eftersom stora tryckytor ska vara lätta att träffa med tummen.
+- **Knappar:** `<Button>` och `<LinkButton>` delar utseende via `buttonStyles.ts`. `primary` är svart med gul text och används en gång per skärm, för det viktigaste steget. Tryckytor är minst 48 px höga.
+- **Storlekar på laptopen:** text som ska läsas från soffan skalar med skärmen via `clamp()` och viewport-enheter, så att den fungerar både på laptopen och på en TV via HDMI.
+- **Rörelse:** laptopen rör sig hela tiden, med `<Marquee>` och `<Reels>`. Mobilen ligger still. Animationer skrivs som `lg:motion-safe:animate-…`, så att de bara körs på stor skärm och bara när "minska rörelse" är avstängt. `motion-reduce:animate-none` bredvid `lg:animate-…` fungerar inte, eftersom brytpunkten kommer senare i CSS:en och vinner. Stora ögonblick som avslöjandet hör till #24.
+- **Layout:** vänsterställt som standard. Centrera bara det som är ensamt i fokus, som rumskoden.
 
 ## Namngivning
 
