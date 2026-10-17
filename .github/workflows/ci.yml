@@ -1,0 +1,78 @@
+name: CI
+
+# Körningen på main visar i efterhand om något har tagit sig förbi PR-grinden.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Jobben läser bara kod, och GITHUB_TOKEN ska inte kunna skriva till repot.
+permissions:
+  contents: read
+
+# En ny push avbryter PR:ens förra körning, men på main får varje commit köra klart.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Inget paths-filter: ett obligatoriskt jobb som hoppas över fastnar som "pending" och blockerar merge.
+jobs:
+  # Jobbens id är checkarnas namn i branch protection, och därför har de inget name:.
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+
+      # --frozen-lockfile: CI får inte skriva om yarn.lock och bygga något annat än det som finns lokalt.
+      - name: Installera beroenden
+        run: yarn install --frozen-lockfile
+
+      - name: Format
+        run: yarn format:check
+
+      # !cancelled() kör steget även när ett tidigare fallit, så att alla fel syns i samma varv.
+      - name: Lint
+        if: '!cancelled()'
+        run: yarn lint
+
+      - name: Bygg
+        if: '!cancelled()'
+        run: yarn build
+
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Återställ paket
+        run: dotnet restore
+
+      - name: Format
+        run: dotnet format --verify-no-changes --no-restore
+
+      - name: Bygg
+        id: build
+        if: '!cancelled()'
+        run: dotnet build --no-restore
+
+      # Testerna behöver bygget, så de körs bara när det lyckades.
+      - name: Test
+        if: "!cancelled() && steps.build.outcome == 'success'"
+        run: dotnet test --no-build

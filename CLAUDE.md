@@ -52,7 +52,7 @@ Förklara kort medan du bygger, och bara när ett val inte är självklart.
 En ticket är klar när allt det här stämmer:
 
 - Ticketens "Klart när" är uppfyllt.
-- CI är grön.
+- CI är grön. Kör samma kontroller lokalt före PR, så att en röd check aldrig är en överraskning. De står i `.github/workflows/ci.yml`.
 - Domänreglerna som ticketen rör har tester.
 - Claude och André har testat enligt steg 4 och 5.
 - `/code-review` är körd.
