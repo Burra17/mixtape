@@ -1,24 +1,24 @@
 name: CI
 
-# PR-körningen är grinden. Körningen på main visar i efterhand om något ändå tagit sig förbi den.
+# Körningen på main visar i efterhand om något har tagit sig förbi PR-grinden.
 on:
   pull_request:
     branches: [main]
   push:
     branches: [main]
 
-# Jobben läser bara kod. Utan raden ärver GITHUB_TOKEN repots standardrättigheter, som kan innefatta skrivning.
+# Jobben läser bara kod, och GITHUB_TOKEN ska inte kunna skriva till repot.
 permissions:
   contents: read
 
-# En ny push till en PR gör den förra körningen ointressant. På main avbryts ingenting, så att varje commit får ett facit.
+# En ny push avbryter PR:ens förra körning, men på main får varje commit köra klart.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-# Båda jobben körs på varje PR, utan paths-filter. Ett obligatoriskt jobb som hoppas över fastnar som "pending" och blockerar merge.
-# Jobbens id är namnen som branch protection kräver. De har inget name:, så att checken alltid heter som id:t.
+# Inget paths-filter: ett obligatoriskt jobb som hoppas över fastnar som "pending" och blockerar merge.
 jobs:
+  # Jobbens id är checkarnas namn i branch protection, och därför har de inget name:.
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -68,9 +68,11 @@ jobs:
         run: dotnet format --verify-no-changes --no-restore
 
       - name: Bygg
+        id: build
         if: '!cancelled()'
         run: dotnet build --no-restore
 
+      # Testerna behöver bygget, så de körs bara när det lyckades.
       - name: Test
-        if: '!cancelled()'
+        if: "!cancelled() && steps.build.outcome == 'success'"
         run: dotnet test --no-build
