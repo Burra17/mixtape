@@ -10,17 +10,25 @@
   --color-muted: #5b544e;
   --color-signal: #ffe500;
 
-  /* Spelarfärgerna. Namnet står alltid bredvid, så ingen behöver skilja spelarna åt bara på färgen. */
-  --color-player-1: #ff4d2e;
-  --color-player-2: #1f6fff;
-  --color-player-3: #00a86b;
-  --color-player-4: #b23cff;
-  --color-player-5: #ff2e93;
-  --color-player-6: #e5a800;
-  --color-player-7: #0097a7;
-  --color-player-8: #6b8e00;
+  /* Spelarfärgerna, med kassettetiketternas ränder som förebild. Alla klarar vit text (minst 4,5:1) och syns mot paper (minst 3:1). */
+  --color-player-1: #c83a1e;
+  --color-player-2: #1f5bd6;
+  --color-player-3: #b54d00;
+  --color-player-4: #b01f72;
+  --color-player-5: #00754a;
+  --color-player-6: #7a3cd6;
+  --color-player-7: #00727e;
+  --color-player-8: #7a5a12;
 
   --font-sans: 'Archivo Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --tracking-label: 0.12em;
+
+  /* Skarpa hörn på storskärmen. Mobilens knappar och fält får den lilla radien. */
+  --radius-control: 6px;
+
+  /* Djup skapas med en förskjuten svart skugga, aldrig med glöd eller oskärpa. */
+  --shadow-hard: 4px 4px 0 var(--color-ink);
+  --shadow-hard-pressed: 2px 2px 0 var(--color-ink);
 
   --animate-marquee: marquee 22s linear infinite;
   --animate-reel: spin 3.2s linear infinite;

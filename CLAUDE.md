@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Mixtape är en samling musikspel för en kväll med kompisar. Det första spelläget är Aux Cord Battles: TV:n visar en prompt, alla väljer en låt i mobilen, låtarna spelas anonymt och alla röstar. Fler spellägen kan komma senare, men de byggs när de behövs. Spelreglerna står i [README.md](README.md).
+Mixtape är en samling musikspel för en kväll med kompisar. Det första spelläget är Aux Cord Battles: storskärmen visar en prompt, alla väljer en låt i mobilen, låtarna spelas anonymt och alla röstar. Fler spellägen kan komma senare, men de byggs när de behövs. Spelreglerna står i [README.md](README.md).
 
 Allt körs lokalt. Laptopen kör backenden, visar spelet och spelar musiken. Mobilerna ansluter via wifi. Det finns ingen deploy.
 
@@ -24,7 +24,7 @@ Kodreglerna för respektive del står i [backend/CLAUDE.md](backend/CLAUDE.md) o
 Det här gäller både backend och frontend, och en ändring som bryter mot det är fel även om den fungerar:
 
 - **Servern är enda sanningen.** Den äger faserna, klockan, poängen och reglerna. Klienterna visar det servern skickar och skickar tillbaka vad spelaren gjort.
-- **Vem som valde vilken låt lämnar aldrig servern** före avslöjandet, inte ens till TV:n. Allt som skickas till en klient går att läsa i nätverksfliken.
+- **Vem som valde vilken låt lämnar aldrig servern** före avslöjandet, inte ens till storskärmen. Allt som skickas till en klient går att läsa i nätverksfliken.
 - **Spelare och värd identifieras med en hemlig token**, inte med `ConnectionId`. Anslutningen byts varje gång en mobil låser skärmen.
 - **Hubkontraktet ändras på båda sidor i samma PR:** `IGameClient` och hubmetoderna i backenden, `hubContract.ts` i frontenden. Kontraktet skrivs för hand, så ingenting annat fångar en sida som glömts.
 
@@ -39,7 +39,7 @@ Varje ticket går igenom de här stegen i ordning. Claude sköter git-stegen: br
 1. **Grilla.** En ny epic grillas på djupet med `/grilling`. En ticket får en snabb genomgång av det som fortfarande är öppet. Besluten skrivs in i ticketen. Klart när ticketen inte har någon öppen fråga kvar.
 2. **Brancha** från en uppdaterad `main`: `feature/<issuenummer>`.
 3. **Bygg** ticketen, committa löpande och pusha. Commits skrivs på svenska i imperativ form.
-4. **Claude testar:** testerna är gröna, och appen körs i webbläsarpanelen med en TV-flik och tre spelarflikar när ticketen rör spelet.
+4. **Claude testar:** testerna är gröna, och appen körs i webbläsarpanelen med en storskärmsflik och tre spelarflikar när ticketen rör spelet.
 5. **André testar** på en riktig mobil.
 6. **Granska** med `/code-review` och rätta det som kommer fram.
 7. **PR:** titeln är ticketens titel och beskrivningen följer mallen. Ett val som inte är självklart får sitt skäl i beskrivningen.
