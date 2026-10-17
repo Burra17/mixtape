@@ -7,7 +7,7 @@ builder.Services
     .AddApplication()
     .AddInfrastructure();
 
-var app   =   builder.Build();
+var app = builder.Build();
 
 app.MapGet("/health", () => Results.Ok());
 
