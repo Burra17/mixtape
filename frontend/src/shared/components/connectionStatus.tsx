@@ -1,10 +1,10 @@
 import { ping } from '../../services/hub/connection.ts';
-import { useConnectionStore, type ConnectionStatus as Status } from '../../store/connectionStore.ts';
+import { useConnectionStore, type HubStatus } from '../../store/connectionStore.ts';
 import { Button } from './button.tsx';
 import { Card } from './card.tsx';
 import { Label } from './label.tsx';
 
-const statusText: Record<Status, string> = {
+const statusText: Record<HubStatus, string> = {
   connecting: 'Ansluter…',
   connected: 'Ansluten',
   reconnecting: 'Återansluter…',

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR.Client;
+using Mixtape.Api.Hubs;
 
 namespace Mixtape.Tests.Api;
 
@@ -25,13 +26,13 @@ public sealed class GameHubTests
     {
         await using var connection = CreateConnection();
         var pong = new TaskCompletionSource();
-        connection.On("Pong", () => pong.TrySetResult());
+        connection.On(nameof(IGameClient.Pong), () => pong.TrySetResult());
         await connection.StartAsync();
 
-        await connection.InvokeAsync("Ping");
+        await connection.InvokeAsync(nameof(GameHub.Ping));
 
-        // WaitAsync gör att ett uteblivet svar ger ett rött test i stället för ett test som hänger.
-        Assert.That(async () => await pong.Task.WaitAsync(TimeSpan.FromSeconds(5)), Throws.Nothing);
+        // Ett uteblivet svar ger ett rött test efter fem sekunder i stället för ett test som hänger.
+        await pong.Task.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
     // Testservern har ingen riktig port, så klienten går via dess HTTP-hanterare med long polling.

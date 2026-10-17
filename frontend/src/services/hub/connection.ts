@@ -25,4 +25,5 @@ export const startConnection = async () => {
   }
 };
 
-export const ping = () => connection.invoke(serverMethods.ping);
+// Om anslutningen hinner försvinna innan svaret kommer visar statusen redan det, så felet behöver inte hanteras här.
+export const ping = () => connection.invoke(serverMethods.ping).catch(() => undefined);
