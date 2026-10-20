@@ -32,7 +32,7 @@ Varje kommando har en handler: `JoinRoomHandler` med `HandleAsync(...)`. Hubben 
 
 Handlern hämtar rummet, anropar domänen och skickar ut resultatet. Den innehåller ingen spelregel.
 
-Hubben är ännu tunnare. Den tar emot anropet, slår upp spelaren via token, anropar handlern och returnerar `Result`.
+Hubben är ännu tunnare. Den tar emot anropet, slår upp spelaren via token, anropar handlern och gör om `Result` till `HubResponse<T>`. `Result<T>` kan inte skickas som det är, eftersom `Value` kastar ett undantag när utfallet misslyckats. `HubResponse<T>` har i stället `Value` och `Error` som vanliga fält, och samma form speglas i `hubContract.ts`.
 
 ## Samtidighet
 

@@ -21,9 +21,11 @@ Webbläsaren spelar inte upp ljud förrän någon har klickat på sidan. Klicket
 src/
   features/<fas>/     lobby, submitting, playing, voting, revealing, gameOver
     components/       komponenter för både storskärm och mobil i den här fasen
+    hooks/            flödet i fasen: anrop via services/hub och vad som skrivs till storen
   router.tsx          en route per vy
   views/              en vy per route. hostView och playerView är tunna skal som väljer fas utifrån serverns state
   services/hub/       anslutningen, hubContract.ts och alla anrop till hubben
+  services/storage/   den enda koden som läser och skriver localStorage, en fil per sak som sparas
   store/              Zustand-storen
   shared/components/  komponenter som används av flera faser
 ```

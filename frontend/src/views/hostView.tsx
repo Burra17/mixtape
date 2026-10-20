@@ -1,19 +1,14 @@
-import { useEffect } from 'react';
-import { startConnection } from '../services/hub/connection.ts';
-import { ConnectionStatus } from '../shared/components/connectionStatus.tsx';
+import { HostLobby } from '../features/lobby/components/hostLobby.tsx';
+import { HostStart } from '../features/lobby/components/hostStart.tsx';
+import { useHostRoom } from '../features/lobby/hooks/useHostRoom.ts';
+import { useHostStore } from '../store/hostStore.ts';
 
-// Storskärmens vy. Väljer fas utifrån serverns state när spelet finns.
+// Storskärmens vy. Väljer skärm utifrån var värden är i flödet, och senare utifrån spelets fas.
 export const HostView = () => {
-  useEffect(() => {
-    void startConnection();
-  }, []);
+  const { create, resume, startOver } = useHostRoom();
+  const screen = useHostStore((state) => state.screen);
 
-  return (
-    <main className='flex min-h-dvh flex-col justify-center gap-8 px-6 py-12 lg:px-[6vw]'>
-      <h1 className='text-[clamp(2.75rem,7vw,6rem)] text-display'>Storskärmen</h1>
-      <div className='max-w-md'>
-        <ConnectionStatus />
-      </div>
-    </main>
-  );
+  if (screen === 'lobby') return <HostLobby />;
+
+  return <HostStart onCreate={() => void create()} onResume={resume} onStartOver={() => void startOver()} />;
 };
