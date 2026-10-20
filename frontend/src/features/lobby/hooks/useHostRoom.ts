@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { createRoom, getJoinAddresses, resumeRoom, startConnection } from '../../../services/hub/connection.ts';
+import { checkRoom, createRoom, getJoinAddresses, resumeRoom, startConnection } from '../../../services/hub/connection.ts';
 import type { HostSession, HubResponse } from '../../../services/hub/hubContract.ts';
 import { clearHostSession, loadHostSession, saveHostSession } from '../../../services/storage/hostSessionStorage.ts';
 import { useConnectionStore } from '../../../store/connectionStore.ts';
@@ -31,7 +31,7 @@ const checkSavedRoom = async () => {
     return;
   }
 
-  const response = await resumeRoom(saved).catch(() => null);
+  const response = await checkRoom(saved).catch(() => null);
   if (response?.value) {
     show('resumable', response.value);
   } else {
@@ -70,7 +70,11 @@ export const useHostRoom = () => {
 
   return {
     create: () => createRoom(null).then(enterLobby, () => setError(FAILED)),
-    resume: () => show('lobby'),
+    // Klicket tar tillbaka rummet och häver pausen, och det är också klicket som låser upp ljudet.
+    resume: () => {
+      const { session } = useHostStore.getState();
+      if (session) void resumeRoom(session).then(enterLobby, () => setError(FAILED));
+    },
     startOver: () => createRoom(useHostStore.getState().session).then(enterLobby, () => setError(FAILED)),
   };
 };

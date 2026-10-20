@@ -45,7 +45,7 @@ export const HostStart = ({ onCreate, onResume, onStartOver }: HostStartProps) =
             <h1 className='text-[clamp(3rem,9vw,8rem)] text-display'>Rum {session.roomCode}</h1>
             <p className='max-w-[40ch] text-2xl font-medium'>Rummet finns kvar. Fortsätt där ni var, eller börja om med ett nytt rum.</p>
             <div className='flex flex-col gap-4 sm:flex-row'>
-              <Button variant='primary' onClick={onResume}>
+              <Button variant='primary' onClick={onResume} disabled={!isConnected}>
                 Fortsätt
               </Button>
               <Button onClick={onStartOver} disabled={!isConnected}>

@@ -2,6 +2,7 @@
 export const serverMethods = {
   ping: 'Ping',
   createRoom: 'CreateRoom',
+  checkRoom: 'CheckRoom',
   resumeRoom: 'ResumeRoom',
   getJoinAddresses: 'GetJoinAddresses',
   joinRoom: 'JoinRoom',

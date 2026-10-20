@@ -10,6 +10,7 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddTransient<CreateRoomHandler>();
+        services.AddTransient<CheckRoomHandler>();
         services.AddTransient<ResumeRoomHandler>();
         services.AddTransient<JoinRoomHandler>();
         services.AddTransient<RejoinRoomHandler>();

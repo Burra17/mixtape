@@ -7,6 +7,7 @@ namespace Mixtape.Api.Hubs;
 
 public sealed class GameHub(
     CreateRoomHandler createRoom,
+    CheckRoomHandler checkRoom,
     ResumeRoomHandler resumeRoom,
     JoinRoomHandler joinRoom,
     RejoinRoomHandler rejoinRoom,
@@ -39,6 +40,12 @@ public sealed class GameHub(
         }
 
         return HubResponse<HostSession>.From(result, room => room.Session);
+    }
+
+    // Storskärmen frågar när sidan laddas om det sparade rummet finns kvar, utan att ta tillbaka det.
+    public async Task<HubResponse<HostSession>> CheckRoom(HostSession session)
+    {
+        return HubResponse<HostSession>.From(await checkRoom.HandleAsync(session));
     }
 
     // Häver pausen, så lobbyn går till hela rummet och inte bara till storskärmen.

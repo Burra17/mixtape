@@ -9,6 +9,7 @@ namespace Mixtape.Tests.Application;
 
 public sealed class PresenceHandlersTests
 {
+    private InMemoryGameRoomRepository _rooms = null!;
     private InMemoryConnectionRegistry _connections = null!;
     private JoinRoomHandler _join = null!;
     private RejoinRoomHandler _rejoin = null!;
@@ -18,12 +19,12 @@ public sealed class PresenceHandlersTests
     [SetUp]
     public async Task SetUp()
     {
-        var rooms = new InMemoryGameRoomRepository();
+        _rooms = new InMemoryGameRoomRepository();
         _connections = new InMemoryConnectionRegistry();
-        _join = new JoinRoomHandler(rooms, _connections);
-        _rejoin = new RejoinRoomHandler(rooms, _connections);
-        _disconnect = new DisconnectHandler(rooms, _connections);
-        _host = (await new CreateRoomHandler(rooms, _connections).HandleAsync(null, "host")).Value.Session;
+        _join = new JoinRoomHandler(_rooms, _connections);
+        _rejoin = new RejoinRoomHandler(_rooms, _connections);
+        _disconnect = new DisconnectHandler(_rooms, _connections);
+        _host = (await new CreateRoomHandler(_rooms, _connections).HandleAsync(null, "host")).Value.Session;
     }
 
     [Test]
@@ -85,6 +86,20 @@ public sealed class PresenceHandlersTests
         var lobby = (await DisconnectAsync("host")).Value;
 
         Assert.That(lobby.IsPaused, Is.True);
+    }
+
+    [Test]
+    public async Task CheckRoom_KeepsThePauseUntilTheHostResumes()
+    {
+        await DisconnectAsync("host");
+
+        var checkedRoom = await new CheckRoomHandler(_rooms).HandleAsync(_host);
+        var stillPaused = (await _rooms.WithRoomAsync(RoomCode.Parse(_host.RoomCode)!, room => Result<bool>.Success(room.IsPaused))).Value;
+        var resumed = (await new ResumeRoomHandler(_rooms, _connections).HandleAsync(_host, "host-2")).Value;
+
+        Assert.That(checkedRoom.Value, Is.EqualTo(_host));
+        Assert.That(stillPaused, Is.True);
+        Assert.That(resumed.Lobby.IsPaused, Is.False);
     }
 
     // Som hubben: anslutningen tas bort ur registret före handlern.

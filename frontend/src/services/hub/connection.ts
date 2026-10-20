@@ -77,6 +77,8 @@ document.addEventListener('visibilitychange', () => {
 // previous skickas med vid "Nytt spel", så att servern tar bort det gamla rummet.
 export const createRoom = (previous: HostSession | null) => connection.invoke<HubResponse<HostSession>>(serverMethods.createRoom, previous);
 
+export const checkRoom = (session: HostSession) => connection.invoke<HubResponse<HostSession>>(serverMethods.checkRoom, session);
+
 export const resumeRoom = (session: HostSession) => connection.invoke<HubResponse<HostSession>>(serverMethods.resumeRoom, session);
 
 export const getJoinAddresses = () => connection.invoke<string[]>(serverMethods.getJoinAddresses);
