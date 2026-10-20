@@ -20,7 +20,7 @@ public sealed partial record PlayerName
     {
         var value = Whitespace().Replace(input ?? string.Empty, " ").Trim();
         var length = new StringInfo(value).LengthInTextElements;
-        if (length is < 1 or > MaxLength)
+        if (length is < 1 or > MaxLength || value.All(IsInvisible))
         {
             return PlayerErrors.InvalidName;
         }
@@ -32,6 +32,9 @@ public sealed partial record PlayerName
     public bool IsSameAs(PlayerName other) => string.Equals(Value, other.Value, StringComparison.OrdinalIgnoreCase);
 
     public override string ToString() => Value;
+
+    // Nollbreddstecken som U+200B räknas som ett tecken men syns inte, så ett namn av bara sådana vore tomt på skärmen.
+    private static bool IsInvisible(char c) => char.IsWhiteSpace(c) || char.GetUnicodeCategory(c) == UnicodeCategory.Format;
 
     [GeneratedRegex(@"\s+")]
     private static partial Regex Whitespace();

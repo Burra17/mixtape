@@ -39,7 +39,7 @@ export const HostPlayerList = () => {
       )}
       <p className='font-medium text-muted'>
         {lobby.players.length > 0 && 'Klicka på ett namn för att ta bort spelaren. '}
-        {!lobby.canStart && 'Minst 3 spelare behövs.'}
+        {!lobby.canStart && `Minst ${lobby.minPlayers} spelare behövs.`}
       </p>
       <div>
         <Button variant='primary' disabled={!lobby.canStart}>

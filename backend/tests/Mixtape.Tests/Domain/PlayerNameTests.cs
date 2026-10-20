@@ -24,6 +24,8 @@ public sealed class PlayerNameTests
     [TestCase(null)]
     [TestCase("")]
     [TestCase("   ")]
+    [TestCase("​")]
+    [TestCase("​ ​")]
     [TestCase("Seventeen chars!!")]
     [TestCase("🎸🎸🎸🎸🎸🎸🎸🎸🎸🎸🎸🎸🎸🎸🎸🎸🎸")]
     public void Create_RejectsEmptyOrTooLongNames(string? input)

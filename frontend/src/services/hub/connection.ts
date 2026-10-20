@@ -15,9 +15,12 @@ connection.onreconnected(() => setStatus('connected'));
 connection.onclose(() => setStatus('disconnected'));
 connection.on(clientEvents.pong, receivePong);
 connection.on(clientEvents.lobbyUpdated, (lobby: LobbyState) => useLobbyStore.getState().receiveLobby(lobby));
+// Den borttagna mobilen lämnar själv rummets grupp, eftersom servern inte vet vilken anslutning den har.
 connection.on(clientEvents.removedFromRoom, () => {
+  const { session, removedFromRoom } = usePlayerStore.getState();
+  if (session) void leaveRoom(session);
   clearPlayerSession();
-  usePlayerStore.getState().removedFromRoom();
+  removedFromRoom();
 });
 
 let starting: Promise<boolean> | null = null;

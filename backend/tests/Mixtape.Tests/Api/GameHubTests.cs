@@ -135,6 +135,37 @@ public sealed class GameHubTests
         Assert.That(bertilRemoved, Is.False);
     }
 
+    [Test]
+    public async Task LeaveRoom_AfterBeingRemoved_StopsTheLobbyUpdates()
+    {
+        await using var host = CreateConnection();
+        await using var anna = CreateConnection();
+        await using var bertil = CreateConnection();
+        var hostSawBertil = new TaskCompletionSource();
+        var annaLobbies = 0;
+        host.On<LobbyState>(nameof(IGameClient.LobbyUpdated), lobby =>
+        {
+            if (lobby.Players.Any(player => player.Name == "Bertil"))
+            {
+                hostSawBertil.TrySetResult();
+            }
+        });
+        anna.On<LobbyState>(nameof(IGameClient.LobbyUpdated), _ => annaLobbies++);
+        await Task.WhenAll(host.StartAsync(), anna.StartAsync(), bertil.StartAsync());
+
+        var created = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
+        var annaSession = (await anna.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Anna")).Value!;
+        await host.InvokeAsync(nameof(GameHub.RemovePlayer), created, annaSession.PlayerId);
+
+        // Som frontenden gör när RemovedFromRoom kommer.
+        await anna.InvokeAsync(nameof(GameHub.LeaveRoom), annaSession);
+        var lobbiesBeforeBertil = annaLobbies;
+        await bertil.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Bertil");
+        await hostSawBertil.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.That(annaLobbies, Is.EqualTo(lobbiesBeforeBertil));
+    }
+
     // Testservern har ingen riktig port, så klienten går via dess HTTP-hanterare med long polling.
     private HubConnection CreateConnection()
     {

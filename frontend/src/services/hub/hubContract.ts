@@ -52,6 +52,7 @@ export type LobbyState = {
   roomCode: string;
   revision: number;
   players: LobbyPlayer[];
+  minPlayers: number;
   maxPlayers: number;
   canStart: boolean;
 };

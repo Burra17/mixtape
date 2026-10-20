@@ -68,16 +68,17 @@ public sealed class GameHub(
         return HubResponse<PlayerSession>.From(result, joined => joined.Session);
     }
 
-    // Inget svar, eftersom mobilen går tillbaka till /join oavsett utfall. Ett rum som redan är borta är inget fel för den som ville lämna.
+    // Inget svar, eftersom mobilen går tillbaka till /join oavsett utfall. En borttagen mobil anropar också LeaveRoom, och då misslyckas Leave men grupperna lämnas ändå.
     public async Task LeaveRoom(PlayerSession session)
     {
         var result = await leaveRoom.HandleAsync(session);
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, session.RoomCode);
+
+        // Klientens egna värden räcker här, eftersom det bara är den egna anslutningen som lämnar grupperna.
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, session.RoomCode.ToUpperInvariant());
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, PlayerGroup(session.PlayerId));
         if (result.IsSuccess)
         {
-            var (playerId, lobby) = result.Value;
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, PlayerGroup(playerId));
-            await Clients.Group(lobby.RoomCode).LobbyUpdated(lobby);
+            await Clients.Group(result.Value.Lobby.RoomCode).LobbyUpdated(result.Value.Lobby);
         }
     }
 

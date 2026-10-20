@@ -82,6 +82,7 @@ public sealed class GameRoom
     // Värden tar bort en spelare i lobbyn. Spelaren kan sedan gå med igen som ny.
     public Result<Player> RemovePlayer(string? hostToken, string? playerId)
     {
+        // Värd-token kontrolleras före fasen, så att den som inte är värd bara får veta att rummet inte finns.
         if (!IsHost(hostToken))
         {
             return RoomErrors.NotFound;
