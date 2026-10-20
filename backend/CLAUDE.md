@@ -66,4 +66,5 @@ Läs tiden från en injicerad `TimeProvider`. Domänen tar emot tiden som argume
 - Varje regel i Domain har tester, inklusive kantfallen: fel fas, gränsvärden och dubbletter.
 - Handlers testas när de innehåller logik utöver att skicka vidare.
 - Ett fåtal integrationstester går mot hubben.
+- Testerna går aldrig mot nätet. Ett externt API testas med ett sparat svar i `Fixtures/` och en `FakeHttpHandler`, och hubbtester byter ut tjänsten med `ConfigureTestServices`.
 - Testnamnen beskriver beteendet: `Vote_OnOwnEntry_ReturnsError`.

@@ -14,4 +14,6 @@ public sealed class InMemoryConnectionRegistry : IConnectionRegistry
 
     // Går igenom alla anslutningar. Det är några tiotal en kväll, så en uppslagstabell åt andra hållet behövs inte.
     public bool HasConnection(ConnectionOwner owner) => _owners.Values.Contains(owner);
+
+    public ConnectionOwner? TryGetOwner(string connectionId) => _owners.TryGetValue(connectionId, out var owner) ? owner : null;
 }

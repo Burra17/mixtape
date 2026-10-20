@@ -3,7 +3,7 @@ import { useConnectionStore } from '../../store/connectionStore.ts';
 import { useLobbyStore } from '../../store/lobbyStore.ts';
 import { usePlayerStore } from '../../store/playerStore.ts';
 import { clearPlayerSession } from '../storage/playerSessionStorage.ts';
-import { clientEvents, serverMethods, type HostSession, type HubResponse, type LobbyState, type PlayerSession } from './hubContract.ts';
+import { clientEvents, serverMethods, type HostSession, type HubResponse, type LobbyState, type PlayerSession, type Track } from './hubContract.ts';
 
 // Två snabba försök först, eftersom de flesta avbrott är ett kort hack i wifi. Sedan var 5:e sekund.
 const FIRST_RETRY_DELAYS_MS = [0, 2000];
@@ -116,3 +116,6 @@ export const leaveRoom = (session: PlayerSession) => connection.invoke(serverMet
 
 export const removePlayer = (host: HostSession, playerId: string) =>
   connection.invoke(serverMethods.removePlayer, host, playerId).catch(() => undefined);
+
+// Bara en spelare i ett rum får söka. Sökrutan som använder den kommer i #19.
+export const search = (query: string) => connection.invoke<HubResponse<Track[]>>(serverMethods.search, query);

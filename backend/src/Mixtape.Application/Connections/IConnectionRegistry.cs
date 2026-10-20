@@ -10,4 +10,7 @@ public interface IConnectionRegistry
     ConnectionOwner? Unregister(string connectionId);
 
     bool HasConnection(ConnectionOwner owner);
+
+    // Vem anslutningen tillhör, eller null om den inte har gått med i något rum.
+    ConnectionOwner? TryGetOwner(string connectionId);
 }
