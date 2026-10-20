@@ -3,6 +3,7 @@ import { Card } from '../../../shared/components/card.tsx';
 import { Label } from '../../../shared/components/label.tsx';
 import { Marquee } from '../../../shared/components/marquee.tsx';
 import { useHostStore } from '../../../store/hostStore.ts';
+import { HostPlayerList } from './hostPlayerList.tsx';
 
 // Laptopen öppnas ofta på localhost, som mobilerna inte når. Därför byggs adressen av serverns LAN-adress och sidans egen port.
 const joinUrl = (address: string, roomCode: string) => {
@@ -30,6 +31,7 @@ export const HostLobby = () => {
           <Label>Rumskod</Label>
           <p className='self-start bg-signal px-4 pt-3 pb-1 text-[clamp(4rem,9vw,9rem)] text-display'>{session.roomCode}</p>
           <p className='max-w-[30ch] text-[clamp(1.25rem,2vw,1.75rem)] font-medium'>Skanna QR-koden med mobilen för att gå med.</p>
+          <HostPlayerList />
         </div>
 
         <Card>
