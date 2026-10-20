@@ -40,7 +40,7 @@ Hubben är ännu tunnare. Den tar emot anropet, slår upp spelaren via token, an
 
 ## Klockan
 
-Läs tiden från en injicerad `TimeProvider`. Faserna har deadlines och rum rensas efter inaktivitet, och med `TimeProvider` kan testerna spola fram tiden i stället för att vänta.
+Läs tiden från en injicerad `TimeProvider`. Domänen tar emot tiden som argument (`DateTimeOffset now`), och handlers läser den från `TimeProvider`. Testerna har en egen `FakeTimeProvider`. Faserna har deadlines och rum rensas efter inaktivitet, och med `TimeProvider` kan testerna spola fram tiden i stället för att vänta.
 
 ## Hubben
 

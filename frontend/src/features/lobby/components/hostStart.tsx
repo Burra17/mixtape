@@ -16,6 +16,7 @@ export const HostStart = ({ onCreate, onResume, onStartOver }: HostStartProps) =
   const screen = useHostStore((state) => state.screen);
   const session = useHostStore((state) => state.session);
   const error = useHostStore((state) => state.error);
+  const roomClosed = useHostStore((state) => state.roomClosed);
   const isConnected = useIsConnected();
 
   return (
@@ -32,6 +33,11 @@ export const HostStart = ({ onCreate, onResume, onStartOver }: HostStartProps) =
         {screen === 'start' && (
           <>
             <h1 className='text-[clamp(3rem,9vw,8rem)] text-display'>Nytt spel</h1>
+            {roomClosed && (
+              <p role='status' className='self-start bg-signal px-4 py-2 text-[clamp(1.25rem,2vw,1.75rem)] font-bold'>
+                Det förra rummet har stängts.
+              </p>
+            )}
             <div>
               <Button variant='primary' onClick={onCreate} disabled={!isConnected}>
                 Skapa spel

@@ -5,7 +5,7 @@ import { clearHostSession, loadHostSession, saveHostSession } from '../../../ser
 import { useConnectionStore } from '../../../store/connectionStore.ts';
 import { useHostStore } from '../../../store/hostStore.ts';
 
-const { show, setJoinAddresses, setError } = useHostStore.getState();
+const { show, setJoinAddresses, setError, showRoomClosed } = useHostStore.getState();
 
 const FAILED = 'Något gick fel. Försök igen.';
 
@@ -34,8 +34,11 @@ const checkSavedRoom = async () => {
   const response = await checkRoom(saved).catch(() => null);
   if (response?.value) {
     show('resumable', response.value);
-  } else {
+  } else if (response?.error) {
     clearHostSession();
+    showRoomClosed();
+  } else {
+    // Utan svar går det inte att veta om rummet finns kvar, så det sparade rummet ligger kvar till nästa försök.
     show('start', null);
   }
 };
@@ -45,8 +48,7 @@ const resumeSilently = async (session: HostSession) => {
   const response = await resumeRoom(session).catch(() => null);
   if (response?.error) {
     clearHostSession();
-    show('start', null);
-    setError(response.error.message);
+    showRoomClosed();
   }
 };
 
