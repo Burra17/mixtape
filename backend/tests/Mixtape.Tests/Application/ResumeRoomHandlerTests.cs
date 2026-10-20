@@ -20,17 +20,17 @@ public sealed class ResumeRoomHandlerTests
     [Test]
     public async Task Handle_WithRightHostToken_ReturnsTheRoom()
     {
-        var session = (await _create.HandleAsync(null)).Value;
+        var session = (await _create.HandleAsync(null)).Value.Session;
 
         var result = await _resume.HandleAsync(session);
 
-        Assert.That(result.Value, Is.EqualTo(session));
+        Assert.That(result.Value.Session, Is.EqualTo(session));
     }
 
     [Test]
     public async Task Handle_WithWrongHostToken_ReturnsNotFound()
     {
-        var session = (await _create.HandleAsync(null)).Value;
+        var session = (await _create.HandleAsync(null)).Value.Session;
 
         var result = await _resume.HandleAsync(session with { HostToken = "fel" });
 

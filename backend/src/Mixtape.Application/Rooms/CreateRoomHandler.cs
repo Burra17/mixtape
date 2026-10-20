@@ -6,7 +6,7 @@ namespace Mixtape.Application.Rooms;
 public sealed class CreateRoomHandler(IGameRoomRepository rooms)
 {
     // previous är värdens gamla rum vid "Nytt spel". Det tas bort bara om token stämmer.
-    public async Task<Result<HostSession>> HandleAsync(HostSession? previous)
+    public async Task<Result<HostRoom>> HandleAsync(HostSession? previous)
     {
         if (previous is not null && RoomCode.Parse(previous.RoomCode) is { } oldCode)
         {
@@ -21,6 +21,6 @@ public sealed class CreateRoomHandler(IGameRoomRepository rooms)
         }
         while (!rooms.TryAdd(room));
 
-        return new HostSession(room.Code.Value, room.HostToken);
+        return new HostRoom(new HostSession(room.Code.Value, room.HostToken), LobbyState.From(room));
     }
 }

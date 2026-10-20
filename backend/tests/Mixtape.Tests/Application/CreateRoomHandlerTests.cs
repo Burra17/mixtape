@@ -24,7 +24,7 @@ public sealed class CreateRoomHandlerTests
 
         for (var i = 0; i < 200; i++)
         {
-            var session = (await _handler.HandleAsync(null)).Value;
+            var session = (await _handler.HandleAsync(null)).Value.Session;
             Assert.That(codes.Add(session.RoomCode), Is.True, session.RoomCode);
         }
     }
@@ -32,8 +32,8 @@ public sealed class CreateRoomHandlerTests
     [Test]
     public async Task Handle_GivesEachRoomItsOwnHostToken()
     {
-        var first = (await _handler.HandleAsync(null)).Value;
-        var second = (await _handler.HandleAsync(null)).Value;
+        var first = (await _handler.HandleAsync(null)).Value.Session;
+        var second = (await _handler.HandleAsync(null)).Value.Session;
 
         Assert.That(first.HostToken, Has.Length.EqualTo(32));
         Assert.That(second.HostToken, Is.Not.EqualTo(first.HostToken));
@@ -42,7 +42,7 @@ public sealed class CreateRoomHandlerTests
     [Test]
     public async Task Handle_WithPreviousSession_RemovesTheOldRoom()
     {
-        var old = (await _handler.HandleAsync(null)).Value;
+        var old = (await _handler.HandleAsync(null)).Value.Session;
 
         await _handler.HandleAsync(old);
 
@@ -52,7 +52,7 @@ public sealed class CreateRoomHandlerTests
     [Test]
     public async Task Handle_WithWrongHostToken_KeepsTheOldRoom()
     {
-        var old = (await _handler.HandleAsync(null)).Value;
+        var old = (await _handler.HandleAsync(null)).Value.Session;
 
         await _handler.HandleAsync(old with { HostToken = "fel" });
 

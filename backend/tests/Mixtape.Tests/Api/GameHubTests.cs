@@ -63,6 +63,78 @@ public sealed class GameHubTests
         Assert.That(resumed.Error?.Code, Is.EqualTo("room.not_found"));
     }
 
+    [Test]
+    public async Task JoinRoom_SendsLobbyToHost()
+    {
+        await using var host = CreateConnection();
+        await using var player = CreateConnection();
+        var lobbies = new List<LobbyState>();
+        var annaJoined = new TaskCompletionSource();
+        host.On<LobbyState>(nameof(IGameClient.LobbyUpdated), lobby =>
+        {
+            lobbies.Add(lobby);
+            if (lobby.Players.Count == 1)
+            {
+                annaJoined.TrySetResult();
+            }
+        });
+        await host.StartAsync();
+        await player.StartAsync();
+
+        var created = await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null);
+        var joined = await player.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.Value!.RoomCode, "Anna");
+        await annaJoined.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.That(joined.Value!.PlayerToken, Has.Length.EqualTo(32));
+        Assert.That(lobbies[0].Players, Is.Empty);
+        Assert.That(lobbies[^1].Players.Single(), Is.EqualTo(new LobbyPlayer(joined.Value.PlayerId, "Anna", 1)));
+    }
+
+    [Test]
+    public async Task JoinRoom_WithTakenName_ReturnsTheErrorCode()
+    {
+        await using var host = CreateConnection();
+        await host.StartAsync();
+
+        var created = await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null);
+        await host.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.Value!.RoomCode, "Anna");
+        var second = await host.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.Value.RoomCode, "anna");
+
+        Assert.That(second.Error?.Code, Is.EqualTo("player.name_taken"));
+    }
+
+    [Test]
+    public async Task RemovePlayer_TellsOnlyThatPlayer()
+    {
+        await using var host = CreateConnection();
+        await using var anna = CreateConnection();
+        await using var bertil = CreateConnection();
+        var annaRemoved = new TaskCompletionSource();
+        var bertilRemoved = false;
+        anna.On(nameof(IGameClient.RemovedFromRoom), () => annaRemoved.TrySetResult());
+        var bertilSawAnnaGo = new TaskCompletionSource();
+        bertil.On(nameof(IGameClient.RemovedFromRoom), () => bertilRemoved = true);
+        bertil.On<LobbyState>(nameof(IGameClient.LobbyUpdated), lobby =>
+        {
+            if (lobby.Players.Count == 1 && lobby.Players[0].Name == "Bertil")
+            {
+                bertilSawAnnaGo.TrySetResult();
+            }
+        });
+        await Task.WhenAll(host.StartAsync(), anna.StartAsync(), bertil.StartAsync());
+
+        var created = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
+        var annaSession = (await anna.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Anna")).Value!;
+        await bertil.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Bertil");
+
+        await host.InvokeAsync(nameof(GameHub.RemovePlayer), created, annaSession.PlayerId);
+        await annaRemoved.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        // Lobbyn skickas efter RemovedFromRoom, så när Bertil sett den nya lobbyn hade ett felaktigt RemovedFromRoom redan kommit fram.
+        await bertilSawAnnaGo.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.That(bertilRemoved, Is.False);
+    }
+
     // Testservern har ingen riktig port, så klienten går via dess HTTP-hanterare med long polling.
     private HubConnection CreateConnection()
     {

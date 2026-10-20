@@ -10,6 +10,9 @@ public static class DependencyInjection
     {
         services.AddTransient<CreateRoomHandler>();
         services.AddTransient<ResumeRoomHandler>();
+        services.AddTransient<JoinRoomHandler>();
+        services.AddTransient<LeaveRoomHandler>();
+        services.AddTransient<RemovePlayerHandler>();
         return services;
     }
 }
