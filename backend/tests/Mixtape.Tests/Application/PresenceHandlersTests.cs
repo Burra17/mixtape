@@ -23,7 +23,7 @@ public sealed class PresenceHandlersTests
         _connections = new InMemoryConnectionRegistry();
         _join = new JoinRoomHandler(_rooms, _connections);
         _rejoin = new RejoinRoomHandler(_rooms, _connections);
-        _disconnect = new DisconnectHandler(_rooms, _connections);
+        _disconnect = new DisconnectHandler(_rooms, _connections, TimeProvider.System);
         _host = (await new CreateRoomHandler(_rooms, _connections).HandleAsync(null, "host")).Value.Session;
     }
 

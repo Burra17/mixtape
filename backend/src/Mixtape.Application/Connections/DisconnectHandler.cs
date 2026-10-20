@@ -3,7 +3,7 @@ using Mixtape.Domain.Common;
 
 namespace Mixtape.Application.Connections;
 
-public sealed class DisconnectHandler(IGameRoomRepository rooms, IConnectionRegistry connections)
+public sealed class DisconnectHandler(IGameRoomRepository rooms, IConnectionRegistry connections, TimeProvider time)
 {
     // Anslutningen är redan borta ur registret. Andra anslutningar kontrolleras med rummets lås, eftersom en mobil
     // som låses upp kan hinna återansluta innan den gamla anslutningens disconnect kommer fram.
@@ -17,11 +17,11 @@ public sealed class DisconnectHandler(IGameRoomRepository rooms, IConnectionRegi
 
             if (owner.IsHost)
             {
-                room.DisconnectHost();
+                room.DisconnectHost(time.GetUtcNow());
                 return LobbyState.From(room);
             }
 
-            var disconnected = room.Disconnect(owner.PlayerId!);
+            var disconnected = room.Disconnect(owner.PlayerId!, time.GetUtcNow());
             return disconnected.IsSuccess ? LobbyState.From(room) : disconnected.Error!;
         });
 }

@@ -30,6 +30,20 @@ public sealed class InMemoryGameRoomRepository : IGameRoomRepository
         }
     }
 
+    public async Task<int> RemoveWhereAsync(Func<GameRoom, bool> shouldRemove)
+    {
+        var removed = 0;
+        foreach (var entry in _rooms.Values)
+        {
+            if (await TryRemoveAsync(entry.Room.Code, shouldRemove))
+            {
+                removed++;
+            }
+        }
+
+        return removed;
+    }
+
     public async Task<Result<T>> WithRoomAsync<T>(RoomCode code, Func<GameRoom, Result<T>> action)
     {
         if (!_rooms.TryGetValue(code.Value, out var entry))
