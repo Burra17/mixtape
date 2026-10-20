@@ -28,7 +28,7 @@ export const HostLobby = () => {
       <main className='grid flex-1 items-center gap-10 px-6 py-12 lg:grid-cols-2 lg:px-[6vw]'>
         <div className='flex flex-col gap-6'>
           <Label>Rumskod</Label>
-          <p className='self-start bg-signal px-4 pt-3 pb-1 text-[clamp(4rem,12vw,11rem)] text-display'>{session.roomCode}</p>
+          <p className='self-start bg-signal px-4 pt-3 pb-1 text-[clamp(4rem,9vw,9rem)] text-display'>{session.roomCode}</p>
           <p className='max-w-[30ch] text-[clamp(1.25rem,2vw,1.75rem)] font-medium'>Skanna QR-koden med mobilen för att gå med.</p>
         </div>
 
