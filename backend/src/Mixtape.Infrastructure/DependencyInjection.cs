@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
+using Mixtape.Application.Connections;
 using Mixtape.Application.Network;
 using Mixtape.Application.Rooms;
+using Mixtape.Infrastructure.Connections;
 using Mixtape.Infrastructure.Network;
 using Mixtape.Infrastructure.Rooms;
 
@@ -13,6 +15,7 @@ public static class DependencyInjection
     {
         services.AddSingleton<IGameRoomRepository, InMemoryGameRoomRepository>();
         services.AddSingleton<IJoinAddressProvider, JoinAddressProvider>();
+        services.AddSingleton<IConnectionRegistry, InMemoryConnectionRegistry>();
         return services;
     }
 }

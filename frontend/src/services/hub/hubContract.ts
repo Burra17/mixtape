@@ -2,9 +2,11 @@
 export const serverMethods = {
   ping: 'Ping',
   createRoom: 'CreateRoom',
+  checkRoom: 'CheckRoom',
   resumeRoom: 'ResumeRoom',
   getJoinAddresses: 'GetJoinAddresses',
   joinRoom: 'JoinRoom',
+  rejoinRoom: 'RejoinRoom',
   leaveRoom: 'LeaveRoom',
   removePlayer: 'RemovePlayer',
 } as const;
@@ -13,6 +15,7 @@ export const clientEvents = {
   pong: 'Pong',
   lobbyUpdated: 'LobbyUpdated',
   removedFromRoom: 'RemovedFromRoom',
+  roomClosed: 'RoomClosed',
 } as const;
 
 // Error i Domain/Common.
@@ -45,6 +48,8 @@ export type LobbyPlayer = {
   id: string;
   name: string;
   colorIndex: number;
+  // Platsen behålls när anslutningen tappas, så en spelare kan finnas kvar utan att vara nåbar.
+  isConnected: boolean;
 };
 
 // LobbyState i Application/Rooms, som kommer med LobbyUpdated.
@@ -55,4 +60,6 @@ export type LobbyState = {
   minPlayers: number;
   maxPlayers: number;
   canStart: boolean;
+  // Storskärmen är borta och spelet står still.
+  isPaused: boolean;
 };

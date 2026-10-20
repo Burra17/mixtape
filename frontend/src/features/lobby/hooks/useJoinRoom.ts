@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { joinRoom, startConnection } from '../../../services/hub/connection.ts';
 import { savePlayerSession } from '../../../services/storage/playerSessionStorage.ts';
+import { useConnectionStore } from '../../../store/connectionStore.ts';
 import { usePlayerStore } from '../../../store/playerStore.ts';
 
 // Mobilen går med i ett rum och fortsätter till /play. Felet och väntan är bara formulärets eget state.
@@ -9,10 +10,6 @@ export const useJoinRoom = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    void startConnection();
-  }, []);
 
   const join = async (roomCode: string, name: string) => {
     setBusy(true);
@@ -27,7 +24,7 @@ export const useJoinRoom = () => {
     }
 
     savePlayerSession(response.value);
-    usePlayerStore.getState().joined(response.value);
+    usePlayerStore.getState().joined(response.value, useConnectionStore.getState().epoch);
     void navigate('/play');
   };
 

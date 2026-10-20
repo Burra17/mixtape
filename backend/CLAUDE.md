@@ -47,7 +47,8 @@ Läs tiden från en injicerad `TimeProvider`. Faserna har deadlines och rum rens
 - `GameHub : Hub<IGameClient>`, så att eventnamn är kompileringsfel och inte stavfel.
 - Servern skickar ögonblicksbilder av state (`LobbyUpdated`, `GameStateUpdated`), inte små ändrings-events. Den som återansluter behöver då bara den senaste bilden.
 - Ögonblicksbilden skickas efter att rummets lås släppts, så två bilder kan komma fram i fel ordning. Därför har den rummets `Revision`, och klienten kastar en bild som är äldre än den den har.
-- En enskild spelare nås via gruppen `player:{id}`, inte via `ConnectionId`. Anslutningen läggs i gruppen när spelaren går med (och från #11 när den återansluter).
+- En enskild spelare nås via gruppen `player:{id}`, inte via `ConnectionId`. Anslutningen läggs i gruppen när spelaren går med och när den återansluter.
+- Vem en anslutning tillhör står i `IConnectionRegistry`, som bara hubben och handlers använder. Domänen vet bara om en spelare är ansluten (`IsConnected`). Handlers kopplar en ny anslutning med rummets lås, och `DisconnectHandler` kontrollerar andra anslutningar med samma lås, så att en sen disconnect inte markerar en mobil som redan återanslutit.
 - Events och DTO:er är `record`.
 - Metoderna i `GameHub` och `IGameClient` har inget `Async`-suffix. SignalR använder metodnamnet som det står som namnet i kontraktet, så `PingAsync` skulle bli det klienten anropar.
 

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Mixtape.Application.Connections;
 using Mixtape.Application.Rooms;
 
 namespace Mixtape.Application;
@@ -9,10 +10,13 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddTransient<CreateRoomHandler>();
+        services.AddTransient<CheckRoomHandler>();
         services.AddTransient<ResumeRoomHandler>();
         services.AddTransient<JoinRoomHandler>();
+        services.AddTransient<RejoinRoomHandler>();
         services.AddTransient<LeaveRoomHandler>();
         services.AddTransient<RemovePlayerHandler>();
+        services.AddTransient<DisconnectHandler>();
         return services;
     }
 }

@@ -30,6 +30,11 @@ public sealed class GameRoom
 
     public bool CanStart => _players.Count >= MinPlayers;
 
+    public bool IsHostConnected { get; private set; } = true;
+
+    // Utan storskärmen står spelet still. Timrarna i #17 läser flaggan.
+    public bool IsPaused => !IsHostConnected;
+
     // Ett nytt rum börjar i lobbyn med en egen hemlig värd-token.
     public static GameRoom Create(RoomCode code) => new(code, SecretToken.Create());
 
@@ -94,6 +99,52 @@ public sealed class GameRoom
         }
 
         return RemoveWhere(player => player.Id == playerId);
+    }
+
+    // Mobilen kommer tillbaka med sin token efter en tappad anslutning. Ingen faskontroll, eftersom platsen behålls hela spelet.
+    public Result<Player> Rejoin(string? playerToken) => SetPlayerConnected(player => player.HasToken(playerToken), true);
+
+    // Servern vet vilken spelare anslutningen tillhörde, så id räcker här. En spelare som redan tagits bort ger NotFound.
+    public Result<Player> Disconnect(string playerId) => SetPlayerConnected(player => player.Id == playerId, false);
+
+    // Närvaron nedan gäller i alla faser, precis som Rejoin, så ingen av metoderna kontrollerar fasen.
+    // Storskärmen är tillbaka, efter en omladdning eller ett avbrott i wifi, och pausen hävs.
+    public Result ResumeHost(string? hostToken)
+    {
+        if (!IsHost(hostToken))
+        {
+            return RoomErrors.NotFound;
+        }
+
+        SetHostConnected(true);
+        return Result.Success();
+    }
+
+    public void DisconnectHost() => SetHostConnected(false);
+
+    private void SetHostConnected(bool connected)
+    {
+        if (IsHostConnected != connected)
+        {
+            IsHostConnected = connected;
+            Revision++;
+        }
+    }
+
+    private Result<Player> SetPlayerConnected(Func<Player, bool> match, bool connected)
+    {
+        var player = _players.FirstOrDefault(match);
+        if (player is null)
+        {
+            return PlayerErrors.NotFound;
+        }
+
+        if (player.SetConnected(connected))
+        {
+            Revision++;
+        }
+
+        return player;
     }
 
     private Result<Player> RemoveWhere(Func<Player, bool> match)

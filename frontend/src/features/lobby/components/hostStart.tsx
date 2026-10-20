@@ -2,6 +2,7 @@ import { Button } from '../../../shared/components/button.tsx';
 import { Label } from '../../../shared/components/label.tsx';
 import { Marquee } from '../../../shared/components/marquee.tsx';
 import { Reels } from '../../../shared/components/reels.tsx';
+import { useIsConnected } from '../../../store/connectionStore.ts';
 import { useHostStore } from '../../../store/hostStore.ts';
 
 type HostStartProps = {
@@ -15,6 +16,7 @@ export const HostStart = ({ onCreate, onResume, onStartOver }: HostStartProps) =
   const screen = useHostStore((state) => state.screen);
   const session = useHostStore((state) => state.session);
   const error = useHostStore((state) => state.error);
+  const isConnected = useIsConnected();
 
   return (
     <div className='flex min-h-dvh flex-col'>
@@ -31,7 +33,7 @@ export const HostStart = ({ onCreate, onResume, onStartOver }: HostStartProps) =
           <>
             <h1 className='text-[clamp(3rem,9vw,8rem)] text-display'>Nytt spel</h1>
             <div>
-              <Button variant='primary' onClick={onCreate}>
+              <Button variant='primary' onClick={onCreate} disabled={!isConnected}>
                 Skapa spel
               </Button>
             </div>
@@ -43,10 +45,12 @@ export const HostStart = ({ onCreate, onResume, onStartOver }: HostStartProps) =
             <h1 className='text-[clamp(3rem,9vw,8rem)] text-display'>Rum {session.roomCode}</h1>
             <p className='max-w-[40ch] text-2xl font-medium'>Rummet finns kvar. Fortsätt där ni var, eller börja om med ett nytt rum.</p>
             <div className='flex flex-col gap-4 sm:flex-row'>
-              <Button variant='primary' onClick={onResume}>
+              <Button variant='primary' onClick={onResume} disabled={!isConnected}>
                 Fortsätt
               </Button>
-              <Button onClick={onStartOver}>Nytt spel</Button>
+              <Button onClick={onStartOver} disabled={!isConnected}>
+                Nytt spel
+              </Button>
             </div>
           </>
         )}
