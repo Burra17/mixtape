@@ -107,6 +107,7 @@ public sealed class GameRoom
     // Servern vet vilken spelare anslutningen tillhörde, så id räcker här. En spelare som redan tagits bort ger NotFound.
     public Result<Player> Disconnect(string playerId) => SetPlayerConnected(player => player.Id == playerId, false);
 
+    // Närvaron nedan gäller i alla faser, precis som Rejoin, så ingen av metoderna kontrollerar fasen.
     // Storskärmen är tillbaka, efter en omladdning eller ett avbrott i wifi, och pausen hävs.
     public Result ResumeHost(string? hostToken)
     {

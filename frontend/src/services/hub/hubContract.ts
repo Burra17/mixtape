@@ -15,6 +15,7 @@ export const clientEvents = {
   pong: 'Pong',
   lobbyUpdated: 'LobbyUpdated',
   removedFromRoom: 'RemovedFromRoom',
+  roomClosed: 'RoomClosed',
 } as const;
 
 // Error i Domain/Common.

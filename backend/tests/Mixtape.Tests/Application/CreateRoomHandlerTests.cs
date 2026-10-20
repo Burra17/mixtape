@@ -45,9 +45,10 @@ public sealed class CreateRoomHandlerTests
     {
         var old = (await _handler.HandleAsync(null, "host")).Value.Session;
 
-        await _handler.HandleAsync(old, "host");
+        var created = (await _handler.HandleAsync(old, "host")).Value;
 
         Assert.That(await RoomExists(old.RoomCode), Is.False);
+        Assert.That(created.ClosedRoomCode, Is.EqualTo(old.RoomCode));
     }
 
     [Test]
@@ -55,9 +56,10 @@ public sealed class CreateRoomHandlerTests
     {
         var old = (await _handler.HandleAsync(null, "host")).Value.Session;
 
-        await _handler.HandleAsync(old with { HostToken = "fel" }, "host");
+        var created = (await _handler.HandleAsync(old with { HostToken = "fel" }, "host")).Value;
 
         Assert.That(await RoomExists(old.RoomCode), Is.True);
+        Assert.That(created.ClosedRoomCode, Is.Null);
     }
 
     private async Task<bool> RoomExists(string code) =>

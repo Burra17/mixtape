@@ -25,7 +25,7 @@ export const ConnectionBar = () => {
   return (
     <div
       role='status'
-      className='sticky top-0 z-10 flex min-h-14 items-center justify-between gap-4 border-b-2 border-ink bg-signal px-6 py-2 font-bold lg:px-[6vw] lg:text-xl'
+      className='sticky top-0 z-10 flex min-h-14 items-center justify-between gap-4 border-b-2 border-ink bg-signal px-6 py-2 font-bold lg:px-[6vw] lg:text-[clamp(1.25rem,1.6vw,1.75rem)]'
     >
       <span>{gaveUp ? 'Tappade anslutningen' : 'Återansluter…'}</span>
       {gaveUp && <Button onClick={() => void retryConnection()}>Försök igen</Button>}

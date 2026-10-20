@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import type { PlayerSession } from '../services/hub/hubContract.ts';
-import { useConnectionStore } from './connectionStore.ts';
 
 type PlayerState = {
   session: PlayerSession | null;
@@ -9,7 +8,7 @@ type PlayerState = {
   // Rummet mobilen senast var i, så att /join kan fylla i koden igen efter "Lämna" eller en borttagning.
   lastRoomCode: string | null;
   notice: string | null;
-  joined: (session: PlayerSession) => void;
+  joined: (session: PlayerSession, epoch: number) => void;
   left: () => void;
   removedFromRoom: (roomCode?: string) => void;
   roomClosed: () => void;
@@ -20,7 +19,7 @@ export const usePlayerStore = create<PlayerState>()((set) => ({
   sessionEpoch: 0,
   lastRoomCode: null,
   notice: null,
-  joined: (session) => set({ session, sessionEpoch: useConnectionStore.getState().epoch, lastRoomCode: session.roomCode, notice: null }),
+  joined: (session, epoch) => set({ session, sessionEpoch: epoch, lastRoomCode: session.roomCode, notice: null }),
   left: () => set({ session: null, notice: null }),
   // roomCode skickas med när mobilen fick beskedet först vid återanslutningen, efter en omladdning som tömt minnet.
   removedFromRoom: (roomCode) =>

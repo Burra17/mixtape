@@ -16,6 +16,6 @@ public sealed class ResumeRoomHandler(IGameRoomRepository rooms, IConnectionRegi
             }
 
             connections.Register(connectionId, ConnectionOwner.Host(room.Code.Value));
-            return new HostRoom(new HostSession(room.Code.Value, room.HostToken), LobbyState.From(room));
+            return new HostRoom(HostSession.For(room), LobbyState.From(room));
         });
 }

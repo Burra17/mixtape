@@ -22,7 +22,7 @@ export const PlayerLobby = ({ session }: { session: PlayerSession }) => {
             </p>
             <p className='text-lg font-medium text-muted'>Väntar på att spelet startar</p>
             {lobby.isPaused && (
-              <p role='status' className='self-start border-2 border-ink px-3 py-2 font-bold'>
+              <p role='status' className='self-start rounded-control border-2 border-ink px-3 py-2 font-bold'>
                 Storskärmen är borta. Spelet väntar.
               </p>
             )}

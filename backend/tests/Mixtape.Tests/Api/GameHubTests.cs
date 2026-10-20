@@ -227,6 +227,22 @@ public sealed class GameHubTests
         await paused.Task.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
+    [Test]
+    public async Task CreateRoom_WithPreviousRoom_TellsItsPlayersThatItClosed()
+    {
+        await using var host = CreateConnection();
+        await using var anna = CreateConnection();
+        var closed = new TaskCompletionSource();
+        anna.On(nameof(IGameClient.RoomClosed), () => closed.TrySetResult());
+        await Task.WhenAll(host.StartAsync(), anna.StartAsync());
+
+        var old = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
+        await anna.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), old.RoomCode, "Anna");
+        await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), old);
+
+        await closed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
     // Testservern har ingen riktig port, så klienten går via dess HTTP-hanterare med long polling.
     private HubConnection CreateConnection()
     {

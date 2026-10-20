@@ -12,4 +12,7 @@ public interface IGameClient
 
     // Bara till spelaren som värden tog bort.
     Task RemovedFromRoom();
+
+    // Till alla mobiler i ett rum som inte finns längre, till exempel efter "Nytt spel".
+    Task RoomClosed();
 }

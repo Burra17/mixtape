@@ -5,11 +5,14 @@ import { usePlayerStore } from '../../store/playerStore.ts';
 import { clearPlayerSession } from '../storage/playerSessionStorage.ts';
 import { clientEvents, serverMethods, type HostSession, type HubResponse, type LobbyState, type PlayerSession } from './hubContract.ts';
 
-const FIRST_RETRY_DELAYS = [0, 2000];
-const RETRY_INTERVAL = 5000;
+// Två snabba försök först, eftersom de flesta avbrott är ett kort hack i wifi. Sedan var 5:e sekund.
+const FIRST_RETRY_DELAYS_MS = [0, 2000];
+const RETRY_INTERVAL_MS = 5000;
+// Så länge får en ping ta när sidan blir synlig innan anslutningen räknas som död.
+const ALIVE_TIMEOUT_MS = 3000;
 
 // Försöker igen för evigt. En mobil kan vara låst i flera minuter, och då ska den komma tillbaka av sig själv.
-const nextRetryDelay = (previousRetryCount: number) => FIRST_RETRY_DELAYS[previousRetryCount] ?? RETRY_INTERVAL;
+const nextRetryDelay = (previousRetryCount: number) => FIRST_RETRY_DELAYS_MS[previousRetryCount] ?? RETRY_INTERVAL_MS;
 
 // En enda anslutning för hela appen. Adressen är relativ, så Vite skickar den vidare till backenden.
 const connection = new HubConnectionBuilder()
@@ -23,6 +26,7 @@ const { connected, lost } = useConnectionStore.getState();
 connection.onreconnecting(lost);
 connection.onreconnected(connected);
 connection.onclose(lost);
+connection.on(clientEvents.pong, () => undefined);
 connection.on(clientEvents.lobbyUpdated, (lobby: LobbyState) => useLobbyStore.getState().receiveLobby(lobby));
 // Den borttagna mobilen lämnar själv rummets grupp, eftersom servern inte vet vilken anslutning den har.
 connection.on(clientEvents.removedFromRoom, () => {
@@ -30,6 +34,10 @@ connection.on(clientEvents.removedFromRoom, () => {
   if (session) void leaveRoom(session);
   clearPlayerSession();
   removedFromRoom(session?.roomCode);
+});
+connection.on(clientEvents.roomClosed, () => {
+  clearPlayerSession();
+  usePlayerStore.getState().roomClosed();
 });
 
 let wanted = false;
@@ -49,29 +57,45 @@ export const startConnection = () => {
       },
       () => {
         lost();
-        retryTimer = setTimeout(() => void startConnection(), RETRY_INTERVAL);
+        retryTimer = setTimeout(() => void startConnection(), RETRY_INTERVAL_MS);
         return false;
       },
     );
   }
 
-  return starting ?? Promise.resolve(connection.state === HubConnectionState.Connected);
+  if (connection.state === HubConnectionState.Connecting && starting) return starting;
+  return Promise.resolve(connection.state === HubConnectionState.Connected);
 };
 
 // "Försök igen" och en sida som blir synlig igen väntar inte på nästa schemalagda försök.
 export const retryConnection = async () => {
-  if (connection.state === HubConnectionState.Reconnecting) {
+  if (connection.state !== HubConnectionState.Disconnected) {
     await connection.stop();
   }
 
   return startConnection();
 };
 
-// En mobil som låses upp har ofta en död anslutning som SignalR inte märkt än.
+// En anslutning som SignalR tror är uppe kan vara död efter en låst skärm. En ping som inte kommer tillbaka avslöjar det.
+const isAlive = () =>
+  Promise.race([
+    connection.invoke(serverMethods.ping).then(
+      () => true,
+      () => false,
+    ),
+    new Promise<boolean>((resolve) => setTimeout(() => resolve(false), ALIVE_TIMEOUT_MS)),
+  ]);
+
 document.addEventListener('visibilitychange', () => {
-  if (wanted && document.visibilityState === 'visible' && connection.state !== HubConnectionState.Connected) {
+  if (!wanted || document.visibilityState !== 'visible') return;
+  if (connection.state !== HubConnectionState.Connected) {
     void retryConnection();
+    return;
   }
+
+  void isAlive().then((alive) => {
+    if (!alive) void retryConnection();
+  });
 });
 
 // previous skickas med vid "Nytt spel", så att servern tar bort det gamla rummet.

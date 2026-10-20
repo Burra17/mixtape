@@ -35,8 +35,14 @@ public sealed class GameHub(
         var result = await createRoom.HandleAsync(previous, Context.ConnectionId);
         if (result.IsSuccess)
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, result.Value.Session.RoomCode);
-            await Clients.Caller.LobbyUpdated(result.Value.Lobby);
+            var (session, lobby, closedRoomCode) = result.Value;
+            if (closedRoomCode is not null)
+            {
+                await Clients.Group(closedRoomCode).RoomClosed();
+            }
+
+            await Groups.AddToGroupAsync(Context.ConnectionId, session.RoomCode);
+            await Clients.Caller.LobbyUpdated(lobby);
         }
 
         return HubResponse<HostSession>.From(result, room => room.Session);
