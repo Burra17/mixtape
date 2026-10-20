@@ -18,7 +18,7 @@ public sealed class CachingMusicCatalogTests
     }
 
     [Test]
-    public async Task SameSearchTwice_GoesToTheSourceOnce()
+    public async Task Search_SameQueryTwice_GoesToTheSourceOnce()
     {
         var first = await _catalog.SearchAsync(Query("Veronica Maggio"));
         var second = await _catalog.SearchAsync(Query("  veronica   MAGGIO "));
@@ -28,7 +28,7 @@ public sealed class CachingMusicCatalogTests
     }
 
     [Test]
-    public async Task DifferentSearches_GoToTheSourceEachTime()
+    public async Task Search_DifferentQueries_GoToTheSourceEachTime()
     {
         await _catalog.SearchAsync(Query("kent"));
         await _catalog.SearchAsync(Query("robyn"));
@@ -37,7 +37,7 @@ public sealed class CachingMusicCatalogTests
     }
 
     [Test]
-    public async Task Errors_AreNotCached()
+    public async Task Search_AfterAnError_GoesToTheSourceAgain()
     {
         _inner.Next = MusicErrors.Unavailable;
         await _catalog.SearchAsync(Query("kent"));
@@ -50,7 +50,7 @@ public sealed class CachingMusicCatalogTests
     }
 
     [Test]
-    public async Task EmptyResults_AreCached()
+    public async Task Search_WithNoHits_CachesTheEmptyList()
     {
         _inner.Tracks = [];
         await _catalog.SearchAsync(Query("xqzjwvkk"));

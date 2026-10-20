@@ -21,7 +21,7 @@ public sealed class SearchTracksHandlerTests
     }
 
     [Test]
-    public async Task Player_SearchesWithTheNormalizedQuery()
+    public async Task Handle_AsPlayer_SearchesWithTheNormalizedQuery()
     {
         _connections.Register("anna", ConnectionOwner.Player("BCDF", "id"));
 
@@ -33,7 +33,7 @@ public sealed class SearchTracksHandlerTests
 
     [TestCase("host")]
     [TestCase("okänd")]
-    public async Task HostOrUnknownConnection_ReturnsRoomNotFound(string connectionId)
+    public async Task Handle_AsHostOrUnknownConnection_ReturnsRoomNotFound(string connectionId)
     {
         _connections.Register("host", ConnectionOwner.Host("BCDF"));
 
@@ -45,7 +45,7 @@ public sealed class SearchTracksHandlerTests
 
     [TestCase(null)]
     [TestCase("   ")]
-    public async Task EmptyQuery_ReturnsInvalidQueryWithoutSearching(string? query)
+    public async Task Handle_WithEmptyQuery_ReturnsInvalidQueryWithoutSearching(string? query)
     {
         _connections.Register("anna", ConnectionOwner.Player("BCDF", "id"));
 

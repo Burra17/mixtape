@@ -9,8 +9,6 @@ namespace Mixtape.Infrastructure.Music.Deezer;
 // Deezers öppna API, utan nyckel. Basadressen, timeouten och User-Agent sätts när HttpClient registreras.
 public sealed class DeezerMusicCatalog(HttpClient http, ILogger<DeezerMusicCatalog> logger) : IMusicCatalog
 {
-    public const int MaxResults = 8;
-
     // Fler än som visas, så att träffar utan klipp kan filtreras bort utan ett andra anrop.
     private const int FetchLimit = 25;
 
@@ -40,8 +38,14 @@ public sealed class DeezerMusicCatalog(HttpClient http, ILogger<DeezerMusicCatal
 
         return (response?.Data ?? [])
             .Where(track => track.Readable && !string.IsNullOrEmpty(track.Preview))
-            .Take(MaxResults)
-            .Select(track => new Track(track.Id, track.Title, track.Artist.Name, track.Album.Title, track.Album.CoverMedium, track.ExplicitLyrics))
+            .Select(ToTrack)
+            .OfType<Track>()
+            .Take(IMusicCatalog.MaxResults)
             .ToList();
     }
+
+    private static Track? ToTrack(DeezerTrack track) =>
+        track is { Artist: { } artist, Album: { CoverMedium: { } cover } album }
+            ? new Track(track.Id, track.Title, artist.Name, album.Title, cover, track.ExplicitLyrics)
+            : null;
 }

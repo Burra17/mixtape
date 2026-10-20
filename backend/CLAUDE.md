@@ -49,6 +49,7 @@ Läs tiden från en injicerad `TimeProvider`. Domänen tar emot tiden som argume
 - Ögonblicksbilden skickas efter att rummets lås släppts, så två bilder kan komma fram i fel ordning. Därför har den rummets `Revision`, och klienten kastar en bild som är äldre än den den har.
 - En enskild spelare nås via gruppen `player:{id}`, inte via `ConnectionId`. Anslutningen läggs i gruppen när spelaren går med och när den återansluter.
 - Vem en anslutning tillhör står i `IConnectionRegistry`, som bara hubben och handlers använder. Domänen vet bara om en spelare är ansluten (`IsConnected`). Handlers kopplar en ny anslutning med rummets lås, och `DisconnectHandler` kontrollerar andra anslutningar med samma lås, så att en sen disconnect inte markerar en mobil som redan återanslutit.
+- Ett anrop som inte ändrar rummet, som `Search`, känner igen spelaren via anslutningen i `IConnectionRegistry` i stället för att klienten skickar sin token. Anslutningen kopplades till spelaren när den gick med eller återanslöt med token, så identiteten bygger fortfarande på token.
 - Events och DTO:er är `record`.
 - Metoderna i `GameHub` och `IGameClient` har inget `Async`-suffix. SignalR använder metodnamnet som det står som namnet i kontraktet, så `PingAsync` skulle bli det klienten anropar.
 

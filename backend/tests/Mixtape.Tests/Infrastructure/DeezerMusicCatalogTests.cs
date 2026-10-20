@@ -16,7 +16,7 @@ public sealed class DeezerMusicCatalogTests
 
         var tracks = (await catalog.SearchAsync(VeronicaMaggio)).Value;
 
-        Assert.That(tracks, Has.Count.EqualTo(DeezerMusicCatalog.MaxResults));
+        Assert.That(tracks, Has.Count.EqualTo(IMusicCatalog.MaxResults));
         Assert.That(tracks[0], Is.EqualTo(new Track(
             44112901,
             "Jag kommer",
@@ -74,6 +74,33 @@ public sealed class DeezerMusicCatalogTests
         var result = await catalog.SearchAsync(VeronicaMaggio);
 
         Assert.That(result.Error, Is.EqualTo(MusicErrors.Unavailable));
+    }
+
+    [Test]
+    public async Task Search_WhenDeezerTimesOut_ReturnsUnavailable()
+    {
+        var (catalog, _) = CreateCatalog(new FakeHttpHandler(_ => throw new TaskCanceledException("timeout")));
+
+        var result = await catalog.SearchAsync(VeronicaMaggio);
+
+        Assert.That(result.Error, Is.EqualTo(MusicErrors.Unavailable));
+    }
+
+    [Test]
+    public async Task Search_HitWithoutArtistOrAlbum_IsLeftOutInsteadOfCrashing()
+    {
+        var json = """
+            {"data":[
+              {"id":1,"readable":true,"title":"Hel","preview":"p","explicit_lyrics":false,"artist":{"name":"A"},"album":{"title":"X","cover_medium":"c1"}},
+              {"id":2,"readable":true,"title":"Utan artist","preview":"p","explicit_lyrics":false,"album":{"title":"Y","cover_medium":"c2"}},
+              {"id":3,"readable":true,"title":"Utan album","preview":"p","explicit_lyrics":false,"artist":{"name":"C"}}
+            ],"total":3}
+            """;
+        var (catalog, _) = CreateCatalog(FakeHttpHandler.Json(json));
+
+        var tracks = (await catalog.SearchAsync(VeronicaMaggio)).Value;
+
+        Assert.That(tracks.Select(track => track.Title), Is.EqualTo(new[] { "Hel" }));
     }
 
     [Test]

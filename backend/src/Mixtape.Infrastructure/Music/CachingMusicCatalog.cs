@@ -4,11 +4,10 @@ using Mixtape.Domain.Common;
 
 namespace Mixtape.Infrastructure.Music;
 
-// Lägger en cache framför musikkällan. Sökordet är redan normaliserat i SearchQuery, så det fungerar direkt som nyckel.
-// Träffarna saknar klipplänk, så inget som slutar gälla hamnar i cachen.
+// En cache framför musikkällan. Sökordet är redan normaliserat i SearchQuery och träffarna saknar klipplänk, så inget som slutar gälla cachas.
 public sealed class CachingMusicCatalog(IMusicCatalog inner, IMemoryCache cache) : IMusicCatalog
 {
-    public static readonly TimeSpan Lifetime = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(10);
 
     public async Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default)
     {
@@ -23,7 +22,7 @@ public sealed class CachingMusicCatalog(IMusicCatalog inner, IMemoryCache cache)
         // Fel cachas aldrig, så att nästa försök går till Deezer igen.
         if (result.IsSuccess)
         {
-            cache.Set(key, result.Value, Lifetime);
+            cache.Set(key, result.Value, CacheDuration);
         }
 
         return result;
