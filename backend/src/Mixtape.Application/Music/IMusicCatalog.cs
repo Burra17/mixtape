@@ -10,4 +10,7 @@ public interface IMusicCatalog
 
     // Högst MaxResults träffar som alla har ett klipp. Inga träffar är en lyckad, tom lista.
     Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default);
+
+    // En färsk klipplänk och det stora omslaget i ett anrop, eller TrackUnavailable om låten inte går att spela.
+    Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default);
 }

@@ -18,25 +18,14 @@ public sealed class DeezerMusicCatalog(HttpClient http, ILogger<DeezerMusicCatal
     {
         logger.LogInformation("Söker i Deezer: {Query}", query.Value);
 
-        DeezerSearchResponse? response;
-        try
+        var response = await GetAsync<DeezerSearchResponse>(
+            $"search?q={Uri.EscapeDataString(query.Value)}&limit={FetchLimit}", MusicErrors.Unavailable, cancellationToken);
+        if (!response.IsSuccess)
         {
-            response = await http.GetFromJsonAsync<DeezerSearchResponse>(
-                $"search?q={Uri.EscapeDataString(query.Value)}&limit={FetchLimit}", JsonOptions, cancellationToken);
-        }
-        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or JsonException)
-        {
-            logger.LogWarning(exception, "Deezer svarade inte på sökningen {Query}", query.Value);
-            return MusicErrors.Unavailable;
+            return response.Error!;
         }
 
-        if (response?.Error is { } error)
-        {
-            logger.LogWarning("Deezer gav fel {Code} ({Type}: {Message}) för {Query}", error.Code, error.Type, error.Message, query.Value);
-            return error.Code == DeezerError.QuotaExceeded ? MusicErrors.Busy : MusicErrors.Unavailable;
-        }
-
-        return (response?.Data ?? [])
+        return (response.Value.Data ?? [])
             .Where(track => track.Readable && !string.IsNullOrEmpty(track.Preview))
             .Select(ToTrack)
             .OfType<Track>()
@@ -44,8 +33,65 @@ public sealed class DeezerMusicCatalog(HttpClient http, ILogger<DeezerMusicCatal
             .ToList();
     }
 
+    public async Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Hämtar klipp från Deezer: {TrackId}", trackId);
+
+        var response = await GetAsync<DeezerTrackResponse>($"track/{trackId}", MusicErrors.TrackUnavailable, cancellationToken);
+        if (!response.IsSuccess)
+        {
+            return response.Error!;
+        }
+
+        var track = response.Value;
+        return track is
+        {
+            Readable: true,
+            Title: { } title,
+            Preview: { Length: > 0 } preview,
+            Artist.Name: { } artist,
+            Album: { Title: { } album, CoverXl: { } cover },
+        }
+            ? new PlayableTrack(track.Id, title, artist, album, cover, preview)
+            : MusicErrors.TrackUnavailable;
+    }
+
     private static Track? ToTrack(DeezerTrack track) =>
-        track is { Artist: { } artist, Album: { CoverMedium: { } cover } album }
-            ? new Track(track.Id, track.Title, artist.Name, album.Title, cover, track.ExplicitLyrics)
+        track is { Artist.Name: { } artist, Album: { Title: { } album, CoverMedium: { } cover } }
+            ? new Track(track.Id, track.Title, artist, album, cover, track.ExplicitLyrics)
             : null;
+
+    // Bryts ut redan vid andra anropet, eftersom regeln om fel i svar med status 200 måste vara likadan för varje anrop till Deezer.
+    private async Task<Result<T>> GetAsync<T>(string path, Error noData, CancellationToken cancellationToken)
+        where T : class, IDeezerResponse
+    {
+        T? response;
+        try
+        {
+            response = await http.GetFromJsonAsync<T>(path, JsonOptions, cancellationToken);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or JsonException)
+        {
+            logger.LogWarning(exception, "Deezer svarade inte på {Path}", path);
+            return MusicErrors.Unavailable;
+        }
+
+        if (response is null)
+        {
+            return MusicErrors.Unavailable;
+        }
+
+        if (response.Error is { } error)
+        {
+            logger.LogWarning("Deezer gav fel {Code} ({Type}: {Message}) för {Path}", error.Code, error.Type, error.Message, path);
+            return error.Code switch
+            {
+                DeezerError.QuotaExceeded => MusicErrors.Busy,
+                DeezerError.NoData => noData,
+                _ => MusicErrors.Unavailable,
+            };
+        }
+
+        return response;
+    }
 }

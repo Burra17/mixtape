@@ -27,4 +27,8 @@ public sealed class CachingMusicCatalog(IMusicCatalog inner, IMemoryCache cache)
 
         return result;
     }
+
+    // Går alltid till källan, eftersom klipplänken slutar gälla efter 15 minuter.
+    public Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default) =>
+        inner.GetPlayableTrackAsync(trackId, cancellationToken);
 }

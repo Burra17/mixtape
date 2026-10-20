@@ -74,5 +74,8 @@ public sealed class SearchHubTests
 
         public Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default) =>
             Task.FromResult(Result<IReadOnlyList<Track>>.Success(Tracks));
+
+        public Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException("Hubben spelar inga klipp än.");
     }
 }
