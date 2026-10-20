@@ -1,6 +1,9 @@
 import { HubConnectionBuilder, HubConnectionState, LogLevel } from '@microsoft/signalr';
 import { useConnectionStore } from '../../store/connectionStore.ts';
-import { clientEvents, serverMethods, type HostSession, type HubResponse } from './hubContract.ts';
+import { useLobbyStore } from '../../store/lobbyStore.ts';
+import { usePlayerStore } from '../../store/playerStore.ts';
+import { clearPlayerSession } from '../storage/playerSessionStorage.ts';
+import { clientEvents, serverMethods, type HostSession, type HubResponse, type LobbyState, type PlayerSession } from './hubContract.ts';
 
 // En enda anslutning för hela appen. Adressen är relativ, så Vite skickar den vidare till backenden.
 const connection = new HubConnectionBuilder().withUrl('/gamehub').withAutomaticReconnect().configureLogging(LogLevel.Warning).build();
@@ -11,6 +14,14 @@ connection.onreconnecting(() => setStatus('reconnecting'));
 connection.onreconnected(() => setStatus('connected'));
 connection.onclose(() => setStatus('disconnected'));
 connection.on(clientEvents.pong, receivePong);
+connection.on(clientEvents.lobbyUpdated, (lobby: LobbyState) => useLobbyStore.getState().receiveLobby(lobby));
+// Den borttagna mobilen lämnar själv rummets grupp, eftersom servern inte vet vilken anslutning den har.
+connection.on(clientEvents.removedFromRoom, () => {
+  const { session, removedFromRoom } = usePlayerStore.getState();
+  if (session) void leaveRoom(session);
+  clearPlayerSession();
+  removedFromRoom();
+});
 
 let starting: Promise<boolean> | null = null;
 
@@ -42,3 +53,11 @@ export const createRoom = (previous: HostSession | null) => connection.invoke<Hu
 export const resumeRoom = (session: HostSession) => connection.invoke<HubResponse<HostSession>>(serverMethods.resumeRoom, session);
 
 export const getJoinAddresses = () => connection.invoke<string[]>(serverMethods.getJoinAddresses);
+
+export const joinRoom = (roomCode: string, name: string) => connection.invoke<HubResponse<PlayerSession>>(serverMethods.joinRoom, roomCode, name);
+
+// Mobilen går tillbaka till /join oavsett utfall, så ett fel här har ingen att visas för.
+export const leaveRoom = (session: PlayerSession) => connection.invoke(serverMethods.leaveRoom, session).catch(() => undefined);
+
+export const removePlayer = (host: HostSession, playerId: string) =>
+  connection.invoke(serverMethods.removePlayer, host, playerId).catch(() => undefined);

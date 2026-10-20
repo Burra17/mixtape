@@ -4,10 +4,15 @@ export const serverMethods = {
   createRoom: 'CreateRoom',
   resumeRoom: 'ResumeRoom',
   getJoinAddresses: 'GetJoinAddresses',
+  joinRoom: 'JoinRoom',
+  leaveRoom: 'LeaveRoom',
+  removePlayer: 'RemovePlayer',
 } as const;
 
 export const clientEvents = {
   pong: 'Pong',
+  lobbyUpdated: 'LobbyUpdated',
+  removedFromRoom: 'RemovedFromRoom',
 } as const;
 
 // Error i Domain/Common.
@@ -26,4 +31,28 @@ export type HubResponse<T> = {
 export type HostSession = {
   roomCode: string;
   hostToken: string;
+};
+
+// PlayerSession i Application/Rooms.
+export type PlayerSession = {
+  roomCode: string;
+  playerId: string;
+  playerToken: string;
+};
+
+// LobbyPlayer i Application/Rooms. colorIndex är 1–8, en plats i paletten player-1 till player-8.
+export type LobbyPlayer = {
+  id: string;
+  name: string;
+  colorIndex: number;
+};
+
+// LobbyState i Application/Rooms, som kommer med LobbyUpdated.
+export type LobbyState = {
+  roomCode: string;
+  revision: number;
+  players: LobbyPlayer[];
+  minPlayers: number;
+  maxPlayers: number;
+  canStart: boolean;
 };
