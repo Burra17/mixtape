@@ -6,9 +6,11 @@ import { useHostStore } from '../../../store/hostStore.ts';
 
 const { show, setJoinAddresses, setError } = useHostStore.getState();
 
+const FAILED = 'Något gick fel. Försök igen.';
+
 const enterLobby = (response: HubResponse<HostSession>) => {
   if (!response.value) {
-    setError(response.error?.message ?? 'Något gick fel. Försök igen.');
+    setError(response.error?.message ?? FAILED);
     return;
   }
 
@@ -18,7 +20,13 @@ const enterLobby = (response: HubResponse<HostSession>) => {
 
 // Ansluter storskärmen och tar reda på om det finns ett sparat rum att fortsätta med.
 const checkSavedRoom = async () => {
-  await startConnection();
+  // Utan anslutning går det inte att veta om det sparade rummet finns kvar, så det sparas till nästa försök.
+  if (!(await startConnection())) {
+    show('start', null);
+    setError('Kunde inte nå servern. Ladda om sidan när backenden är igång.');
+    return;
+  }
+
   getJoinAddresses()
     .then(setJoinAddresses)
     .catch(() => setJoinAddresses([]));
@@ -45,8 +53,8 @@ export const useHostRoom = () => {
   }, []);
 
   return {
-    create: () => createRoom(null).then(enterLobby, () => setError('Kunde inte nå servern. Försök igen.')),
+    create: () => createRoom(null).then(enterLobby, () => setError(FAILED)),
     resume: () => show('lobby'),
-    startOver: () => createRoom(useHostStore.getState().session).then(enterLobby, () => setError('Kunde inte nå servern. Försök igen.')),
+    startOver: () => createRoom(useHostStore.getState().session).then(enterLobby, () => setError(FAILED)),
   };
 };

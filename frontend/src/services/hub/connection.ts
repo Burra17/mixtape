@@ -12,19 +12,25 @@ connection.onreconnected(() => setStatus('connected'));
 connection.onclose(() => setStatus('disconnected'));
 connection.on(clientEvents.pong, receivePong);
 
-let starting: Promise<void> | null = null;
+let starting: Promise<boolean> | null = null;
 
-// Startar anslutningen om den inte redan är igång. Den som anropar under en pågående start får samma löfte, så att den kan vänta tills anslutningen är klar.
+// Startar anslutningen om den inte redan är igång och svarar om den är uppe. Den som anropar under en pågående start får samma löfte.
 export const startConnection = () => {
   if (connection.state === HubConnectionState.Disconnected) {
     setStatus('connecting');
     starting = connection.start().then(
-      () => setStatus('connected'),
-      () => setStatus('disconnected'),
+      () => {
+        setStatus('connected');
+        return true;
+      },
+      () => {
+        setStatus('disconnected');
+        return false;
+      },
     );
   }
 
-  return starting ?? Promise.resolve();
+  return starting ?? Promise.resolve(connection.state === HubConnectionState.Connected);
 };
 
 // Om anslutningen hinner försvinna innan svaret kommer visar statusen redan det, så felet behöver inte hanteras här.

@@ -10,11 +10,7 @@ public sealed class CreateRoomHandler(IGameRoomRepository rooms)
     {
         if (previous is not null && RoomCode.Parse(previous.RoomCode) is { } oldCode)
         {
-            var isHost = await rooms.WithRoomAsync(oldCode, room => Result<bool>.Success(room.IsHost(previous.HostToken)));
-            if (isHost.IsSuccess && isHost.Value)
-            {
-                rooms.Remove(oldCode);
-            }
+            await rooms.TryRemoveAsync(oldCode, room => room.IsHost(previous.HostToken));
         }
 
         // Koden slumpas tills den är ledig. Med 19⁴ möjliga koder och några få rum tar det nästan alltid ett försök.

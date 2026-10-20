@@ -12,7 +12,23 @@ public sealed class InMemoryGameRoomRepository : IGameRoomRepository
 
     public bool TryAdd(GameRoom room) => _rooms.TryAdd(room.Code.Value, new Entry(room));
 
-    public void Remove(RoomCode code) => _rooms.TryRemove(code.Value, out _);
+    public async Task<bool> TryRemoveAsync(RoomCode code, Func<GameRoom, bool> shouldRemove)
+    {
+        if (!_rooms.TryGetValue(code.Value, out var entry))
+        {
+            return false;
+        }
+
+        await entry.Gate.WaitAsync();
+        try
+        {
+            return shouldRemove(entry.Room) && _rooms.TryRemove(code.Value, out _);
+        }
+        finally
+        {
+            entry.Gate.Release();
+        }
+    }
 
     public async Task<Result<T>> WithRoomAsync<T>(RoomCode code, Func<GameRoom, Result<T>> action)
     {

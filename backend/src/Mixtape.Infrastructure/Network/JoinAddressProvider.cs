@@ -18,12 +18,15 @@ public sealed class JoinAddressProvider : IJoinAddressProvider
             .Select(nic => (Properties: nic.GetIPProperties(), Wireless: nic.NetworkInterfaceType == NetworkInterfaceType.Wireless80211))
             .ToList();
 
-        // Kort med en default gateway kommer först, och bland dem wifi, eftersom mobilerna sitter på wifi.
-        return candidates
-            .OrderByDescending(c => c.Properties.GatewayAddresses.Any(g => g.Address.AddressFamily == AddressFamily.InterNetwork))
-            .ThenByDescending(c => c.Wireless)
+        // Bara kort med en default gateway når samma nät som mobilerna. Saknas sådana visas resten hellre än ingenting.
+        var withGateway = candidates.Where(c => c.Properties.GatewayAddresses.Any(g => g.Address.AddressFamily == AddressFamily.InterNetwork)).ToList();
+        var chosen = withGateway.Count > 0 ? withGateway : candidates;
+
+        // Wifi först, eftersom mobilerna sitter på wifi. 169.254.* är en adress Windows ger sig själv när inget nät svarar.
+        return chosen
+            .OrderByDescending(c => c.Wireless)
             .SelectMany(c => c.Properties.UnicastAddresses)
-            .Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork)
+            .Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork && !a.Address.ToString().StartsWith("169.254.", StringComparison.Ordinal))
             .Select(a => a.Address.ToString())
             .Distinct()
             .ToList();

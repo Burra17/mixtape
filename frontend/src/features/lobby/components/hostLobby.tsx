@@ -34,18 +34,21 @@ export const HostLobby = () => {
 
         <Card>
           <Label>Gå med</Label>
-          <div className='self-start bg-white p-4 text-ink'>
+          <div className='self-start bg-card p-4 text-ink'>
             <QRCodeSVG value={url} size={240} fgColor='currentColor' bgColor='transparent' title={`QR-kod till ${url}`} />
           </div>
-          <button
-            type='button'
-            onClick={nextAddress}
-            disabled={!hasAlternatives}
-            className='self-start text-left font-semibold text-muted underline-offset-4 focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-ink enabled:hover:underline'
-          >
-            {url.replace('http://', '')}
-            {hasAlternatives && ' · byt adress'}
-          </button>
+          {hasAlternatives ? (
+            <button
+              type='button'
+              onClick={nextAddress}
+              aria-label={`Byt adress, nu ${address}`}
+              className='self-start text-left font-semibold text-muted underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-ink'
+            >
+              {url.replace('http://', '')} · byt adress
+            </button>
+          ) : (
+            <p className='font-semibold text-muted'>{url.replace('http://', '')}</p>
+          )}
         </Card>
       </main>
     </div>

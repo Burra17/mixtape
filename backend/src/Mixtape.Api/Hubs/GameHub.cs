@@ -15,6 +15,12 @@ public sealed class GameHub(CreateRoomHandler createRoom, ResumeRoomHandler resu
     // previous skickas med vid "Nytt spel", så att det gamla rummet tas bort.
     public async Task<HubResponse<HostSession>> CreateRoom(HostSession? previous)
     {
+        // Anslutningen lämnar det gamla rummets grupp, så att den inte får händelser från ett rum som inte finns.
+        if (previous is not null)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, previous.RoomCode);
+        }
+
         var result = await createRoom.HandleAsync(previous);
         if (result.IsSuccess)
         {
