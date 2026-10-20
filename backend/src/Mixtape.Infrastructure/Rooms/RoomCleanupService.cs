@@ -14,10 +14,18 @@ public sealed class RoomCleanupService(CleanUpRoomsHandler cleanUp, TimeProvider
         using var timer = new PeriodicTimer(Interval, time);
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
-            var removed = await cleanUp.HandleAsync();
-            if (removed > 0)
+            // Ett fel i ett varv loggas. Utan try stoppar ett undantag i en BackgroundService hela backenden mitt i spelet.
+            try
             {
-                logger.LogInformation("Städade bort {Count} tomma rum", removed);
+                var removed = await cleanUp.HandleAsync();
+                if (removed > 0)
+                {
+                    logger.LogInformation("Städade bort {Count} tomma rum", removed);
+                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "Städningen av rum misslyckades");
             }
         }
     }

@@ -22,7 +22,13 @@ public sealed class InMemoryGameRoomRepository : IGameRoomRepository
         await entry.Gate.WaitAsync();
         try
         {
-            return shouldRemove(entry.Room) && _rooms.TryRemove(code.Value, out _);
+            if (entry.Removed || !shouldRemove(entry.Room) || !_rooms.TryRemove(code.Value, out _))
+            {
+                return false;
+            }
+
+            entry.Removed = true;
+            return true;
         }
         finally
         {
@@ -54,7 +60,7 @@ public sealed class InMemoryGameRoomRepository : IGameRoomRepository
         await entry.Gate.WaitAsync();
         try
         {
-            return action(entry.Room);
+            return entry.Removed ? RoomErrors.NotFound : action(entry.Room);
         }
         finally
         {
@@ -66,5 +72,8 @@ public sealed class InMemoryGameRoomRepository : IGameRoomRepository
     private sealed record Entry(GameRoom Room)
     {
         public SemaphoreSlim Gate { get; } = new(1, 1);
+
+        // Sätts med låset när rummet tas bort. Ett anrop som redan väntade på låset ska då få NotFound, inte ändra ett rum som inte finns längre.
+        public bool Removed { get; set; }
     }
 }

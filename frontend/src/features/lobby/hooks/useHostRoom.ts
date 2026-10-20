@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { checkRoom, createRoom, getJoinAddresses, resumeRoom, startConnection } from '../../../services/hub/connection.ts';
-import type { HostSession, HubResponse } from '../../../services/hub/hubContract.ts';
+import type { HostSession, HubError, HubResponse } from '../../../services/hub/hubContract.ts';
 import { clearHostSession, loadHostSession, saveHostSession } from '../../../services/storage/hostSessionStorage.ts';
 import { useConnectionStore } from '../../../store/connectionStore.ts';
 import { useHostStore } from '../../../store/hostStore.ts';
@@ -17,6 +17,16 @@ const enterLobby = (response: HubResponse<HostSession>) => {
 
   saveHostSession(response.value);
   show('lobby', response.value);
+};
+
+// Bara ett rum som inte finns längre ger meddelandet om det stängda rummet. Andra fel visas som de är.
+const closedOrFailed = (error: HubError) => {
+  if (error.code === 'room.not_found') {
+    showRoomClosed();
+  } else {
+    show('start', null);
+    setError(error.message);
+  }
 };
 
 // Tar reda på om det finns ett sparat rum att fortsätta med. Körs när anslutningen kommit upp första gången.
@@ -36,7 +46,7 @@ const checkSavedRoom = async () => {
     show('resumable', response.value);
   } else if (response?.error) {
     clearHostSession();
-    showRoomClosed();
+    closedOrFailed(response.error);
   } else {
     // Utan svar går det inte att veta om rummet finns kvar, så det sparade rummet ligger kvar till nästa försök.
     show('start', null);
@@ -48,7 +58,7 @@ const resumeSilently = async (session: HostSession) => {
   const response = await resumeRoom(session).catch(() => null);
   if (response?.error) {
     clearHostSession();
-    showRoomClosed();
+    closedOrFailed(response.error);
   }
 };
 

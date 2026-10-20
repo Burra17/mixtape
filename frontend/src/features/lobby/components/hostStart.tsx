@@ -34,7 +34,7 @@ export const HostStart = ({ onCreate, onResume, onStartOver }: HostStartProps) =
           <>
             <h1 className='text-[clamp(3rem,9vw,8rem)] text-display'>Nytt spel</h1>
             {roomClosed && (
-              <p role='status' className='self-start bg-signal px-4 py-2 text-[clamp(1.25rem,2vw,1.75rem)] font-bold'>
+              <p role='status' className='self-start border-2 border-ink px-4 py-2 text-[clamp(1.25rem,2vw,1.75rem)] font-bold'>
                 Det förra rummet har stängts.
               </p>
             )}
