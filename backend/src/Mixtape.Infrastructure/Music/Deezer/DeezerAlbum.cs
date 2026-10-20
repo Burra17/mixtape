@@ -1,4 +1,4 @@
 namespace Mixtape.Infrastructure.Music.Deezer;
 
-// CoverMedium är 250 px, lagom för träfflistan i mobilen.
-internal sealed record DeezerAlbum(string Title, string? CoverMedium);
+// CoverMedium (250 px) räcker för träfflistan i mobilen. CoverXl (1000 px) visas på storskärmen.
+internal sealed record DeezerAlbum(string Title, string? CoverMedium, string? CoverXl);

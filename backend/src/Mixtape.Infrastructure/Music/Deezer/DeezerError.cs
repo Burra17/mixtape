@@ -1,7 +1,10 @@
 namespace Mixtape.Infrastructure.Music.Deezer;
 
-// Code 4 betyder enligt tredjepartskällor att för många anrop gjorts. 800 betyder att inget fanns.
 internal sealed record DeezerError(string? Type, string? Message, int Code)
 {
+    // Enligt tredjepartskällor, inte bekräftat av Deezer.
     public const int QuotaExceeded = 4;
+
+    // Bekräftat: en låt som inte finns.
+    public const int NoData = 800;
 }

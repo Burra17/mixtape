@@ -64,5 +64,8 @@ public sealed class SearchTracksHandlerTests
             Queries.Add(query.Value);
             return Task.FromResult(Result<IReadOnlyList<Track>>.Success([]));
         }
+
+        public Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException("Sökningen hämtar inga klipp.");
     }
 }

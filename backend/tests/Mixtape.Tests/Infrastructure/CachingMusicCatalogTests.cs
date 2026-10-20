@@ -59,6 +59,16 @@ public sealed class CachingMusicCatalogTests
         Assert.That(_inner.Calls, Is.EqualTo(1));
     }
 
+    [Test]
+    public async Task GetPlayableTrack_SameTrackTwice_GoesToTheSourceEachTime()
+    {
+        var first = await _catalog.GetPlayableTrackAsync(44112901);
+        var second = await _catalog.GetPlayableTrackAsync(44112901);
+
+        Assert.That(_inner.Calls, Is.EqualTo(2));
+        Assert.That(second.Value.PreviewUrl, Is.Not.EqualTo(first.Value.PreviewUrl));
+    }
+
     private static SearchQuery Query(string text) => SearchQuery.Create(text).Value;
 
     private sealed class CountingCatalog : IMusicCatalog
@@ -73,6 +83,12 @@ public sealed class CachingMusicCatalogTests
         {
             Calls++;
             return Task.FromResult(Next is { } error ? Result<IReadOnlyList<Track>>.Failure(error) : Result<IReadOnlyList<Track>>.Success(Tracks));
+        }
+
+        public Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default)
+        {
+            Calls++;
+            return Task.FromResult(Result<PlayableTrack>.Success(new PlayableTrack(trackId, "Jag kommer", "Veronica Maggio", "Satan i gatan", "xl", $"klipp-{Calls}")));
         }
     }
 }
