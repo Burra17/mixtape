@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Button } from '../../../shared/components/button.tsx';
 import { Label } from '../../../shared/components/label.tsx';
+import { useIsConnected } from '../../../store/connectionStore.ts';
 import { useJoinRoom } from '../hooks/useJoinRoom.ts';
 
 const fieldClasses =
@@ -16,6 +17,7 @@ type JoinFormProps = {
 
 export const JoinForm = ({ roomFromLink, notice }: JoinFormProps) => {
   const { join, error, busy } = useJoinRoom();
+  const isConnected = useIsConnected();
   const [roomCode, setRoomCode] = useState(roomFromLink ?? '');
   const [name, setName] = useState('');
 
@@ -64,7 +66,7 @@ export const JoinForm = ({ roomFromLink, notice }: JoinFormProps) => {
         )}
 
         <div>
-          <Button type='submit' variant='primary' disabled={busy || roomCode.trim().length !== CODE_LENGTH || name.trim() === ''}>
+          <Button type='submit' variant='primary' disabled={busy || !isConnected || roomCode.trim().length !== CODE_LENGTH || name.trim() === ''}>
             Gå med
           </Button>
         </div>

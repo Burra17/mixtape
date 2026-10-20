@@ -2,6 +2,7 @@ import { removePlayer } from '../../../services/hub/connection.ts';
 import { Button } from '../../../shared/components/button.tsx';
 import { Card } from '../../../shared/components/card.tsx';
 import { Label } from '../../../shared/components/label.tsx';
+import { useIsConnected } from '../../../store/connectionStore.ts';
 import { useHostStore } from '../../../store/hostStore.ts';
 import { useLobbyStore } from '../../../store/lobbyStore.ts';
 import { PlayerChip } from './playerChip.tsx';
@@ -10,6 +11,7 @@ import { PlayerChip } from './playerChip.tsx';
 export const HostPlayerList = () => {
   const session = useHostStore((state) => state.session);
   const lobby = useLobbyStore((state) => state.lobby);
+  const isConnected = useIsConnected();
 
   if (!session || lobby?.roomCode !== session.roomCode) return null;
 
@@ -27,11 +29,16 @@ export const HostPlayerList = () => {
               <button
                 type='button'
                 onClick={() => void removePlayer(session, player.id)}
-                aria-label={`Ta bort ${player.name}`}
+                disabled={!isConnected}
+                aria-label={`Ta bort ${player.name}${player.isConnected ? '' : ', borta'}`}
                 title='Ta bort'
-                className='w-full text-left decoration-2 hover:line-through focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-ink'
+                className='flex w-full items-center gap-3 text-left decoration-2 hover:line-through focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-ink disabled:cursor-not-allowed'
               >
-                <PlayerChip player={player} />
+                {/* Nedtoningen syns dåligt på avstånd, så ordet "borta" står bredvid. */}
+                <span className={player.isConnected ? '' : 'opacity-40'}>
+                  <PlayerChip player={player} />
+                </span>
+                {!player.isConnected && <span className='text-[0.7em] font-bold tracking-label text-muted uppercase'>borta</span>}
               </button>
             </li>
           ))}

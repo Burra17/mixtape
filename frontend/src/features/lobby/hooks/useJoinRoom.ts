@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { joinRoom, startConnection } from '../../../services/hub/connection.ts';
 import { savePlayerSession } from '../../../services/storage/playerSessionStorage.ts';
@@ -9,10 +9,6 @@ export const useJoinRoom = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    void startConnection();
-  }, []);
 
   const join = async (roomCode: string, name: string) => {
     setBusy(true);

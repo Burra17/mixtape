@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { createRoom, getJoinAddresses, resumeRoom, startConnection } from '../../../services/hub/connection.ts';
 import type { HostSession, HubResponse } from '../../../services/hub/hubContract.ts';
 import { clearHostSession, loadHostSession, saveHostSession } from '../../../services/storage/hostSessionStorage.ts';
+import { useConnectionStore } from '../../../store/connectionStore.ts';
 import { useHostStore } from '../../../store/hostStore.ts';
 
 const { show, setJoinAddresses, setError } = useHostStore.getState();
@@ -18,15 +19,8 @@ const enterLobby = (response: HubResponse<HostSession>) => {
   show('lobby', response.value);
 };
 
-// Ansluter storskärmen och tar reda på om det finns ett sparat rum att fortsätta med.
+// Tar reda på om det finns ett sparat rum att fortsätta med. Körs när anslutningen kommit upp första gången.
 const checkSavedRoom = async () => {
-  // Utan anslutning går det inte att veta om det sparade rummet finns kvar, så det sparas till nästa försök.
-  if (!(await startConnection())) {
-    show('start', null);
-    setError('Kunde inte nå servern. Ladda om sidan när backenden är igång.');
-    return;
-  }
-
   getJoinAddresses()
     .then(setJoinAddresses)
     .catch(() => setJoinAddresses([]));
@@ -46,11 +40,33 @@ const checkSavedRoom = async () => {
   }
 };
 
+// Sidan har redan fått sitt klick och ljudet är upplåst, så en återanslutning utan omladdning tar tillbaka rummet utan "Fortsätt".
+const resumeSilently = async (session: HostSession) => {
+  const response = await resumeRoom(session).catch(() => null);
+  if (response?.error) {
+    clearHostSession();
+    show('start', null);
+    setError(response.error.message);
+  }
+};
+
 // Flödet för storskärmen före spelet: skapa ett rum, fortsätta med det sparade eller kasta det och börja om.
 export const useHostRoom = () => {
+  const epoch = useConnectionStore((state) => state.epoch);
+  const handledEpoch = useRef(0);
+
   useEffect(() => {
-    void checkSavedRoom();
+    void startConnection();
   }, []);
+
+  useEffect(() => {
+    if (epoch === 0 || epoch === handledEpoch.current) return;
+    handledEpoch.current = epoch;
+
+    const { screen, session } = useHostStore.getState();
+    if (screen === 'checking') void checkSavedRoom();
+    else if (screen === 'lobby' && session) void resumeSilently(session);
+  }, [epoch]);
 
   return {
     create: () => createRoom(null).then(enterLobby, () => setError(FAILED)),
