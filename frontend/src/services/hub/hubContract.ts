@@ -9,6 +9,7 @@ export const serverMethods = {
   rejoinRoom: 'RejoinRoom',
   leaveRoom: 'LeaveRoom',
   removePlayer: 'RemovePlayer',
+  search: 'Search',
 } as const;
 
 export const clientEvents = {
@@ -62,4 +63,14 @@ export type LobbyState = {
   canStart: boolean;
   // Storskärmen är borta och spelet står still.
   isPaused: boolean;
+};
+
+// Track i Application/Music. Ingen klipplänk, eftersom den slutar gälla efter 15 minuter och hämtas färsk inför uppspelningen.
+export type Track = {
+  id: number;
+  title: string;
+  artist: string;
+  album: string;
+  coverUrl: string;
+  isExplicit: boolean;
 };

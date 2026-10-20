@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Mixtape.Application.Connections;
+using Mixtape.Application.Music;
 using Mixtape.Application.Rooms;
 
 namespace Mixtape.Application;
@@ -18,6 +19,7 @@ public static class DependencyInjection
         services.AddTransient<RemovePlayerHandler>();
         services.AddTransient<DisconnectHandler>();
         services.AddTransient<CleanUpRoomsHandler>();
+        services.AddTransient<SearchTracksHandler>();
         return services;
     }
 }

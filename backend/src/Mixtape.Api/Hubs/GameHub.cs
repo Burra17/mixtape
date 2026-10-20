@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using Mixtape.Application.Connections;
+using Mixtape.Application.Music;
 using Mixtape.Application.Network;
 using Mixtape.Application.Rooms;
 
@@ -14,6 +15,7 @@ public sealed class GameHub(
     LeaveRoomHandler leaveRoom,
     RemovePlayerHandler removePlayer,
     DisconnectHandler disconnect,
+    SearchTracksHandler searchTracks,
     IConnectionRegistry connections,
     IJoinAddressProvider joinAddresses) : Hub<IGameClient>
 {
@@ -70,6 +72,12 @@ public sealed class GameHub(
     public IReadOnlyList<string> GetJoinAddresses()
     {
         return joinAddresses.GetAddresses();
+    }
+
+    // Bara spelare i ett rum får söka. Handlern slår upp anslutningen, så klienten behöver inte skicka med sin token.
+    public async Task<HubResponse<IReadOnlyList<Track>>> Search(string? query)
+    {
+        return HubResponse<IReadOnlyList<Track>>.From(await searchTracks.HandleAsync(Context.ConnectionId, query));
     }
 
     public async Task<HubResponse<PlayerSession>> JoinRoom(string? roomCode, string? name)
