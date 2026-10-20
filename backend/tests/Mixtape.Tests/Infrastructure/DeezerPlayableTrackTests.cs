@@ -7,7 +7,7 @@ namespace Mixtape.Tests.Infrastructure;
 public sealed class DeezerPlayableTrackTests
 {
     [Test]
-    public async Task GetPlayableTrack_MapsTheSavedResponseWithBigCoverAndPreview()
+    public async Task GetPlayableTrack_WithSavedResponse_ReturnsBigCoverAndFreshPreview()
     {
         var json = await File.ReadAllTextAsync(Path.Combine(TestContext.CurrentContext.TestDirectory, "Fixtures", "deezer-track-44112901.json"));
         var (catalog, handler) = CreateCatalog(FakeHttpHandler.Json(json));
@@ -36,6 +36,7 @@ public sealed class DeezerPlayableTrackTests
     [TestCase("""{"id":2,"readable":false,"title":"Spärrad","preview":"https://p/a.mp3","artist":{"name":"A"},"album":{"title":"X","cover_xl":"xl"}}""")]
     [TestCase("""{"id":2,"readable":true,"title":"Utan klipp","preview":"","artist":{"name":"A"},"album":{"title":"X","cover_xl":"xl"}}""")]
     [TestCase("""{"id":2,"readable":true,"title":"Utan omslag","preview":"https://p/a.mp3","artist":{"name":"A"},"album":{"title":"X"}}""")]
+    [TestCase("""{"id":2,"readable":true,"title":"Utan artistnamn","preview":"https://p/a.mp3","artist":{},"album":{"title":"X","cover_xl":"xl"}}""")]
     public async Task GetPlayableTrack_NotPlayable_ReturnsTrackUnavailable(string json)
     {
         var (catalog, _) = CreateCatalog(FakeHttpHandler.Json(json));
@@ -62,16 +63,6 @@ public sealed class DeezerPlayableTrackTests
         var (catalog, _) = CreateCatalog(new FakeHttpHandler(_ => throw new HttpRequestException("nere")));
 
         var result = await catalog.GetPlayableTrackAsync(2);
-
-        Assert.That(result.Error, Is.EqualTo(MusicErrors.Unavailable));
-    }
-
-    [Test]
-    public async Task Search_NoDataError_IsUnavailableNotTrackUnavailable()
-    {
-        var (catalog, _) = CreateCatalog(FakeHttpHandler.Json("""{"error":{"type":"DataException","message":"no data","code":800}}"""));
-
-        var result = await catalog.SearchAsync(SearchQuery.Create("kent").Value);
 
         Assert.That(result.Error, Is.EqualTo(MusicErrors.Unavailable));
     }

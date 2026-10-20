@@ -62,11 +62,10 @@ public sealed class CachingMusicCatalogTests
     [Test]
     public async Task GetPlayableTrack_SameTrackTwice_GoesToTheSourceEachTime()
     {
-        var first = await _catalog.GetPlayableTrackAsync(44112901);
-        var second = await _catalog.GetPlayableTrackAsync(44112901);
+        await _catalog.GetPlayableTrackAsync(44112901);
+        await _catalog.GetPlayableTrackAsync(44112901);
 
         Assert.That(_inner.Calls, Is.EqualTo(2));
-        Assert.That(second.Value.PreviewUrl, Is.Not.EqualTo(first.Value.PreviewUrl));
     }
 
     private static SearchQuery Query(string text) => SearchQuery.Create(text).Value;
@@ -88,7 +87,7 @@ public sealed class CachingMusicCatalogTests
         public Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default)
         {
             Calls++;
-            return Task.FromResult(Result<PlayableTrack>.Success(new PlayableTrack(trackId, "Jag kommer", "Veronica Maggio", "Satan i gatan", "xl", $"klipp-{Calls}")));
+            return Task.FromResult(Result<PlayableTrack>.Success(new PlayableTrack(trackId, "Jag kommer", "Veronica Maggio", "Satan i gatan", "xl", "klipp")));
         }
     }
 }

@@ -43,17 +43,25 @@ public sealed class DeezerMusicCatalog(HttpClient http, ILogger<DeezerMusicCatal
             return response.Error!;
         }
 
-        return response.Value is { Readable: true, Title: { } title, Preview: { Length: > 0 } preview, Artist: { } artist, Album: { CoverXl: { } cover } album }
-            ? new PlayableTrack(response.Value.Id, title, artist.Name, album.Title, cover, preview)
+        var track = response.Value;
+        return track is
+        {
+            Readable: true,
+            Title: { } title,
+            Preview: { Length: > 0 } preview,
+            Artist.Name: { } artist,
+            Album: { Title: { } album, CoverXl: { } cover },
+        }
+            ? new PlayableTrack(track.Id, title, artist, album, cover, preview)
             : MusicErrors.TrackUnavailable;
     }
 
     private static Track? ToTrack(DeezerTrack track) =>
-        track is { Artist: { } artist, Album: { CoverMedium: { } cover } album }
-            ? new Track(track.Id, track.Title, artist.Name, album.Title, cover, track.ExplicitLyrics)
+        track is { Artist.Name: { } artist, Album: { Title: { } album, CoverMedium: { } cover } }
+            ? new Track(track.Id, track.Title, artist, album, cover, track.ExplicitLyrics)
             : null;
 
-    // Gemensamt för alla anrop: nätverksfel och Deezers felobjekt i ett svar med status 200 blir Result-fel. noData är vad koden 800 betyder för anroparen.
+    // Bryts ut redan vid andra anropet, eftersom regeln om fel i svar med status 200 måste vara likadan för varje anrop till Deezer.
     private async Task<Result<T>> GetAsync<T>(string path, Error noData, CancellationToken cancellationToken)
         where T : class, IDeezerResponse
     {

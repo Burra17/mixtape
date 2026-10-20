@@ -67,6 +67,16 @@ public sealed class DeezerMusicCatalogTests
     }
 
     [Test]
+    public async Task Search_NoDataError_ReturnsUnavailableNotTrackUnavailable()
+    {
+        var (catalog, _) = CreateCatalog(FakeHttpHandler.Json("""{"error":{"type":"DataException","message":"no data","code":800}}"""));
+
+        var result = await catalog.SearchAsync(VeronicaMaggio);
+
+        Assert.That(result.Error, Is.EqualTo(MusicErrors.Unavailable));
+    }
+
+    [Test]
     public async Task Search_WhenTheNetworkFails_ReturnsUnavailable()
     {
         var (catalog, _) = CreateCatalog(new FakeHttpHandler(_ => throw new HttpRequestException("nere")));
