@@ -25,10 +25,16 @@ const rejoin = async (session: PlayerSession) => {
     clearPlayerSession();
     const { roomClosed, removedFromRoom } = usePlayerStore.getState();
     if (response.error.code === 'room.not_found') roomClosed();
-    else removedFromRoom();
+    else removedFromRoom(session.roomCode);
   }
 
   return false;
+};
+
+// Formuläret ska visa rummet mobilen togs bort från, och inget rum alls om det har stängts.
+const joinPath = () => {
+  const { lastRoomCode } = usePlayerStore.getState();
+  return lastRoomCode ? `/join?room=${lastRoomCode}` : '/join';
 };
 
 // Kopplar mobilen till sin plats igen varje gång anslutningen kommer upp: vid sidladdning, efter en återanslutning och när sidan blir synlig.
@@ -64,6 +70,7 @@ export const usePlayerRejoin = (roomFromLink: string | null) => {
     void rejoin(saved).then((ok) => {
       setRejoining(false);
       if (ok && pathname !== '/play') void navigate('/play');
+      else if (!ok && !usePlayerStore.getState().session && pathname === '/join') void navigate(joinPath(), { replace: true });
     });
   }, [epoch, roomFromLink, pathname, navigate]);
 

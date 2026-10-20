@@ -29,7 +29,7 @@ connection.on(clientEvents.removedFromRoom, () => {
   const { session, removedFromRoom } = usePlayerStore.getState();
   if (session) void leaveRoom(session);
   clearPlayerSession();
-  removedFromRoom();
+  removedFromRoom(session?.roomCode);
 });
 
 let wanted = false;

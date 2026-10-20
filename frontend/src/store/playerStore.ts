@@ -11,7 +11,7 @@ type PlayerState = {
   notice: string | null;
   joined: (session: PlayerSession) => void;
   left: () => void;
-  removedFromRoom: () => void;
+  removedFromRoom: (roomCode?: string) => void;
   roomClosed: () => void;
 };
 
@@ -22,7 +22,9 @@ export const usePlayerStore = create<PlayerState>()((set) => ({
   notice: null,
   joined: (session) => set({ session, sessionEpoch: useConnectionStore.getState().epoch, lastRoomCode: session.roomCode, notice: null }),
   left: () => set({ session: null, notice: null }),
-  removedFromRoom: () => set({ session: null, notice: 'Du togs bort från rummet.' }),
+  // roomCode skickas med när mobilen fick beskedet först vid återanslutningen, efter en omladdning som tömt minnet.
+  removedFromRoom: (roomCode) =>
+    set((state) => ({ session: null, lastRoomCode: roomCode ?? state.lastRoomCode, notice: 'Du togs bort från rummet.' })),
   // Koden fylls inte i igen, eftersom rummet inte finns längre.
   roomClosed: () => set({ session: null, lastRoomCode: null, notice: 'Rummet har stängts.' }),
 }));
