@@ -1,5 +1,6 @@
 using Mixtape.Application.Rooms;
 using Mixtape.Domain.Rooms;
+using Mixtape.Infrastructure.Connections;
 using Mixtape.Infrastructure.Rooms;
 
 namespace Mixtape.Tests.Application;
@@ -13,16 +14,17 @@ public sealed class ResumeRoomHandlerTests
     public void SetUp()
     {
         var rooms = new InMemoryGameRoomRepository();
-        _create = new CreateRoomHandler(rooms);
-        _resume = new ResumeRoomHandler(rooms);
+        var connections = new InMemoryConnectionRegistry();
+        _create = new CreateRoomHandler(rooms, connections);
+        _resume = new ResumeRoomHandler(rooms, connections);
     }
 
     [Test]
     public async Task Handle_WithRightHostToken_ReturnsTheRoom()
     {
-        var session = (await _create.HandleAsync(null)).Value.Session;
+        var session = (await _create.HandleAsync(null, "host")).Value.Session;
 
-        var result = await _resume.HandleAsync(session);
+        var result = await _resume.HandleAsync(session, "host");
 
         Assert.That(result.Value.Session, Is.EqualTo(session));
     }
@@ -30,9 +32,9 @@ public sealed class ResumeRoomHandlerTests
     [Test]
     public async Task Handle_WithWrongHostToken_ReturnsNotFound()
     {
-        var session = (await _create.HandleAsync(null)).Value.Session;
+        var session = (await _create.HandleAsync(null, "host")).Value.Session;
 
-        var result = await _resume.HandleAsync(session with { HostToken = "fel" });
+        var result = await _resume.HandleAsync(session with { HostToken = "fel" }, "host");
 
         Assert.That(result.Error, Is.EqualTo(RoomErrors.NotFound));
     }
@@ -41,7 +43,7 @@ public sealed class ResumeRoomHandlerTests
     [TestCase("inte en kod")]
     public async Task Handle_ForUnknownRoom_ReturnsNotFound(string roomCode)
     {
-        var result = await _resume.HandleAsync(new HostSession(roomCode, "token"));
+        var result = await _resume.HandleAsync(new HostSession(roomCode, "token"), "host");
 
         Assert.That(result.Error, Is.EqualTo(RoomErrors.NotFound));
     }

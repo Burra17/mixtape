@@ -87,7 +87,7 @@ public sealed class GameHubTests
 
         Assert.That(joined.Value!.PlayerToken, Has.Length.EqualTo(32));
         Assert.That(lobbies[0].Players, Is.Empty);
-        Assert.That(lobbies[^1].Players.Single(), Is.EqualTo(new LobbyPlayer(joined.Value.PlayerId, "Anna", 1)));
+        Assert.That(lobbies[^1].Players.Single(), Is.EqualTo(new LobbyPlayer(joined.Value.PlayerId, "Anna", 1, true)));
     }
 
     [Test]
@@ -164,6 +164,67 @@ public sealed class GameHubTests
         await hostSawBertil.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
         Assert.That(annaLobbies, Is.EqualTo(lobbiesBeforeBertil));
+    }
+
+    [Test]
+    public async Task RejoinRoom_AfterLostConnection_GivesBackTheSamePlace()
+    {
+        await using var host = CreateConnection();
+        var annaAway = new TaskCompletionSource();
+        var annaBack = new TaskCompletionSource();
+        host.On<LobbyState>(nameof(IGameClient.LobbyUpdated), lobby =>
+        {
+            if (lobby.Players is [{ IsConnected: false }])
+            {
+                annaAway.TrySetResult();
+            }
+            else if (annaAway.Task.IsCompleted && lobby.Players is [{ IsConnected: true }])
+            {
+                annaBack.TrySetResult();
+            }
+        });
+        await host.StartAsync();
+        var created = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
+
+        PlayerSession annaSession;
+        await using (var lostPhone = CreateConnection())
+        {
+            await lostPhone.StartAsync();
+            annaSession = (await lostPhone.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Anna")).Value!;
+        }
+
+        await annaAway.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        await using var phone = CreateConnection();
+        await phone.StartAsync();
+        var rejoined = await phone.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.RejoinRoom), annaSession);
+        await annaBack.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.That(rejoined.Value, Is.EqualTo(annaSession));
+    }
+
+    [Test]
+    public async Task HostLostConnection_PausesTheRoomForThePlayers()
+    {
+        await using var anna = CreateConnection();
+        var paused = new TaskCompletionSource();
+        anna.On<LobbyState>(nameof(IGameClient.LobbyUpdated), lobby =>
+        {
+            if (lobby.IsPaused)
+            {
+                paused.TrySetResult();
+            }
+        });
+        await anna.StartAsync();
+
+        await using (var host = CreateConnection())
+        {
+            await host.StartAsync();
+            var created = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
+            await anna.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Anna");
+        }
+
+        await paused.Task.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
     // Testservern har ingen riktig port, så klienten går via dess HTTP-hanterare med long polling.

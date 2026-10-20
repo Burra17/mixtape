@@ -22,7 +22,18 @@ public sealed class Player
     // 1–8, en plats i paletten. Färgen själv finns bara i frontenden.
     public int ColorIndex { get; }
 
+    // Platsen behålls när anslutningen tappas. Flaggan säger bara om mobilen är nåbar just nu.
+    public bool IsConnected { get; private set; } = true;
+
     internal static Player Create(PlayerName name, int colorIndex) => new(name, colorIndex);
+
+    // Ger true om flaggan ändrades, så att rummet bara räknar upp sin revision vid en verklig ändring.
+    internal bool SetConnected(bool connected)
+    {
+        var changed = IsConnected != connected;
+        IsConnected = connected;
+        return changed;
+    }
 
     // Jämför i konstant tid av samma skäl som värd-token.
     public bool HasToken(string? token) =>

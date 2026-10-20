@@ -1,6 +1,7 @@
 using Mixtape.Application.Rooms;
 using Mixtape.Domain.Common;
 using Mixtape.Domain.Rooms;
+using Mixtape.Infrastructure.Connections;
 using Mixtape.Infrastructure.Rooms;
 
 namespace Mixtape.Tests.Application;
@@ -14,7 +15,7 @@ public sealed class CreateRoomHandlerTests
     public void SetUp()
     {
         _rooms = new InMemoryGameRoomRepository();
-        _handler = new CreateRoomHandler(_rooms);
+        _handler = new CreateRoomHandler(_rooms, new InMemoryConnectionRegistry());
     }
 
     [Test]
@@ -24,7 +25,7 @@ public sealed class CreateRoomHandlerTests
 
         for (var i = 0; i < 200; i++)
         {
-            var session = (await _handler.HandleAsync(null)).Value.Session;
+            var session = (await _handler.HandleAsync(null, "host")).Value.Session;
             Assert.That(codes.Add(session.RoomCode), Is.True, session.RoomCode);
         }
     }
@@ -32,8 +33,8 @@ public sealed class CreateRoomHandlerTests
     [Test]
     public async Task Handle_GivesEachRoomItsOwnHostToken()
     {
-        var first = (await _handler.HandleAsync(null)).Value.Session;
-        var second = (await _handler.HandleAsync(null)).Value.Session;
+        var first = (await _handler.HandleAsync(null, "host")).Value.Session;
+        var second = (await _handler.HandleAsync(null, "host")).Value.Session;
 
         Assert.That(first.HostToken, Has.Length.EqualTo(32));
         Assert.That(second.HostToken, Is.Not.EqualTo(first.HostToken));
@@ -42,9 +43,9 @@ public sealed class CreateRoomHandlerTests
     [Test]
     public async Task Handle_WithPreviousSession_RemovesTheOldRoom()
     {
-        var old = (await _handler.HandleAsync(null)).Value.Session;
+        var old = (await _handler.HandleAsync(null, "host")).Value.Session;
 
-        await _handler.HandleAsync(old);
+        await _handler.HandleAsync(old, "host");
 
         Assert.That(await RoomExists(old.RoomCode), Is.False);
     }
@@ -52,9 +53,9 @@ public sealed class CreateRoomHandlerTests
     [Test]
     public async Task Handle_WithWrongHostToken_KeepsTheOldRoom()
     {
-        var old = (await _handler.HandleAsync(null)).Value.Session;
+        var old = (await _handler.HandleAsync(null, "host")).Value.Session;
 
-        await _handler.HandleAsync(old with { HostToken = "fel" });
+        await _handler.HandleAsync(old with { HostToken = "fel" }, "host");
 
         Assert.That(await RoomExists(old.RoomCode), Is.True);
     }
