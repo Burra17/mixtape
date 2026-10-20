@@ -11,6 +11,9 @@ public interface IGameRoomRepository
     // Tar bort rummet med dess lås, men bara om shouldRemove säger ja. Ger false om rummet saknas eller fick vara kvar.
     Task<bool> TryRemoveAsync(RoomCode code, Func<GameRoom, bool> shouldRemove);
 
+    // Prövar varje rum med dess lås och tar bort dem som shouldRemove säger ja till. Ger antalet borttagna.
+    Task<int> RemoveWhereAsync(Func<GameRoom, bool> shouldRemove);
+
     // Kör action med rummets lås, så att två anrop aldrig ändrar samma rum samtidigt. Ger RoomErrors.NotFound om rummet saknas.
     Task<Result<T>> WithRoomAsync<T>(RoomCode code, Func<GameRoom, Result<T>> action);
 }

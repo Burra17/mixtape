@@ -10,10 +10,13 @@ type HostState = {
   joinAddresses: string[];
   addressIndex: number;
   error: string | null;
+  // Det sparade rummet fanns inte längre, till exempel efter städningen eller en omstart. Visas ovanför "Skapa spel".
+  roomClosed: boolean;
   show: (screen: HostScreen, session?: HostSession | null) => void;
   setJoinAddresses: (addresses: string[]) => void;
   nextAddress: () => void;
   setError: (error: string | null) => void;
+  showRoomClosed: () => void;
 };
 
 export const useHostStore = create<HostState>()((set) => ({
@@ -22,8 +25,10 @@ export const useHostStore = create<HostState>()((set) => ({
   joinAddresses: [],
   addressIndex: 0,
   error: null,
-  show: (screen, session) => set((state) => ({ screen, session: session === undefined ? state.session : session, error: null })),
+  roomClosed: false,
+  show: (screen, session) => set((state) => ({ screen, session: session === undefined ? state.session : session, error: null, roomClosed: false })),
   setJoinAddresses: (joinAddresses) => set({ joinAddresses, addressIndex: 0 }),
   nextAddress: () => set((state) => ({ addressIndex: (state.addressIndex + 1) % Math.max(state.joinAddresses.length, 1) })),
   setError: (error) => set({ error }),
+  showRoomClosed: () => set({ screen: 'start', session: null, error: null, roomClosed: true }),
 }));

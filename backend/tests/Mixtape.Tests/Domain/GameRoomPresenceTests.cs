@@ -4,6 +4,8 @@ namespace Mixtape.Tests.Domain;
 
 public sealed class GameRoomPresenceTests
 {
+    private static readonly DateTimeOffset Now = new(2026, 10, 20, 20, 0, 0, TimeSpan.Zero);
+
     private GameRoom _room = null!;
 
     [SetUp]
@@ -17,7 +19,7 @@ public sealed class GameRoomPresenceTests
     {
         var anna = _room.Join("Anna").Value;
 
-        _room.Disconnect(anna.Id);
+        _room.Disconnect(anna.Id, Now);
 
         Assert.That(_room.Players, Is.EqualTo(new[] { anna }));
         Assert.That(anna.IsConnected, Is.False);
@@ -27,7 +29,7 @@ public sealed class GameRoomPresenceTests
     public void Rejoin_WithOwnToken_MarksThePlayerConnectedAgain()
     {
         var anna = _room.Join("Anna").Value;
-        _room.Disconnect(anna.Id);
+        _room.Disconnect(anna.Id, Now);
 
         var result = _room.Rejoin(anna.Token);
 
@@ -57,16 +59,16 @@ public sealed class GameRoomPresenceTests
     public void Disconnect_RemovedPlayer_ReturnsNotFound()
     {
         var anna = _room.Join("Anna").Value;
-        _room.Leave(anna.Token);
+        _room.Leave(anna.Token, Now);
 
-        Assert.That(_room.Disconnect(anna.Id).Error, Is.EqualTo(PlayerErrors.NotFound));
+        Assert.That(_room.Disconnect(anna.Id, Now).Error, Is.EqualTo(PlayerErrors.NotFound));
     }
 
     [Test]
     public void Disconnect_KeepsTheColorTaken()
     {
         var anna = _room.Join("Anna").Value;
-        _room.Disconnect(anna.Id);
+        _room.Disconnect(anna.Id, Now);
 
         Assert.That(_room.Join("Bertil").Value.ColorIndex, Is.Not.EqualTo(anna.ColorIndex));
     }
@@ -74,7 +76,7 @@ public sealed class GameRoomPresenceTests
     [Test]
     public void DisconnectHost_PausesUntilTheHostResumes()
     {
-        _room.DisconnectHost();
+        _room.DisconnectHost(Now);
         Assert.That(_room.IsPaused, Is.True);
 
         _room.ResumeHost(_room.HostToken);
@@ -84,7 +86,7 @@ public sealed class GameRoomPresenceTests
     [Test]
     public void ResumeHost_WithWrongToken_ReturnsNotFoundAndStaysPaused()
     {
-        _room.DisconnectHost();
+        _room.DisconnectHost(Now);
 
         Assert.That(_room.ResumeHost("fel").Error, Is.EqualTo(RoomErrors.NotFound));
         Assert.That(_room.IsPaused, Is.True);
@@ -100,8 +102,8 @@ public sealed class GameRoomPresenceTests
         _room.ResumeHost(_room.HostToken);
         Assert.That(_room.Revision, Is.EqualTo(afterJoin));
 
-        _room.Disconnect(anna.Id);
-        _room.DisconnectHost();
+        _room.Disconnect(anna.Id, Now);
+        _room.DisconnectHost(Now);
         Assert.That(_room.Revision, Is.EqualTo(afterJoin + 2));
     }
 }

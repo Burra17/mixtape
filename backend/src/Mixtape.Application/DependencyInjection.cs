@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddTransient<LeaveRoomHandler>();
         services.AddTransient<RemovePlayerHandler>();
         services.AddTransient<DisconnectHandler>();
+        services.AddTransient<CleanUpRoomsHandler>();
         return services;
     }
 }

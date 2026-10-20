@@ -9,6 +9,9 @@ public sealed class GameRoom
     public const int MinPlayers = 3;
     public const int MaxPlayers = 8;
 
+    // Så länge får ett rum stå helt tomt innan det städas bort.
+    public static readonly TimeSpan AbandonedAfter = TimeSpan.FromMinutes(30);
+
     private readonly List<Player> _players = [];
 
     private GameRoom(RoomCode code, string hostToken)
@@ -35,12 +38,19 @@ public sealed class GameRoom
     // Utan storskärmen står spelet still. Timrarna i #17 läser flaggan.
     public bool IsPaused => !IsHostConnected;
 
+    // När den sista anslutningen försvann, eller null så länge någon är ansluten. En lobby där alla väntar framför TV:n räknas alltså aldrig som inaktiv.
+    public DateTimeOffset? EmptySince { get; private set; }
+
+    private bool IsAnyoneConnected => IsHostConnected || _players.Any(player => player.IsConnected);
+
     // Ett nytt rum börjar i lobbyn med en egen hemlig värd-token.
     public static GameRoom Create(RoomCode code) => new(code, SecretToken.Create());
 
     // Jämför i konstant tid, så att svarstiden inte avslöjar hur stor del av en gissad token som stämde.
     public bool IsHost(string? hostToken) =>
         hostToken is not null && CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(hostToken), Encoding.UTF8.GetBytes(HostToken));
+
+    public bool IsAbandoned(DateTimeOffset now) => EmptySince is { } since && now - since >= AbandonedAfter;
 
     // Spelaren får den första lediga färgen, så att en färg som frigjorts när någon lämnat delas ut igen.
     public Result<Player> Join(string? name)
@@ -69,19 +79,23 @@ public sealed class GameRoom
         var colorIndex = Enumerable.Range(1, MaxPlayers).First(index => _players.All(player => player.ColorIndex != index));
         var joined = Player.Create(parsed.Value, colorIndex);
         _players.Add(joined);
+        EmptySince = null;
         Revision++;
         return joined;
     }
 
     // Spelaren lämnar själv och frigör sin plats och färg. Under spelet finns ingen "Lämna".
-    public Result<Player> Leave(string? playerToken)
+    // now behövs eftersom den som lämnar kan vara den sista som var ansluten.
+    public Result<Player> Leave(string? playerToken, DateTimeOffset now)
     {
         if (Phase != GamePhase.Lobby)
         {
             return RoomErrors.AlreadyStarted;
         }
 
-        return RemoveWhere(player => player.HasToken(playerToken));
+        var left = RemoveWhere(player => player.HasToken(playerToken));
+        UpdateEmptySince(now);
+        return left;
     }
 
     // Värden tar bort en spelare i lobbyn. Spelaren kan sedan gå med igen som ny.
@@ -105,7 +119,12 @@ public sealed class GameRoom
     public Result<Player> Rejoin(string? playerToken) => SetPlayerConnected(player => player.HasToken(playerToken), true);
 
     // Servern vet vilken spelare anslutningen tillhörde, så id räcker här. En spelare som redan tagits bort ger NotFound.
-    public Result<Player> Disconnect(string playerId) => SetPlayerConnected(player => player.Id == playerId, false);
+    public Result<Player> Disconnect(string playerId, DateTimeOffset now)
+    {
+        var disconnected = SetPlayerConnected(player => player.Id == playerId, false);
+        UpdateEmptySince(now);
+        return disconnected;
+    }
 
     // Närvaron nedan gäller i alla faser, precis som Rejoin, så ingen av metoderna kontrollerar fasen.
     // Storskärmen är tillbaka, efter en omladdning eller ett avbrott i wifi, och pausen hävs.
@@ -120,10 +139,22 @@ public sealed class GameRoom
         return Result.Success();
     }
 
-    public void DisconnectHost() => SetHostConnected(false);
+    public void DisconnectHost(DateTimeOffset now)
+    {
+        SetHostConnected(false);
+        UpdateEmptySince(now);
+    }
+
+    // Klockan startar när den sista anslutningen försvinner och nollställs när någon kommer tillbaka. Ett rum som redan är tomt behåller sin tid.
+    private void UpdateEmptySince(DateTimeOffset now) => EmptySince = IsAnyoneConnected ? null : EmptySince ?? now;
 
     private void SetHostConnected(bool connected)
     {
+        if (connected)
+        {
+            EmptySince = null;
+        }
+
         if (IsHostConnected != connected)
         {
             IsHostConnected = connected;
@@ -137,6 +168,11 @@ public sealed class GameRoom
         if (player is null)
         {
             return PlayerErrors.NotFound;
+        }
+
+        if (connected)
+        {
+            EmptySince = null;
         }
 
         if (player.SetConnected(connected))

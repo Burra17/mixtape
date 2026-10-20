@@ -16,6 +16,8 @@ public static class DependencyInjection
         services.AddSingleton<IGameRoomRepository, InMemoryGameRoomRepository>();
         services.AddSingleton<IJoinAddressProvider, JoinAddressProvider>();
         services.AddSingleton<IConnectionRegistry, InMemoryConnectionRegistry>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddHostedService<RoomCleanupService>();
         return services;
     }
 }

@@ -4,6 +4,8 @@ namespace Mixtape.Tests.Domain;
 
 public sealed class GameRoomTests
 {
+    private static readonly DateTimeOffset Now = new(2026, 10, 20, 20, 0, 0, TimeSpan.Zero);
+
     private GameRoom _room = null!;
 
     [SetUp]
@@ -77,7 +79,7 @@ public sealed class GameRoomTests
         _room.Join("Anna");
         var bertil = _room.Join("Bertil").Value;
         _room.Join("Cecilia");
-        _room.Leave(bertil.Token);
+        _room.Leave(bertil.Token, Now);
 
         Assert.That(_room.Join("David").Value.ColorIndex, Is.EqualTo(bertil.ColorIndex));
     }
@@ -87,7 +89,7 @@ public sealed class GameRoomTests
     {
         var anna = _room.Join("Anna").Value;
 
-        var result = _room.Leave(anna.Token);
+        var result = _room.Leave(anna.Token, Now);
 
         Assert.That(result.Value, Is.SameAs(anna));
         Assert.That(_room.Players, Is.Empty);
@@ -99,7 +101,7 @@ public sealed class GameRoomTests
     {
         _room.Join("Anna");
 
-        Assert.That(_room.Leave(token).Error, Is.EqualTo(PlayerErrors.NotFound));
+        Assert.That(_room.Leave(token, Now).Error, Is.EqualTo(PlayerErrors.NotFound));
         Assert.That(_room.Players, Has.Count.EqualTo(1));
     }
 
@@ -107,7 +109,7 @@ public sealed class GameRoomTests
     public void Leave_FreesTheName()
     {
         var anna = _room.Join("Anna").Value;
-        _room.Leave(anna.Token);
+        _room.Leave(anna.Token, Now);
 
         Assert.That(_room.Join("Anna").IsSuccess, Is.True);
     }
@@ -155,7 +157,7 @@ public sealed class GameRoomTests
     {
         var anna = _room.Join("Anna").Value;
         _room.Join("Anna");
-        _room.Leave(anna.Token);
+        _room.Leave(anna.Token, Now);
 
         Assert.That(_room.Revision, Is.EqualTo(2));
     }

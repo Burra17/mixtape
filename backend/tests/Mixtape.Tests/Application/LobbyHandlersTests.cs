@@ -21,7 +21,7 @@ public sealed class LobbyHandlersTests
         var connections = new InMemoryConnectionRegistry();
         _create = new CreateRoomHandler(rooms, connections);
         _join = new JoinRoomHandler(rooms, connections);
-        _leave = new LeaveRoomHandler(rooms);
+        _leave = new LeaveRoomHandler(rooms, TimeProvider.System);
         _remove = new RemovePlayerHandler(rooms);
         _resume = new ResumeRoomHandler(rooms, connections);
         _host = (await _create.HandleAsync(null, "host")).Value.Session;
