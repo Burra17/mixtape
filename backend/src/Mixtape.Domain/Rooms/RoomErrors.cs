@@ -10,4 +10,8 @@ public static class RoomErrors
     public static readonly Error Full = new("room.full", "Rummet är fullt.");
 
     public static readonly Error AlreadyStarted = new("room.already_started", "Spelet har redan börjat.");
+
+    public static readonly Error NotEnoughPlayers = new("room.not_enough_players", $"Det behövs minst {GameRoom.MinPlayers} spelare.");
+
+    public static readonly Error InvalidSettings = new("room.invalid_settings", "Inställningen finns inte.");
 }

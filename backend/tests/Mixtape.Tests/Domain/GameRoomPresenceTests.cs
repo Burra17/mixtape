@@ -79,7 +79,7 @@ public sealed class GameRoomPresenceTests
         _room.DisconnectHost(Now);
         Assert.That(_room.IsPaused, Is.True);
 
-        _room.ResumeHost(_room.HostToken);
+        _room.ResumeHost(_room.HostToken, Now);
         Assert.That(_room.IsPaused, Is.False);
     }
 
@@ -88,7 +88,7 @@ public sealed class GameRoomPresenceTests
     {
         _room.DisconnectHost(Now);
 
-        Assert.That(_room.ResumeHost("fel").Error, Is.EqualTo(RoomErrors.NotFound));
+        Assert.That(_room.ResumeHost("fel", Now).Error, Is.EqualTo(RoomErrors.NotFound));
         Assert.That(_room.IsPaused, Is.True);
     }
 
@@ -99,7 +99,7 @@ public sealed class GameRoomPresenceTests
         var afterJoin = _room.Revision;
 
         _room.Rejoin(anna.Token);
-        _room.ResumeHost(_room.HostToken);
+        _room.ResumeHost(_room.HostToken, Now);
         Assert.That(_room.Revision, Is.EqualTo(afterJoin));
 
         _room.Disconnect(anna.Id, Now);

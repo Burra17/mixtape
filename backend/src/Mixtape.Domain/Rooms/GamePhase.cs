@@ -1,7 +1,12 @@
 namespace Mixtape.Domain.Rooms;
 
-// Fler faser kommer i #17, och då får frontenden en spegel av dem.
+// Speglas av PHASES i hubContract.ts, och mapparna i frontend/src/features heter som faserna.
 public enum GamePhase
 {
     Lobby,
+    Submitting,
+    Playing,
+    Voting,
+    Revealing,
+    GameOver,
 }
