@@ -51,7 +51,7 @@ export const HostSetup = () => {
         selected={game.settings.rounds}
         format={String}
         disabled={!isConnected}
-        onChoose={(rounds) => choose(rounds, game.settings.clipSeconds)}
+        onChoose={(rounds) => choose(rounds, null)}
       />
       <OptionRow
         label='Klipplängd'
@@ -59,7 +59,7 @@ export const HostSetup = () => {
         selected={game.settings.clipSeconds}
         format={(seconds) => `${seconds} s`}
         disabled={!isConnected}
-        onChoose={(clipSeconds) => choose(game.settings.rounds, clipSeconds)}
+        onChoose={(clipSeconds) => choose(null, clipSeconds)}
       />
       {!game.canStart && <p className='font-medium text-muted'>Minst {game.minPlayers} spelare behövs.</p>}
       {error && (

@@ -72,7 +72,8 @@ public sealed class GameRoom
     // Tiden som är kvar av fasen, eller null i faser utan deadline.
     public TimeSpan? RemainingTime(DateTimeOffset now) => _clock.Remaining(now);
 
-    public Result UpdateSettings(string? hostToken, int rounds, int clipSeconds)
+    // Bara inställningen som ändras skickas, och null behåller den andra. Två snabba klick skriver då inte över varandra med ett gammalt värde.
+    public Result UpdateSettings(string? hostToken, int? rounds, int? clipSeconds)
     {
         if (!IsHost(hostToken))
         {
@@ -84,7 +85,7 @@ public sealed class GameRoom
             return RoomErrors.AlreadyStarted;
         }
 
-        var parsed = GameSettings.Create(rounds, clipSeconds);
+        var parsed = GameSettings.Create(rounds ?? Settings.Rounds, clipSeconds ?? Settings.ClipSeconds);
         if (!parsed.IsSuccess)
         {
             return parsed.Error!;

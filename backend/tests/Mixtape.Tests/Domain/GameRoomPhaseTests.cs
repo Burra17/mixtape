@@ -172,6 +172,16 @@ public sealed class GameRoomPhaseTests
     }
 
     [Test]
+    public void UpdateSettings_OneAtATime_KeepsTheOther()
+    {
+        _room.UpdateSettings(_room.HostToken, 3, null);
+        _room.UpdateSettings(_room.HostToken, null, 10);
+
+        Assert.That(_room.Settings.Rounds, Is.EqualTo(3));
+        Assert.That(_room.Settings.ClipSeconds, Is.EqualTo(10));
+    }
+
+    [Test]
     public void UpdateSettings_WithWrongHostToken_ReturnsRoomNotFound()
     {
         Assert.That(_room.UpdateSettings("fel", 8, 20).Error, Is.EqualTo(RoomErrors.NotFound));

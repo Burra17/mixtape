@@ -123,8 +123,8 @@ export const leaveRoom = (session: PlayerSession) => connection.invoke(serverMet
 export const removePlayer = (host: HostSession, playerId: string) =>
   connection.invoke(serverMethods.removePlayer, host, playerId).catch(() => undefined);
 
-// Svaret bär bara ett eventuellt fel. Den nya bilden kommer med GameStateUpdated.
-export const updateSettings = (host: HostSession, rounds: number, clipSeconds: number) =>
+// Bara inställningen som ändras skickas, och null behåller den andra. Svaret bär bara ett eventuellt fel, och den nya bilden kommer med GameStateUpdated.
+export const updateSettings = (host: HostSession, rounds: number | null, clipSeconds: number | null) =>
   connection.invoke<HubResponse<GameState>>(serverMethods.updateSettings, host, rounds, clipSeconds);
 
 export const startGame = (host: HostSession) => connection.invoke<HubResponse<GameState>>(serverMethods.startGame, host);

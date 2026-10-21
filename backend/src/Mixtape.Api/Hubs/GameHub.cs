@@ -133,8 +133,8 @@ public sealed class GameHub(
         }
     }
 
-    // Klienten läser bara felet ur svaret. Bilden går till hela rummet, eftersom mobilerna också visar inställningarna.
-    public async Task<HubResponse<GameState>> UpdateSettings(HostSession host, int rounds, int clipSeconds)
+    // Null behåller inställningen som den är. Klienten läser bara felet ur svaret, och bilden går till hela rummet eftersom mobilerna också visar inställningarna.
+    public async Task<HubResponse<GameState>> UpdateSettings(HostSession host, int? rounds, int? clipSeconds)
     {
         return await SendToRoomAsync(await updateSettings.HandleAsync(host, rounds, clipSeconds));
     }

@@ -16,7 +16,7 @@ export const useGameSetup = () => {
     if (!response?.value) setError(response?.error?.message ?? FAILED);
   };
 
-  const choose = (rounds: number, clipSeconds: number) => {
+  const choose = (rounds: number | null, clipSeconds: number | null) => {
     const { session } = useHostStore.getState();
     if (session) void send(() => updateSettings(session, rounds, clipSeconds));
   };
