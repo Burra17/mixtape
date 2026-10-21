@@ -13,7 +13,7 @@ Samma app har två användare med olika förutsättningar:
 
 Brytpunkten `lg` (1024 px) är gränsen mellan dem i stilen: från `lg` och uppåt gäller storskärmens former och rörelse.
 
-Webbläsaren spelar inte upp ljud förrän någon har klickat på sidan. Klicket på "Starta spel" och "Fortsätt" på storskärmen låser upp ljudet.
+Webbläsaren spelar inte upp ljud förrän någon har klickat på sidan. Klicket på "Starta spel" och "Fortsätt" på storskärmen anropar `unlockAudio()` i `services/audio/` innan hubben anropas. Safari kräver att samma ljudelement som sedan spelar fick sitt `play()` i klicket, så alla klipp spelas på det enda elementet där.
 
 ## Struktur
 
@@ -26,8 +26,10 @@ src/
   views/              en vy per route. hostView och playerView är tunna skal som väljer fas utifrån serverns state
   services/hub/       anslutningen, hubContract.ts och alla anrop till hubben
   services/storage/   den enda koden som läser och skriver localStorage, en fil per sak som sparas
+  services/audio/     storskärmens enda ljudelement
   store/              Zustand-storen
   shared/components/  komponenter som används av flera faser
+  shared/hooks/       hooks som används av flera faser, som useCountdown
 ```
 
 Mapparna heter som faserna i `Phase` nedan, så att fasen i serverns state och mappen med dess komponenter har samma namn. En ticket om en fas berör bara den fasens mapp. Behöver en andra fas en komponent flyttas den till `shared/components/`. Flytta, kopiera inte.
@@ -42,6 +44,8 @@ hubb-event → store → komponent → hubbanrop via services/hub → server
 
 - All kommunikation med servern går genom `services/hub/`. Komponenterna anropar funktioner därifrån.
 - Hubbens events skriver serverns ögonblicksbild till storen. Komponenterna läser ur storen med selectors.
+- Hela rummet är en bild, `GameState` i `gameStore`. Storen töms innan `createRoom` och `joinRoom` anropas, eftersom ett nytt rum kan få samma kod som det förra och då skulle dess bilder kastas som äldre.
+- Nedräkningen räknas lokalt med `useCountdown`. Fasens deadline är tiden när bilden kom fram, enligt enhetens egen klocka, plus `remainingMs` från servern.
 - Klienten håller bara UI-state, som texten i ett sökfält. Faser, poäng och regler kommer från servern.
 
 ## Stil
