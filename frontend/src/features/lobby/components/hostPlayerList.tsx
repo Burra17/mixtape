@@ -1,16 +1,15 @@
 import { removePlayer } from '../../../services/hub/connection.ts';
-import { Button } from '../../../shared/components/button.tsx';
 import { Card } from '../../../shared/components/card.tsx';
 import { Label } from '../../../shared/components/label.tsx';
 import { useIsConnected } from '../../../store/connectionStore.ts';
+import { useGameStore } from '../../../store/gameStore.ts';
 import { useHostStore } from '../../../store/hostStore.ts';
-import { useLobbyStore } from '../../../store/lobbyStore.ts';
 import { PlayerChip } from './playerChip.tsx';
 
-// Spelarna i realtid. Ett klick på ett namn tar bort spelaren, och "Starta" gör inget förrän spelet finns.
+// Spelarna i realtid. Ett klick på ett namn tar bort spelaren.
 export const HostPlayerList = () => {
   const session = useHostStore((state) => state.session);
-  const lobby = useLobbyStore((state) => state.lobby);
+  const lobby = useGameStore((state) => state.game);
   const isConnected = useIsConnected();
 
   if (!session || lobby?.roomCode !== session.roomCode) return null;
@@ -44,15 +43,7 @@ export const HostPlayerList = () => {
           ))}
         </ul>
       )}
-      <p className='font-medium text-muted'>
-        {lobby.players.length > 0 && 'Klicka på ett namn för att ta bort spelaren. '}
-        {!lobby.canStart && `Minst ${lobby.minPlayers} spelare behövs.`}
-      </p>
-      <div>
-        <Button variant='primary' disabled={!lobby.canStart}>
-          Starta
-        </Button>
-      </div>
+      {lobby.players.length > 0 && <p className='font-medium text-muted'>Klicka på ett namn för att ta bort spelaren.</p>}
     </Card>
   );
 };

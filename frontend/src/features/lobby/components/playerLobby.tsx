@@ -1,6 +1,7 @@
 import type { PlayerSession } from '../../../services/hub/hubContract.ts';
 import { Button } from '../../../shared/components/button.tsx';
 import { Label } from '../../../shared/components/label.tsx';
+import { PausedNotice } from '../../../shared/components/pausedNotice.tsx';
 import { useIsConnected } from '../../../store/connectionStore.ts';
 import { usePlayerLobby } from '../hooks/usePlayerLobby.ts';
 import { playerText } from './playerColors.ts';
@@ -20,12 +21,11 @@ export const PlayerLobby = ({ session }: { session: PlayerSession }) => {
             <p className='text-2xl font-extrabold'>
               {lobby.players.length} av {lobby.maxPlayers} spelare
             </p>
+            <p className='text-lg font-bold'>
+              {lobby.settings.rounds} rundor · {lobby.settings.clipSeconds} s klipp
+            </p>
             <p className='text-lg font-medium text-muted'>Väntar på att spelet startar</p>
-            {lobby.isPaused && (
-              <p role='status' className='self-start rounded-control border-2 border-ink px-3 py-2 font-bold'>
-                Storskärmen är borta. Spelet väntar.
-              </p>
-            )}
+            {lobby.isPaused && <PausedNotice />}
           </>
         ) : (
           <p className='text-2xl font-bold'>Hämtar lobbyn…</p>

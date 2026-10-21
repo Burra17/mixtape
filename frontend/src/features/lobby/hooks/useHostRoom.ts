@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { unlockAudio } from '../../../services/audio/audioPlayer.ts';
 import { checkRoom, createRoom, getJoinAddresses, resumeRoom, startConnection } from '../../../services/hub/connection.ts';
 import type { HostSession, HubError, HubResponse } from '../../../services/hub/hubContract.ts';
 import { clearHostSession, loadHostSession, saveHostSession } from '../../../services/storage/hostSessionStorage.ts';
@@ -84,6 +85,7 @@ export const useHostRoom = () => {
     create: () => createRoom(null).then(enterLobby, () => setError(FAILED)),
     // Klicket tar tillbaka rummet och häver pausen, och det är också klicket som låser upp ljudet.
     resume: () => {
+      unlockAudio();
       const { session } = useHostStore.getState();
       if (session) void resumeRoom(session).then(enterLobby, () => setError(FAILED));
     },

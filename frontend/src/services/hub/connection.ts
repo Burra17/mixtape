@@ -1,9 +1,9 @@
 import { HubConnectionBuilder, HubConnectionState, LogLevel } from '@microsoft/signalr';
 import { useConnectionStore } from '../../store/connectionStore.ts';
-import { useLobbyStore } from '../../store/lobbyStore.ts';
+import { useGameStore } from '../../store/gameStore.ts';
 import { usePlayerStore } from '../../store/playerStore.ts';
 import { clearPlayerSession } from '../storage/playerSessionStorage.ts';
-import { clientEvents, serverMethods, type HostSession, type HubResponse, type LobbyState, type PlayerSession, type Track } from './hubContract.ts';
+import { clientEvents, serverMethods, type HostSession, type GameState, type HubResponse, type PlayerSession, type Track } from './hubContract.ts';
 
 // Två snabba försök först, eftersom de flesta avbrott är ett kort hack i wifi. Sedan var 5:e sekund.
 const FIRST_RETRY_DELAYS_MS = [0, 2000];
@@ -27,7 +27,7 @@ connection.onreconnecting(lost);
 connection.onreconnected(connected);
 connection.onclose(lost);
 connection.on(clientEvents.pong, () => undefined);
-connection.on(clientEvents.lobbyUpdated, (lobby: LobbyState) => useLobbyStore.getState().receiveLobby(lobby));
+connection.on(clientEvents.gameStateUpdated, (game: GameState) => useGameStore.getState().receiveGame(game));
 // Den borttagna mobilen lämnar själv rummets grupp, eftersom servern inte vet vilken anslutning den har.
 connection.on(clientEvents.removedFromRoom, () => {
   const { session, removedFromRoom } = usePlayerStore.getState();
@@ -98,8 +98,11 @@ document.addEventListener('visibilitychange', () => {
   });
 });
 
-// previous skickas med vid "Nytt spel", så att servern tar bort det gamla rummet.
-export const createRoom = (previous: HostSession | null) => connection.invoke<HubResponse<HostSession>>(serverMethods.createRoom, previous);
+// previous skickas med vid "Nytt spel", så att servern tar bort det gamla rummet. Storen töms före ett nytt rum, se gameStore.
+export const createRoom = (previous: HostSession | null) => {
+  useGameStore.getState().reset();
+  return connection.invoke<HubResponse<HostSession>>(serverMethods.createRoom, previous);
+};
 
 export const checkRoom = (session: HostSession) => connection.invoke<HubResponse<HostSession>>(serverMethods.checkRoom, session);
 
@@ -107,7 +110,10 @@ export const resumeRoom = (session: HostSession) => connection.invoke<HubRespons
 
 export const getJoinAddresses = () => connection.invoke<string[]>(serverMethods.getJoinAddresses);
 
-export const joinRoom = (roomCode: string, name: string) => connection.invoke<HubResponse<PlayerSession>>(serverMethods.joinRoom, roomCode, name);
+export const joinRoom = (roomCode: string, name: string) => {
+  useGameStore.getState().reset();
+  return connection.invoke<HubResponse<PlayerSession>>(serverMethods.joinRoom, roomCode, name);
+};
 
 export const rejoinRoom = (session: PlayerSession) => connection.invoke<HubResponse<PlayerSession>>(serverMethods.rejoinRoom, session);
 
@@ -116,6 +122,12 @@ export const leaveRoom = (session: PlayerSession) => connection.invoke(serverMet
 
 export const removePlayer = (host: HostSession, playerId: string) =>
   connection.invoke(serverMethods.removePlayer, host, playerId).catch(() => undefined);
+
+// Svaret bär bara ett eventuellt fel. Den nya bilden kommer med GameStateUpdated.
+export const updateSettings = (host: HostSession, rounds: number, clipSeconds: number) =>
+  connection.invoke<HubResponse<GameState>>(serverMethods.updateSettings, host, rounds, clipSeconds);
+
+export const startGame = (host: HostSession) => connection.invoke<HubResponse<GameState>>(serverMethods.startGame, host);
 
 // Bara en spelare i ett rum får söka. Sökrutan som använder den kommer i #19.
 export const search = (query: string) => connection.invoke<HubResponse<Track[]>>(serverMethods.search, query);
