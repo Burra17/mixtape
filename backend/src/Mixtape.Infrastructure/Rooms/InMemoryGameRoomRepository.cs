@@ -50,6 +50,25 @@ public sealed class InMemoryGameRoomRepository : IGameRoomRepository
         return removed;
     }
 
+    public async Task ForEachRoomAsync(Action<GameRoom> action)
+    {
+        foreach (var entry in _rooms.Values)
+        {
+            await entry.Gate.WaitAsync();
+            try
+            {
+                if (!entry.Removed)
+                {
+                    action(entry.Room);
+                }
+            }
+            finally
+            {
+                entry.Gate.Release();
+            }
+        }
+    }
+
     public async Task<Result<T>> WithRoomAsync<T>(RoomCode code, Func<GameRoom, Result<T>> action)
     {
         if (!_rooms.TryGetValue(code.Value, out var entry))

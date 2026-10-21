@@ -15,7 +15,7 @@ public sealed class CreateRoomHandlerTests
     public void SetUp()
     {
         _rooms = new InMemoryGameRoomRepository();
-        _handler = new CreateRoomHandler(_rooms, new InMemoryConnectionRegistry());
+        _handler = new CreateRoomHandler(_rooms, new InMemoryConnectionRegistry(), TimeProvider.System);
     }
 
     [Test]

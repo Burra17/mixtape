@@ -15,8 +15,8 @@ public sealed class ResumeRoomHandlerTests
     {
         var rooms = new InMemoryGameRoomRepository();
         var connections = new InMemoryConnectionRegistry();
-        _create = new CreateRoomHandler(rooms, connections);
-        _resume = new ResumeRoomHandler(rooms, connections);
+        _create = new CreateRoomHandler(rooms, connections, TimeProvider.System);
+        _resume = new ResumeRoomHandler(rooms, connections, TimeProvider.System);
     }
 
     [Test]

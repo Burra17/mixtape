@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddSingleton<IConnectionRegistry, InMemoryConnectionRegistry>();
         services.AddSingleton(TimeProvider.System);
         services.AddHostedService<RoomCleanupService>();
+        services.AddHostedService<GameClockService>();
         services.AddMusicCatalog(configuration);
         return services;
     }

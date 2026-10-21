@@ -8,7 +8,8 @@ public sealed class LeaveRoomHandler(IGameRoomRepository rooms, TimeProvider tim
     public Task<Result<PlayerRemoved>> HandleAsync(PlayerSession session) =>
         rooms.WithRoomAsync<PlayerRemoved>(session.RoomCode, room =>
         {
-            var left = room.Leave(session.PlayerToken, time.GetUtcNow());
-            return left.IsSuccess ? new PlayerRemoved(left.Value.Id, LobbyState.From(room)) : left.Error!;
+            var now = time.GetUtcNow();
+            var left = room.Leave(session.PlayerToken, now);
+            return left.IsSuccess ? new PlayerRemoved(left.Value.Id, GameState.From(room, now)) : left.Error!;
         });
 }
