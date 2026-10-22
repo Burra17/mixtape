@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddTransient<DisconnectHandler>();
         services.AddTransient<CleanUpRoomsHandler>();
         services.AddTransient<SearchTracksHandler>();
+        services.AddTransient<SubmitTrackHandler>();
         return services;
     }
 }
