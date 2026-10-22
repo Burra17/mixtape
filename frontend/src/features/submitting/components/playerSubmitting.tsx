@@ -16,7 +16,7 @@ export const PlayerSubmitting = () => {
   return (
     <main className='flex min-h-dvh flex-col gap-6 px-6 py-12'>
       <Label>{round}</Label>
-      <h1 className='text-3xl text-display [overflow-wrap:anywhere]'>{game.prompt}</h1>
+      <h1 className='text-3xl text-display leading-[1.08] [overflow-wrap:anywhere]'>{game.prompt}</h1>
       <Countdown screen='player' />
       {game.isPaused && <PausedNotice />}
     </main>

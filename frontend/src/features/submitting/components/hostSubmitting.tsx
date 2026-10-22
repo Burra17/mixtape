@@ -18,7 +18,9 @@ export const HostSubmitting = () => {
       <Marquee text={`Välj en låt • ${round}`} />
       <main className='flex flex-1 flex-col justify-center gap-8 px-6 py-12 lg:px-[6vw]'>
         <Label>{round}</Label>
-        <h1 className='max-w-[22ch] self-start bg-signal px-4 pt-3 pb-1 text-[clamp(2.5rem,6vw,6.5rem)] text-display'>{game.prompt}</h1>
+        <h1 className='max-w-[22ch] self-start bg-signal px-4 pt-4 pb-2 text-[clamp(2.5rem,6vw,6.5rem)] text-display leading-[1.08]'>
+          {game.prompt}
+        </h1>
         <Countdown screen='host' />
       </main>
     </div>
