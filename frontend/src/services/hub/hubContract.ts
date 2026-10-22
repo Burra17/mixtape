@@ -74,6 +74,8 @@ export type GameState = {
   isPaused: boolean;
   // 0 i lobbyn.
   round: number;
+  // Rundans prompt, från inskicket till avslöjandet. null i lobbyn och i gameOver.
+  prompt: string | null;
   // Tiden som var kvar av fasen när bilden skapades, eller null i faser utan deadline. Oberoende av mobilens klocka.
   remainingMs: number | null;
   settings: SettingsState;
