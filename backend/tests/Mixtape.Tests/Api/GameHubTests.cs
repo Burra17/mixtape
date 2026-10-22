@@ -1,8 +1,12 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
 using Mixtape.Api.Hubs;
 using Mixtape.Application.Rooms;
+using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Tests.Api;
 
@@ -68,12 +72,12 @@ public sealed class GameHubTests
     {
         await using var host = CreateConnection();
         await using var player = CreateConnection();
-        var lobbies = new List<LobbyState>();
+        var lobbies = new List<GameState>();
         var annaJoined = new TaskCompletionSource();
-        host.On<LobbyState>(nameof(IGameClient.LobbyUpdated), lobby =>
+        host.On<GameState>(nameof(IGameClient.GameStateUpdated), state =>
         {
-            lobbies.Add(lobby);
-            if (lobby.Players.Count == 1)
+            lobbies.Add(state);
+            if (state.Players.Count == 1)
             {
                 annaJoined.TrySetResult();
             }
@@ -87,7 +91,7 @@ public sealed class GameHubTests
 
         Assert.That(joined.Value!.PlayerToken, Has.Length.EqualTo(32));
         Assert.That(lobbies[0].Players, Is.Empty);
-        Assert.That(lobbies[^1].Players.Single(), Is.EqualTo(new LobbyPlayer(joined.Value.PlayerId, "Anna", 1, true)));
+        Assert.That(lobbies[^1].Players.Single(), Is.EqualTo(new GamePlayer(joined.Value.PlayerId, "Anna", 1, true)));
     }
 
     [Test]
@@ -114,9 +118,9 @@ public sealed class GameHubTests
         anna.On(nameof(IGameClient.RemovedFromRoom), () => annaRemoved.TrySetResult());
         var bertilSawAnnaGo = new TaskCompletionSource();
         bertil.On(nameof(IGameClient.RemovedFromRoom), () => bertilRemoved = true);
-        bertil.On<LobbyState>(nameof(IGameClient.LobbyUpdated), lobby =>
+        bertil.On<GameState>(nameof(IGameClient.GameStateUpdated), state =>
         {
-            if (lobby.Players.Count == 1 && lobby.Players[0].Name == "Bertil")
+            if (state.Players.Count == 1 && state.Players[0].Name == "Bertil")
             {
                 bertilSawAnnaGo.TrySetResult();
             }
@@ -143,14 +147,14 @@ public sealed class GameHubTests
         await using var bertil = CreateConnection();
         var hostSawBertil = new TaskCompletionSource();
         var annaLobbies = 0;
-        host.On<LobbyState>(nameof(IGameClient.LobbyUpdated), lobby =>
+        host.On<GameState>(nameof(IGameClient.GameStateUpdated), state =>
         {
-            if (lobby.Players.Any(player => player.Name == "Bertil"))
+            if (state.Players.Any(player => player.Name == "Bertil"))
             {
                 hostSawBertil.TrySetResult();
             }
         });
-        anna.On<LobbyState>(nameof(IGameClient.LobbyUpdated), _ => annaLobbies++);
+        anna.On<GameState>(nameof(IGameClient.GameStateUpdated), _ => annaLobbies++);
         await Task.WhenAll(host.StartAsync(), anna.StartAsync(), bertil.StartAsync());
 
         var created = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
@@ -172,13 +176,13 @@ public sealed class GameHubTests
         await using var host = CreateConnection();
         var annaAway = new TaskCompletionSource();
         var annaBack = new TaskCompletionSource();
-        host.On<LobbyState>(nameof(IGameClient.LobbyUpdated), lobby =>
+        host.On<GameState>(nameof(IGameClient.GameStateUpdated), state =>
         {
-            if (lobby.Players is [{ IsConnected: false }])
+            if (state.Players is [{ IsConnected: false }])
             {
                 annaAway.TrySetResult();
             }
-            else if (annaAway.Task.IsCompleted && lobby.Players is [{ IsConnected: true }])
+            else if (annaAway.Task.IsCompleted && state.Players is [{ IsConnected: true }])
             {
                 annaBack.TrySetResult();
             }
@@ -208,9 +212,9 @@ public sealed class GameHubTests
     {
         await using var anna = CreateConnection();
         var paused = new TaskCompletionSource();
-        anna.On<LobbyState>(nameof(IGameClient.LobbyUpdated), lobby =>
+        anna.On<GameState>(nameof(IGameClient.GameStateUpdated), state =>
         {
-            if (lobby.IsPaused)
+            if (state.IsPaused)
             {
                 paused.TrySetResult();
             }
@@ -243,7 +247,65 @@ public sealed class GameHubTests
         await closed.Task.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
+    [Test]
+    public async Task StartGame_SendsTheFirstRoundWithSettingsToTheWholeRoom()
+    {
+        await using var host = CreateConnection();
+        await using var anna = CreateConnection();
+        var started = new TaskCompletionSource<GameState>();
+        anna.On<GameState>(nameof(IGameClient.GameStateUpdated), state =>
+        {
+            if (state.Phase == GamePhase.Submitting)
+            {
+                started.TrySetResult(state);
+            }
+        });
+        await Task.WhenAll(host.StartAsync(), anna.StartAsync());
+
+        var created = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
+        await anna.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Anna");
+        await host.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Bertil");
+        await host.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Cecilia");
+        var settings = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.UpdateSettings), created, 3, 10);
+        var start = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.StartGame), created);
+        var state = await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.That(settings.Error, Is.Null);
+        Assert.That(start.Error, Is.Null);
+        Assert.That(state.Round, Is.EqualTo(1));
+        Assert.That(state.Settings, Is.EqualTo(new SettingsState(3, 10)));
+        Assert.That(state.RemainingMs, Is.InRange(40_000, 45_000));
+    }
+
+    [Test]
+    public async Task GameStateUpdated_SendsThePhaseAsCamelCaseText()
+    {
+        await using var host = CreateConnection();
+        var raw = new TaskCompletionSource<JsonElement>();
+        // JsonElement tar emot det som står på tråden, oberoende av klientens converter.
+        host.On<JsonElement>(nameof(IGameClient.GameStateUpdated), state => raw.TrySetResult(state));
+        await host.StartAsync();
+
+        await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null);
+        var state = await raw.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.That(state.GetProperty("phase").GetString(), Is.EqualTo("lobby"));
+    }
+
+    [Test]
+    public async Task StartGame_WithTooFewPlayers_ReturnsTheErrorCode()
+    {
+        await using var host = CreateConnection();
+        await host.StartAsync();
+
+        var created = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
+        var start = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.StartGame), created);
+
+        Assert.That(start.Error?.Code, Is.EqualTo("room.not_enough_players"));
+    }
+
     // Testservern har ingen riktig port, så klienten går via dess HTTP-hanterare med long polling.
+    // Klienten läser enums som text, som servern skickar dem.
     private HubConnection CreateConnection()
     {
         var server = _factory.Server;
@@ -252,6 +314,7 @@ public sealed class GameHubTests
             {
                 options.HttpMessageHandlerFactory = _ => server.CreateHandler();
             })
+            .AddJsonProtocol(options => options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)))
             .Build();
     }
 }

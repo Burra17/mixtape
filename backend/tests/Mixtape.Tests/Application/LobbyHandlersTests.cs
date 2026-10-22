@@ -19,11 +19,11 @@ public sealed class LobbyHandlersTests
     {
         var rooms = new InMemoryGameRoomRepository();
         var connections = new InMemoryConnectionRegistry();
-        _create = new CreateRoomHandler(rooms, connections);
-        _join = new JoinRoomHandler(rooms, connections);
+        _create = new CreateRoomHandler(rooms, connections, TimeProvider.System);
+        _join = new JoinRoomHandler(rooms, connections, TimeProvider.System);
         _leave = new LeaveRoomHandler(rooms, TimeProvider.System);
-        _remove = new RemovePlayerHandler(rooms);
-        _resume = new ResumeRoomHandler(rooms, connections);
+        _remove = new RemovePlayerHandler(rooms, TimeProvider.System);
+        _resume = new ResumeRoomHandler(rooms, connections, TimeProvider.System);
         _host = (await _create.HandleAsync(null, "host")).Value.Session;
     }
 
@@ -33,9 +33,9 @@ public sealed class LobbyHandlersTests
         var result = (await _join.HandleAsync(_host.RoomCode.ToLowerInvariant(), "Anna", "anna")).Value;
 
         Assert.That(result.Session.RoomCode, Is.EqualTo(_host.RoomCode));
-        Assert.That(result.Lobby.Players, Is.EqualTo(new[] { new LobbyPlayer(result.Session.PlayerId, "Anna", 1, true) }));
-        Assert.That(result.Lobby.MaxPlayers, Is.EqualTo(GameRoom.MaxPlayers));
-        Assert.That(result.Lobby.CanStart, Is.False);
+        Assert.That(result.State.Players, Is.EqualTo(new[] { new GamePlayer(result.Session.PlayerId, "Anna", 1, true) }));
+        Assert.That(result.State.MaxPlayers, Is.EqualTo(GameRoom.MaxPlayers));
+        Assert.That(result.State.CanStart, Is.False);
     }
 
     [TestCase("BCDF")]
@@ -56,7 +56,7 @@ public sealed class LobbyHandlersTests
         var result = (await _leave.HandleAsync(anna with { PlayerId = bertil.PlayerId })).Value;
 
         Assert.That(result.PlayerId, Is.EqualTo(anna.PlayerId));
-        Assert.That(result.Lobby.Players.Select(player => player.Name), Is.EqualTo(new[] { "Bertil" }));
+        Assert.That(result.State.Players.Select(player => player.Name), Is.EqualTo(new[] { "Bertil" }));
     }
 
     [Test]
@@ -67,7 +67,7 @@ public sealed class LobbyHandlersTests
         var result = (await _remove.HandleAsync(_host, anna.PlayerId)).Value;
 
         Assert.That(result.PlayerId, Is.EqualTo(anna.PlayerId));
-        Assert.That(result.Lobby.Players, Is.Empty);
+        Assert.That(result.State.Players, Is.Empty);
     }
 
     [Test]
@@ -77,6 +77,6 @@ public sealed class LobbyHandlersTests
 
         var result = (await _resume.HandleAsync(_host, "host")).Value;
 
-        Assert.That(result.Lobby.Players.Select(player => player.Name), Is.EqualTo(new[] { "Anna" }));
+        Assert.That(result.State.Players.Select(player => player.Name), Is.EqualTo(new[] { "Anna" }));
     }
 }

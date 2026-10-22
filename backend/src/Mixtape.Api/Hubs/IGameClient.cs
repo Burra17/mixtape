@@ -7,8 +7,8 @@ public interface IGameClient
 {
     Task Pong();
 
-    // Hela lobbyn vid varje ändring, till alla i rummet.
-    Task LobbyUpdated(LobbyState lobby);
+    // Hela rummet vid varje ändring, till alla i rummet.
+    Task GameStateUpdated(GameState state);
 
     // Bara till spelaren som värden tog bort.
     Task RemovedFromRoom();

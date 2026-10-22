@@ -21,10 +21,10 @@ public sealed class PresenceHandlersTests
     {
         _rooms = new InMemoryGameRoomRepository();
         _connections = new InMemoryConnectionRegistry();
-        _join = new JoinRoomHandler(_rooms, _connections);
-        _rejoin = new RejoinRoomHandler(_rooms, _connections);
+        _join = new JoinRoomHandler(_rooms, _connections, TimeProvider.System);
+        _rejoin = new RejoinRoomHandler(_rooms, _connections, TimeProvider.System);
         _disconnect = new DisconnectHandler(_rooms, _connections, TimeProvider.System);
-        _host = (await new CreateRoomHandler(_rooms, _connections).HandleAsync(null, "host")).Value.Session;
+        _host = (await new CreateRoomHandler(_rooms, _connections, TimeProvider.System).HandleAsync(null, "host")).Value.Session;
     }
 
     [Test]
@@ -58,7 +58,7 @@ public sealed class PresenceHandlersTests
         var result = (await _rejoin.HandleAsync(anna with { RoomCode = anna.RoomCode.ToLowerInvariant() }, "anna-2")).Value;
 
         Assert.That(result.Session, Is.EqualTo(anna));
-        Assert.That(result.Lobby.Players.Single().IsConnected, Is.True);
+        Assert.That(result.State.Players.Single().IsConnected, Is.True);
     }
 
     [Test]
@@ -95,14 +95,14 @@ public sealed class PresenceHandlersTests
 
         var checkedRoom = await new CheckRoomHandler(_rooms).HandleAsync(_host);
         var stillPaused = (await _rooms.WithRoomAsync(RoomCode.Parse(_host.RoomCode)!, room => Result<bool>.Success(room.IsPaused))).Value;
-        var resumed = (await new ResumeRoomHandler(_rooms, _connections).HandleAsync(_host, "host-2")).Value;
+        var resumed = (await new ResumeRoomHandler(_rooms, _connections, TimeProvider.System).HandleAsync(_host, "host-2")).Value;
 
         Assert.That(checkedRoom.Value, Is.EqualTo(_host));
         Assert.That(stillPaused, Is.True);
-        Assert.That(resumed.Lobby.IsPaused, Is.False);
+        Assert.That(resumed.State.IsPaused, Is.False);
     }
 
     // Som hubben: anslutningen tas bort ur registret före handlern.
-    private Task<Result<LobbyState>> DisconnectAsync(string connectionId) =>
+    private Task<Result<GameState>> DisconnectAsync(string connectionId) =>
         _disconnect.HandleAsync(_connections.Unregister(connectionId)!);
 }

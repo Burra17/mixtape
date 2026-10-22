@@ -22,7 +22,7 @@ Varje lager registrerar sina tjänster i en egen `Add<Lager>()`-metod, och `Prog
 
 ## Spelreglerna bor i Domain
 
-`GameRoom` äger sitt state. Domänobjekten har inga publika setters, och reglerna nås via metoder som `SubmitTrack` och `Vote`. Varje metod börjar med att kontrollera fasen.
+`GameRoom` äger sitt state. Domänobjekten har inga publika setters, och reglerna nås via metoder som `SubmitTrack` och `Vote`. Varje metod börjar med att kontrollera fasen. Värdens metoder, som `StartGame` och `RemovePlayer`, kontrollerar värd-token före fasen, så att den som inte är värd bara får veta att rummet inte finns.
 
 En regel som säger nej ger ett fel i `Result` (eller `Result<T>` när det lyckade utfallet har ett värde), till exempel "inte i den här fasen", "namnet är upptaget" eller "du kan inte rösta på dig själv". Undantag används för det som inte borde hända, alltså buggar. Ett `Result`-fel blir ett meddelande till spelaren. Ett undantag blir ett fel i loggen.
 
@@ -42,10 +42,19 @@ Hubben är ännu tunnare. Den tar emot anropet, slår upp spelaren via token, an
 
 Läs tiden från en injicerad `TimeProvider`. Domänen tar emot tiden som argument (`DateTimeOffset now`), och handlers läser den från `TimeProvider`. Testerna har en egen `FakeTimeProvider`. Faserna har deadlines och rum rensas efter inaktivitet, och med `TimeProvider` kan testerna spola fram tiden i stället för att vänta.
 
+Fasernas klocka:
+
+- `PhaseClock` i Domain håller deadline för fasen som pågår. Under paus fryses tiden som är kvar.
+- `GameRoom.Tick(now)` byter fas när deadline passerat, och det är det enda stället där klockan driver spelet framåt.
+- `GameClockService` i Infrastructure anropar `AdvancePhasesHandler` var 250:e ms. Handlern kör `Tick` på varje rum med rummets lås och skickar bilden för de rum som bytt fas via `IGameNotifier`.
+- `IGameNotifier` ligger i Application och implementeras i Api med hubbens kontext, eftersom bara Api känner till SignalR.
+
 ## Hubben
 
 - `GameHub : Hub<IGameClient>`, så att eventnamn är kompileringsfel och inte stavfel.
-- Servern skickar ögonblicksbilder av state (`LobbyUpdated`, `GameStateUpdated`), inte små ändrings-events. Den som återansluter behöver då bara den senaste bilden.
+- Servern skickar ögonblicksbilder av state, inte små ändrings-events. Den som återansluter behöver då bara den senaste bilden. Hela rummet är en bild, `GameState`, som skickas med `GameStateUpdated` till alla i rummet. Det som bara gäller en spelare går till `player:{id}`.
+- `GameState` har tiden som är kvar av fasen (`RemainingMs`), inte en tidpunkt, så att en mobil vars klocka går fel ändå räknar ned rätt.
+- Enums skickas som text i camelCase (`"submitting"`), via `JsonStringEnumConverter` i `Program.cs`.
 - Ögonblicksbilden skickas efter att rummets lås släppts, så två bilder kan komma fram i fel ordning. Därför har den rummets `Revision`, och klienten kastar en bild som är äldre än den den har.
 - En enskild spelare nås via gruppen `player:{id}`, inte via `ConnectionId`. Anslutningen läggs i gruppen när spelaren går med och när den återansluter.
 - Vem en anslutning tillhör står i `IConnectionRegistry`, som bara hubben och handlers använder. Domänen vet bara om en spelare är ansluten (`IsConnected`). Handlers kopplar en ny anslutning med rummets lås, och `DisconnectHandler` kontrollerar andra anslutningar med samma lås, så att en sen disconnect inte markerar en mobil som redan återanslutit.

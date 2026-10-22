@@ -79,7 +79,7 @@ public sealed class GameRoomAbandonedTests
     {
         _room.DisconnectHost(Now);
 
-        _room.ResumeHost(_room.HostToken);
+        _room.ResumeHost(_room.HostToken, Now);
 
         Assert.That(_room.EmptySince, Is.Null);
     }

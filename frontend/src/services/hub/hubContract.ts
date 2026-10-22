@@ -9,12 +9,14 @@ export const serverMethods = {
   rejoinRoom: 'RejoinRoom',
   leaveRoom: 'LeaveRoom',
   removePlayer: 'RemovePlayer',
+  updateSettings: 'UpdateSettings',
+  startGame: 'StartGame',
   search: 'Search',
 } as const;
 
 export const clientEvents = {
   pong: 'Pong',
-  lobbyUpdated: 'LobbyUpdated',
+  gameStateUpdated: 'GameStateUpdated',
   removedFromRoom: 'RemovedFromRoom',
   roomClosed: 'RoomClosed',
 } as const;
@@ -44,8 +46,12 @@ export type PlayerSession = {
   playerToken: string;
 };
 
-// LobbyPlayer i Application/Rooms. colorIndex är 1–8, en plats i paletten player-1 till player-8.
-export type LobbyPlayer = {
+// GamePhase i Domain/Rooms. Servern skickar enums som text i camelCase.
+export const PHASES = ['lobby', 'submitting', 'playing', 'voting', 'revealing', 'gameOver'] as const;
+export type Phase = (typeof PHASES)[number];
+
+// GamePlayer i Application/Rooms. colorIndex är 1–8, en plats i paletten player-1 till player-8.
+export type GamePlayer = {
   id: string;
   name: string;
   colorIndex: number;
@@ -53,16 +59,30 @@ export type LobbyPlayer = {
   isConnected: boolean;
 };
 
-// LobbyState i Application/Rooms, som kommer med LobbyUpdated.
-export type LobbyState = {
+// SettingsState i Application/Rooms.
+export type SettingsState = {
+  rounds: number;
+  clipSeconds: number;
+};
+
+// GameState i Application/Rooms, som kommer med GameStateUpdated.
+export type GameState = {
   roomCode: string;
   revision: number;
-  players: LobbyPlayer[];
+  phase: Phase;
+  // Storskärmen är borta och spelet står still.
+  isPaused: boolean;
+  // 0 i lobbyn.
+  round: number;
+  // Tiden som var kvar av fasen när bilden skapades, eller null i faser utan deadline. Oberoende av mobilens klocka.
+  remainingMs: number | null;
+  settings: SettingsState;
+  roundOptions: number[];
+  clipSecondsOptions: number[];
+  players: GamePlayer[];
   minPlayers: number;
   maxPlayers: number;
   canStart: boolean;
-  // Storskärmen är borta och spelet står still.
-  isPaused: boolean;
 };
 
 // Track i Application/Music. Ingen klipplänk, eftersom den slutar gälla efter 15 minuter och hämtas färsk inför uppspelningen.

@@ -1,4 +1,4 @@
-import type { LobbyPlayer } from '../../../services/hub/hubContract.ts';
+import type { GamePlayer } from '../../../services/hub/hubContract.ts';
 import { playerBackground } from './playerColors.ts';
 
 const graphemes = new Intl.Segmenter('sv', { granularity: 'grapheme' });
@@ -7,7 +7,7 @@ const graphemes = new Intl.Segmenter('sv', { granularity: 'grapheme' });
 const initial = (name: string) => (graphemes.segment(name)[Symbol.iterator]().next().value?.segment ?? '').toLocaleUpperCase('sv');
 
 // En spelare som färgruta med initialen och namnet bredvid, så att ingen behöver skilja spelarna åt bara på färgen.
-export const PlayerChip = ({ player }: { player: LobbyPlayer }) => (
+export const PlayerChip = ({ player }: { player: GamePlayer }) => (
   <span className='flex items-center gap-3'>
     <span
       aria-hidden='true'

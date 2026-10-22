@@ -3,6 +3,7 @@ using Mixtape.Application.Connections;
 using Mixtape.Application.Music;
 using Mixtape.Application.Network;
 using Mixtape.Application.Rooms;
+using Mixtape.Domain.Common;
 
 namespace Mixtape.Api.Hubs;
 
@@ -14,6 +15,8 @@ public sealed class GameHub(
     RejoinRoomHandler rejoinRoom,
     LeaveRoomHandler leaveRoom,
     RemovePlayerHandler removePlayer,
+    UpdateSettingsHandler updateSettings,
+    StartGameHandler startGame,
     DisconnectHandler disconnect,
     SearchTracksHandler searchTracks,
     IConnectionRegistry connections,
@@ -37,14 +40,14 @@ public sealed class GameHub(
         var result = await createRoom.HandleAsync(previous, Context.ConnectionId);
         if (result.IsSuccess)
         {
-            var (session, lobby, closedRoomCode) = result.Value;
+            var (session, state, closedRoomCode) = result.Value;
             if (closedRoomCode is not null)
             {
                 await Clients.Group(closedRoomCode).RoomClosed();
             }
 
             await Groups.AddToGroupAsync(Context.ConnectionId, session.RoomCode);
-            await Clients.Caller.LobbyUpdated(lobby);
+            await Clients.Caller.GameStateUpdated(state);
         }
 
         return HubResponse<HostSession>.From(result, room => room.Session);
@@ -56,14 +59,14 @@ public sealed class GameHub(
         return HubResponse<HostSession>.From(await checkRoom.HandleAsync(session));
     }
 
-    // Häver pausen, så lobbyn går till hela rummet och inte bara till storskärmen.
+    // Häver pausen, så bilden går till hela rummet och inte bara till storskärmen.
     public async Task<HubResponse<HostSession>> ResumeRoom(HostSession session)
     {
         var result = await resumeRoom.HandleAsync(session, Context.ConnectionId);
         if (result.IsSuccess)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, result.Value.Session.RoomCode);
-            await Clients.Group(result.Value.Session.RoomCode).LobbyUpdated(result.Value.Lobby);
+            await SendToRoomAsync(result.Value.State);
         }
 
         return HubResponse<HostSession>.From(result, room => room.Session);
@@ -114,20 +117,31 @@ public sealed class GameHub(
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, PlayerGroup(session.PlayerId));
         if (result.IsSuccess)
         {
-            await Clients.Group(result.Value.Lobby.RoomCode).LobbyUpdated(result.Value.Lobby);
+            await SendToRoomAsync(result.Value.State);
         }
     }
 
-    // Inget svar: en spelare som redan är borta syns ändå inte i listan, och storskärmen får den nya listan med LobbyUpdated.
+    // Inget svar: en spelare som redan är borta syns ändå inte i listan, och storskärmen får den nya listan med GameStateUpdated.
     public async Task RemovePlayer(HostSession host, string? playerId)
     {
         var result = await removePlayer.HandleAsync(host, playerId);
         if (result.IsSuccess)
         {
-            var (removedId, lobby) = result.Value;
+            var (removedId, state) = result.Value;
             await Clients.Group(PlayerGroup(removedId)).RemovedFromRoom();
-            await Clients.Group(lobby.RoomCode).LobbyUpdated(lobby);
+            await SendToRoomAsync(state);
         }
+    }
+
+    // Klienten läser bara felet, och bilden går till hela rummet eftersom mobilerna också visar inställningarna.
+    public async Task<HubResponse<GameState>> UpdateSettings(HostSession host, int? rounds, int? clipSeconds)
+    {
+        return await SendToRoomAsync(await updateSettings.HandleAsync(host, rounds, clipSeconds));
+    }
+
+    public async Task<HubResponse<GameState>> StartGame(HostSession host)
+    {
+        return await SendToRoomAsync(await startGame.HandleAsync(host));
     }
 
     // Spelaren eller storskärmen markeras som borta men behåller sin plats. En borttagen spelare eller ett rum som inte finns längre ger fel, och då finns inget att berätta.
@@ -138,7 +152,7 @@ public sealed class GameHub(
             var result = await disconnect.HandleAsync(owner);
             if (result.IsSuccess)
             {
-                await Clients.Group(result.Value.RoomCode).LobbyUpdated(result.Value);
+                await SendToRoomAsync(result.Value);
             }
         }
 
@@ -147,11 +161,23 @@ public sealed class GameHub(
 
     private async Task EnterRoomAsync(JoinedRoom joined)
     {
-        var (session, lobby) = joined;
+        var (session, state) = joined;
         await Groups.AddToGroupAsync(Context.ConnectionId, session.RoomCode);
         await Groups.AddToGroupAsync(Context.ConnectionId, PlayerGroup(session.PlayerId));
-        await Clients.Group(session.RoomCode).LobbyUpdated(lobby);
+        await SendToRoomAsync(state);
     }
+
+    private async Task<HubResponse<GameState>> SendToRoomAsync(Result<GameState> result)
+    {
+        if (result.IsSuccess)
+        {
+            await SendToRoomAsync(result.Value);
+        }
+
+        return HubResponse<GameState>.From(result);
+    }
+
+    private Task SendToRoomAsync(GameState state) => Clients.Group(state.RoomCode).GameStateUpdated(state);
 
     // Spelarens egen grupp, så att servern når spelaren utan att spara ConnectionId, som byts vid varje återanslutning.
     private static string PlayerGroup(string playerId) => $"player:{playerId}";

@@ -3,7 +3,7 @@ using Mixtape.Domain.Common;
 
 namespace Mixtape.Application.Rooms;
 
-public sealed class JoinRoomHandler(IGameRoomRepository rooms, IConnectionRegistry connections)
+public sealed class JoinRoomHandler(IGameRoomRepository rooms, IConnectionRegistry connections, TimeProvider time)
 {
     public Task<Result<JoinedRoom>> HandleAsync(string? roomCode, string? name, string connectionId) =>
         rooms.WithRoomAsync<JoinedRoom>(roomCode, room =>
@@ -16,6 +16,6 @@ public sealed class JoinRoomHandler(IGameRoomRepository rooms, IConnectionRegist
 
             var player = joined.Value;
             connections.Register(connectionId, ConnectionOwner.Player(room.Code.Value, player.Id));
-            return new JoinedRoom(new PlayerSession(room.Code.Value, player.Id, player.Token), LobbyState.From(room));
+            return new JoinedRoom(new PlayerSession(room.Code.Value, player.Id, player.Token), GameState.From(room, time.GetUtcNow()));
         });
 }

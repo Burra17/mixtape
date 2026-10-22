@@ -4,7 +4,7 @@ using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Application.Rooms;
 
-public sealed class CreateRoomHandler(IGameRoomRepository rooms, IConnectionRegistry connections)
+public sealed class CreateRoomHandler(IGameRoomRepository rooms, IConnectionRegistry connections, TimeProvider time)
 {
     // previous är värdens gamla rum vid "Nytt spel". Det tas bort bara om token stämmer.
     public async Task<Result<CreatedRoom>> HandleAsync(HostSession? previous, string connectionId)
@@ -25,6 +25,6 @@ public sealed class CreateRoomHandler(IGameRoomRepository rooms, IConnectionRegi
         while (!rooms.TryAdd(room));
 
         connections.Register(connectionId, ConnectionOwner.Host(room.Code.Value));
-        return new CreatedRoom(HostSession.For(room), LobbyState.From(room), closedRoomCode);
+        return new CreatedRoom(HostSession.For(room), GameState.From(room, time.GetUtcNow()), closedRoomCode);
     }
 }

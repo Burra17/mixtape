@@ -12,7 +12,16 @@ public sealed class GameRoom
     // Så länge får ett rum stå helt tomt innan det städas bort.
     public static readonly TimeSpan AbandonedAfter = TimeSpan.FromMinutes(30);
 
+    public static readonly TimeSpan SubmittingDuration = TimeSpan.FromSeconds(45);
+
+    public static readonly TimeSpan VotingDuration = TimeSpan.FromSeconds(20);
+
+    // Platshållare tills #22 ger avslöjandet sitt innehåll.
+    public static readonly TimeSpan RevealingDuration = TimeSpan.FromSeconds(15);
+
     private readonly List<Player> _players = [];
+
+    private readonly PhaseClock _clock = new();
 
     private GameRoom(RoomCode code, string hostToken)
     {
@@ -24,7 +33,12 @@ public sealed class GameRoom
 
     public string HostToken { get; }
 
-    public GamePhase Phase { get; } = GamePhase.Lobby;
+    public GamePhase Phase { get; private set; } = GamePhase.Lobby;
+
+    public GameSettings Settings { get; private set; } = GameSettings.Default;
+
+    // 1 i första rundan och 0 i lobbyn.
+    public int Round { get; private set; }
 
     public IReadOnlyList<Player> Players => _players;
 
@@ -35,13 +49,16 @@ public sealed class GameRoom
 
     public bool IsHostConnected { get; private set; } = true;
 
-    // Utan storskärmen står spelet still. Timrarna i #17 läser flaggan.
+    // Utan storskärmen står spelet still, och fasens klocka fryses.
     public bool IsPaused => !IsHostConnected;
 
     // När den sista anslutningen försvann, eller null så länge någon är ansluten. En lobby där alla väntar framför TV:n räknas alltså aldrig som inaktiv.
     public DateTimeOffset? EmptySince { get; private set; }
 
     private bool IsAnyoneConnected => IsHostConnected || _players.Any(player => player.IsConnected);
+
+    // Platshållare tills #20 spelar ett klipp per bidrag.
+    private TimeSpan PlayingDuration => Settings.ClipLength * _players.Count;
 
     // Ett nytt rum börjar i lobbyn med en egen hemlig värd-token.
     public static GameRoom Create(RoomCode code) => new(code, SecretToken.Create());
@@ -51,6 +68,71 @@ public sealed class GameRoom
         hostToken is not null && CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(hostToken), Encoding.UTF8.GetBytes(HostToken));
 
     public bool IsAbandoned(DateTimeOffset now) => EmptySince is { } since && now - since >= AbandonedAfter;
+
+    // Tiden som är kvar av fasen, eller null i faser utan deadline.
+    public TimeSpan? RemainingTime(DateTimeOffset now) => _clock.Remaining(now);
+
+    // Bara inställningen som ändras skickas, och null behåller den andra. Två snabba klick skriver då inte över varandra med ett gammalt värde.
+    public Result UpdateSettings(string? hostToken, int? rounds, int? clipSeconds)
+    {
+        if (!IsHost(hostToken))
+        {
+            return RoomErrors.NotFound;
+        }
+
+        if (Phase != GamePhase.Lobby)
+        {
+            return RoomErrors.AlreadyStarted;
+        }
+
+        var parsed = GameSettings.Create(rounds ?? Settings.Rounds, clipSeconds ?? Settings.ClipSeconds);
+        if (!parsed.IsSuccess)
+        {
+            return parsed.Error!;
+        }
+
+        if (parsed.Value != Settings)
+        {
+            Settings = parsed.Value;
+            Revision++;
+        }
+
+        return Result.Success();
+    }
+
+    public Result StartGame(string? hostToken, DateTimeOffset now)
+    {
+        if (!IsHost(hostToken))
+        {
+            return RoomErrors.NotFound;
+        }
+
+        if (Phase != GamePhase.Lobby)
+        {
+            return RoomErrors.AlreadyStarted;
+        }
+
+        if (!CanStart)
+        {
+            return RoomErrors.NotEnoughPlayers;
+        }
+
+        Round = 1;
+        Enter(GamePhase.Submitting, SubmittingDuration, now);
+        return Result.Success();
+    }
+
+    // Anropas av klockan på servern. Ger true när fasen bytts, så att bilden bara skickas vid en ändring.
+    public bool Tick(DateTimeOffset now)
+    {
+        if (!_clock.IsExpired(now))
+        {
+            return false;
+        }
+
+        CompletePhase(now);
+        return true;
+    }
 
     // Spelaren får den första lediga färgen, så att en färg som frigjorts när någon lämnat delas ut igen.
     public Result<Player> Join(string? name)
@@ -127,8 +209,8 @@ public sealed class GameRoom
     }
 
     // Närvaron nedan gäller i alla faser, precis som Rejoin, så ingen av metoderna kontrollerar fasen.
-    // Storskärmen är tillbaka, efter en omladdning eller ett avbrott i wifi, och pausen hävs.
-    public Result ResumeHost(string? hostToken)
+    // Storskärmen är tillbaka, efter en omladdning eller ett avbrott i wifi, och fasen får tillbaka tiden som var kvar.
+    public Result ResumeHost(string? hostToken, DateTimeOffset now)
     {
         if (!IsHost(hostToken))
         {
@@ -136,13 +218,50 @@ public sealed class GameRoom
         }
 
         SetHostConnected(true);
+        _clock.Resume(now);
         return Result.Success();
     }
 
     public void DisconnectHost(DateTimeOffset now)
     {
         SetHostConnected(false);
+        _clock.Pause(now);
         UpdateEmptySince(now);
+    }
+
+    // Fasen är slut, vid sin deadline eller när alla är klara (#19), och nästa fas börjar med en ny klocka.
+    private void CompletePhase(DateTimeOffset now)
+    {
+        switch (Phase)
+        {
+            case GamePhase.Submitting:
+                Enter(GamePhase.Playing, PlayingDuration, now);
+                break;
+            case GamePhase.Playing:
+                Enter(GamePhase.Voting, VotingDuration, now);
+                break;
+            case GamePhase.Voting:
+                Enter(GamePhase.Revealing, RevealingDuration, now);
+                break;
+            case GamePhase.Revealing when Round < Settings.Rounds:
+                Round++;
+                Enter(GamePhase.Submitting, SubmittingDuration, now);
+                break;
+            case GamePhase.Revealing:
+                Phase = GamePhase.GameOver;
+                _clock.Stop();
+                Revision++;
+                break;
+            default:
+                throw new InvalidOperationException($"Fasen {Phase} har ingen deadline att nå.");
+        }
+    }
+
+    private void Enter(GamePhase phase, TimeSpan duration, DateTimeOffset now)
+    {
+        Phase = phase;
+        _clock.Start(duration, now);
+        Revision++;
     }
 
     // Klockan startar när den sista anslutningen försvinner och nollställs när någon kommer tillbaka. Ett rum som redan är tomt behåller sin tid.

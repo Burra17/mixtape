@@ -23,10 +23,10 @@ public sealed class CleanUpRoomsHandlerTests
         _time = new FakeTimeProvider(new DateTimeOffset(2026, 10, 20, 20, 0, 0, TimeSpan.Zero));
         _rooms = new InMemoryGameRoomRepository();
         _connections = new InMemoryConnectionRegistry();
-        _create = new CreateRoomHandler(_rooms, _connections);
+        _create = new CreateRoomHandler(_rooms, _connections, _time);
         _disconnect = new DisconnectHandler(_rooms, _connections, _time);
         _cleanUp = new CleanUpRoomsHandler(_rooms, _time);
-        _rejoin = new RejoinRoomHandler(_rooms, _connections);
+        _rejoin = new RejoinRoomHandler(_rooms, _connections, _time);
     }
 
     [Test]
@@ -61,7 +61,7 @@ public sealed class CleanUpRoomsHandlerTests
     public async Task PlayerComingBackBeforeThirtyMinutes_KeepsTheRoom()
     {
         var host = (await _create.HandleAsync(null, "host")).Value.Session;
-        var anna = (await new JoinRoomHandler(_rooms, _connections).HandleAsync(host.RoomCode, "Anna", "anna-1")).Value.Session;
+        var anna = (await new JoinRoomHandler(_rooms, _connections, _time).HandleAsync(host.RoomCode, "Anna", "anna-1")).Value.Session;
         await DisconnectAsync("host");
         await DisconnectAsync("anna-1");
 
