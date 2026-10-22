@@ -4,6 +4,12 @@ import { useIsConnected } from '../../../store/connectionStore.ts';
 import type { useTrackPicker } from '../hooks/useTrackPicker.ts';
 import { TrackRow } from './trackRow.tsx';
 
+const ErrorLine = ({ error }: { error: string }) => (
+  <p role='alert' className='text-lg font-bold'>
+    {error}
+  </p>
+);
+
 type TrackSearchProps = {
   picker: ReturnType<typeof useTrackPicker>;
 };
@@ -13,6 +19,7 @@ export const TrackSearch = ({ picker }: TrackSearchProps) => {
   const { results, selected, select, error, busy, find, submit } = picker;
   const isConnected = useIsConnected();
   const [query, setQuery] = useState('');
+  const hasResults = results !== null && results.length > 0;
 
   const onSearch = (event: FormEvent) => {
     event.preventDefault();
@@ -38,15 +45,12 @@ export const TrackSearch = ({ picker }: TrackSearchProps) => {
         </Button>
       </form>
 
-      {error && (
-        <p role='alert' className='text-lg font-bold'>
-          {error}
-        </p>
-      )}
+      {/* Med träffar står felet vid "Skicka in", där spelaren är när "Någon hann före dig!" kommer. */}
+      {error && !hasResults && <ErrorLine error={error} />}
 
       {results?.length === 0 && <p className='font-medium text-muted'>Inga träffar. Prova att söka på något annat.</p>}
 
-      {results && results.length > 0 && (
+      {hasResults && (
         <>
           <ul className='flex flex-col gap-2'>
             {results.map((track) => {
@@ -67,7 +71,8 @@ export const TrackSearch = ({ picker }: TrackSearchProps) => {
           </ul>
 
           {/* Knappen ligger kvar längst ned medan spelaren bläddrar bland träffarna. */}
-          <div className='sticky bottom-0 -mx-6 border-t-2 border-ink bg-paper px-6 py-4'>
+          <div className='sticky bottom-0 -mx-6 flex flex-col gap-3 border-t-2 border-ink bg-paper px-6 py-4'>
+            {error && <ErrorLine error={error} />}
             <Button variant='primary' onClick={() => void submit()} disabled={busy || !isConnected || !selected}>
               Skicka in
             </Button>
