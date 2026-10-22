@@ -1,6 +1,7 @@
 using Mixtape.Application.Rooms;
 using Mixtape.Domain.Rooms;
 using Mixtape.Infrastructure.Connections;
+using Mixtape.Infrastructure.Prompts;
 using Mixtape.Infrastructure.Rooms;
 
 namespace Mixtape.Tests.Application;
@@ -68,7 +69,7 @@ public sealed class AdvancePhasesHandlerTests
             await join.HandleAsync(host.RoomCode, name, name);
         }
 
-        await new StartGameHandler(_rooms, _time).HandleAsync(host);
+        await new StartGameHandler(_rooms, PromptBank.LoadEmbedded(new Random(1)), _time).HandleAsync(host);
         return host;
     }
 

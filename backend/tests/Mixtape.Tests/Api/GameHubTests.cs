@@ -273,6 +273,7 @@ public sealed class GameHubTests
         Assert.That(settings.Error, Is.Null);
         Assert.That(start.Error, Is.Null);
         Assert.That(state.Round, Is.EqualTo(1));
+        Assert.That(state.Prompt, Is.Not.Null.And.Not.Empty);
         Assert.That(state.Settings, Is.EqualTo(new SettingsState(3, 10)));
         Assert.That(state.RemainingMs, Is.InRange(40_000, 45_000));
     }
