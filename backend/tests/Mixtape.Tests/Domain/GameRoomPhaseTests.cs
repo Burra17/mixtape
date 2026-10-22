@@ -21,7 +21,7 @@ public sealed class GameRoomPhaseTests
     {
         JoinPlayers(3);
 
-        var result = _room.StartGame(_room.HostToken, _now);
+        var result = _room.StartGame(_room.HostToken, Prompts(), _now);
 
         Assert.That(result.IsSuccess, Is.True);
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Submitting));
@@ -34,7 +34,7 @@ public sealed class GameRoomPhaseTests
     {
         JoinPlayers(2);
 
-        Assert.That(_room.StartGame(_room.HostToken, _now).Error, Is.EqualTo(RoomErrors.NotEnoughPlayers));
+        Assert.That(_room.StartGame(_room.HostToken, Prompts(), _now).Error, Is.EqualTo(RoomErrors.NotEnoughPlayers));
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Lobby));
     }
 
@@ -45,7 +45,7 @@ public sealed class GameRoomPhaseTests
         JoinPlayers(2);
         _room.Disconnect(anna.Id, _now);
 
-        Assert.That(_room.StartGame(_room.HostToken, _now).IsSuccess, Is.True);
+        Assert.That(_room.StartGame(_room.HostToken, Prompts(), _now).IsSuccess, Is.True);
     }
 
     [TestCase(null)]
@@ -54,7 +54,7 @@ public sealed class GameRoomPhaseTests
     {
         JoinPlayers(3);
 
-        Assert.That(_room.StartGame(token, _now).Error, Is.EqualTo(RoomErrors.NotFound));
+        Assert.That(_room.StartGame(token, Prompts(), _now).Error, Is.EqualTo(RoomErrors.NotFound));
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Lobby));
     }
 
@@ -63,7 +63,7 @@ public sealed class GameRoomPhaseTests
     {
         StartWithPlayers(3);
 
-        Assert.That(_room.StartGame(_room.HostToken, _now).Error, Is.EqualTo(RoomErrors.AlreadyStarted));
+        Assert.That(_room.StartGame(_room.HostToken, Prompts(), _now).Error, Is.EqualTo(RoomErrors.AlreadyStarted));
         Assert.That(_room.Round, Is.EqualTo(1));
     }
 
@@ -115,7 +115,7 @@ public sealed class GameRoomPhaseTests
     {
         JoinPlayers(3);
         _room.UpdateSettings(_room.HostToken, rounds, 15);
-        _room.StartGame(_room.HostToken, _now);
+        _room.StartGame(_room.HostToken, Prompts(), _now);
 
         var phaseChanges = 0;
         while (_room.Phase != GamePhase.GameOver && phaseChanges < 100)
@@ -171,7 +171,7 @@ public sealed class GameRoomPhaseTests
 
         Assert.That(_room.RemainingTime(back), Is.Null);
 
-        _room.StartGame(_room.HostToken, back);
+        _room.StartGame(_room.HostToken, Prompts(), back);
         Assert.That(_room.RemainingTime(back), Is.EqualTo(GameRoom.SubmittingDuration));
     }
 
@@ -266,6 +266,9 @@ public sealed class GameRoomPhaseTests
         Assert.That(anna.IsConnected, Is.True);
     }
 
+    // En prompt per runda, så som servern drar dem.
+    private List<string> Prompts() => Enumerable.Range(1, _room.Settings.Rounds).Select(round => $"Prompt {round}").ToList();
+
     private void JoinPlayers(int count)
     {
         for (var i = 1; i <= count; i++)
@@ -277,7 +280,7 @@ public sealed class GameRoomPhaseTests
     private void StartWithPlayers(int count)
     {
         JoinPlayers(count);
-        _room.StartGame(_room.HostToken, _now);
+        _room.StartGame(_room.HostToken, Prompts(), _now);
     }
 
     // Spolar fram till fasens deadline och låter klockan byta fas.

@@ -2,6 +2,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Mixtape.Application\Mixtape.Application.csproj" />
   </ItemGroup>
+  <!-- Banken följer med i assemblyn under ett fast namn, oberoende av mappen den ligger i. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Prompts\prompts.json" LogicalName="prompts.json" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />

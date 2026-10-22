@@ -1,6 +1,7 @@
 import { HostLobby } from '../features/lobby/components/hostLobby.tsx';
 import { HostStart } from '../features/lobby/components/hostStart.tsx';
 import { useHostRoom } from '../features/lobby/hooks/useHostRoom.ts';
+import { HostSubmitting } from '../features/submitting/components/hostSubmitting.tsx';
 import { PhasePlaceholder } from '../shared/components/phasePlaceholder.tsx';
 import { useRoomGame } from '../store/gameStore.ts';
 import { useHostStore } from '../store/hostStore.ts';
@@ -12,7 +13,11 @@ export const HostView = () => {
   const session = useHostStore((state) => state.session);
   const phase = useRoomGame(session?.roomCode)?.phase ?? 'lobby';
 
-  if (screen === 'lobby') return phase === 'lobby' ? <HostLobby /> : <PhasePlaceholder screen='host' />;
+  if (screen === 'lobby') {
+    if (phase === 'lobby') return <HostLobby />;
+    if (phase === 'submitting') return <HostSubmitting />;
+    return <PhasePlaceholder screen='host' />;
+  }
 
   return <HostStart onCreate={() => void create()} onResume={resume} onStartOver={() => void startOver()} />;
 };

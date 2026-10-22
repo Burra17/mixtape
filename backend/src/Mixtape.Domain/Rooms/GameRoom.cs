@@ -23,6 +23,10 @@ public sealed class GameRoom
 
     private readonly PhaseClock _clock = new();
 
+    private readonly List<string> _prompts = [];
+
+    private readonly HashSet<string> _usedPrompts = [];
+
     private GameRoom(RoomCode code, string hostToken)
     {
         Code = code;
@@ -39,6 +43,12 @@ public sealed class GameRoom
 
     // 1 i första rundan och 0 i lobbyn.
     public int Round { get; private set; }
+
+    // Rundans prompt, från inskicket till avslöjandet.
+    public string? Prompt => Phase is GamePhase.Lobby or GamePhase.GameOver ? null : _prompts[Round - 1];
+
+    // Alla promptar som rummet har använt under kvällen, så att nästa spel kan dra andra.
+    public IReadOnlyCollection<string> UsedPrompts => _usedPrompts;
 
     public IReadOnlyList<Player> Players => _players;
 
@@ -100,7 +110,8 @@ public sealed class GameRoom
         return Result.Success();
     }
 
-    public Result StartGame(string? hostToken, DateTimeOffset now)
+    // prompts är en per runda, dragna av servern. Fel antal är en bugg i den som drog dem, inte ett regelfel.
+    public Result StartGame(string? hostToken, IReadOnlyList<string> prompts, DateTimeOffset now)
     {
         if (!IsHost(hostToken))
         {
@@ -117,6 +128,14 @@ public sealed class GameRoom
             return RoomErrors.NotEnoughPlayers;
         }
 
+        if (prompts.Count != Settings.Rounds || prompts.Distinct().Count() != prompts.Count)
+        {
+            throw new ArgumentException($"En prompt per runda behövs, alla olika: {Settings.Rounds} rundor men {prompts.Count} promptar, varav {prompts.Distinct().Count()} olika.", nameof(prompts));
+        }
+
+        _prompts.Clear();
+        _prompts.AddRange(prompts);
+        _usedPrompts.UnionWith(prompts);
         Round = 1;
         Enter(GamePhase.Submitting, SubmittingDuration, now);
         return Result.Success();
