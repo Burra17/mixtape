@@ -2,6 +2,7 @@ import { Navigate } from 'react-router';
 import { PlayerLobby } from '../features/lobby/components/playerLobby.tsx';
 import { Rejoining } from '../features/lobby/components/rejoining.tsx';
 import { usePlayerRejoin } from '../features/lobby/hooks/usePlayerRejoin.ts';
+import { PlayerPlaying } from '../features/playing/components/playerPlaying.tsx';
 import { PlayerSubmitting } from '../features/submitting/components/playerSubmitting.tsx';
 import { PhasePlaceholder } from '../shared/components/phasePlaceholder.tsx';
 import { useRoomGame } from '../store/gameStore.ts';
@@ -24,5 +25,6 @@ export const PlayerView = () => {
   if (phase === 'lobby') return <PlayerLobby session={session} />;
   // Nyckeln är rundan, så att sökningen börjar om när en överhoppad runda går direkt till nästa inskick.
   if (phase === 'submitting') return <PlayerSubmitting key={game?.round} />;
+  if (phase === 'playing') return <PlayerPlaying />;
   return <PhasePlaceholder screen='player' />;
 };

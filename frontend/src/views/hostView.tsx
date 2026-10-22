@@ -1,6 +1,7 @@
 import { HostLobby } from '../features/lobby/components/hostLobby.tsx';
 import { HostStart } from '../features/lobby/components/hostStart.tsx';
 import { useHostRoom } from '../features/lobby/hooks/useHostRoom.ts';
+import { HostPlaying } from '../features/playing/components/hostPlaying.tsx';
 import { HostSubmitting } from '../features/submitting/components/hostSubmitting.tsx';
 import { PhasePlaceholder } from '../shared/components/phasePlaceholder.tsx';
 import { useRoomGame } from '../store/gameStore.ts';
@@ -16,6 +17,7 @@ export const HostView = () => {
   if (screen === 'lobby') {
     if (phase === 'lobby') return <HostLobby />;
     if (phase === 'submitting') return <HostSubmitting />;
+    if (phase === 'playing') return <HostPlaying />;
     return <PhasePlaceholder screen='host' />;
   }
 

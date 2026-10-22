@@ -3,7 +3,16 @@ import { useConnectionStore } from '../../store/connectionStore.ts';
 import { useGameStore } from '../../store/gameStore.ts';
 import { usePlayerStore } from '../../store/playerStore.ts';
 import { clearPlayerSession } from '../storage/playerSessionStorage.ts';
-import { clientEvents, serverMethods, type HostSession, type GameState, type HubResponse, type PlayerSession, type Track } from './hubContract.ts';
+import {
+  clientEvents,
+  serverMethods,
+  type Clip,
+  type HostSession,
+  type GameState,
+  type HubResponse,
+  type PlayerSession,
+  type Track,
+} from './hubContract.ts';
 
 // Två snabba försök först, eftersom de flesta avbrott är ett kort hack i wifi. Sedan var 5:e sekund.
 const FIRST_RETRY_DELAYS_MS = [0, 2000];
@@ -134,3 +143,6 @@ export const search = (query: string) => connection.invoke<HubResponse<Track[]>>
 
 // Bidraget är låst efteråt. Den nya bilden, där spelaren är klar, kommer med GameStateUpdated.
 export const submitTrack = (trackId: number) => connection.invoke<HubResponse<GameState>>(serverMethods.submitTrack, trackId);
+
+// Bara storskärmen får länken till klippet som spelas. Den finns aldrig i GameState.
+export const getClip = (host: HostSession) => connection.invoke<HubResponse<Clip>>(serverMethods.getClip, host);
