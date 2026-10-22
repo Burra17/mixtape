@@ -2,8 +2,7 @@ using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Application.Rooms;
 
-// Ögonblicksbilden av rummet som skickas med GameStateUpdated vid varje ändring, samma för alla i rummet.
-// Gränserna och valen följer med, så att klienten inte har egna kopior av reglerna. Speglas i hubContract.ts.
+// Ögonblicksbilden av rummet, samma för alla, med reglernas gränser och val så att klienten inte har egna kopior. Speglas i hubContract.ts.
 public sealed record GameState(
     string RoomCode,
     int Revision,

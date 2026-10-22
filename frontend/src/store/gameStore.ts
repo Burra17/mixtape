@@ -19,3 +19,6 @@ export const useGameStore = create<GameStoreState>()((set) => ({
   // Före ett nytt rum, så att ett rum som råkar få samma kod som det förra inte får sina första bilder kastade.
   reset: () => set({ game: null }),
 }));
+
+// Bilden bara om den hör till sessionens rum, så att en kvarliggande bild från ett annat rum aldrig styr vyn.
+export const useRoomGame = (roomCode: string | undefined) => useGameStore((state) => (state.game?.roomCode === roomCode ? state.game : null));

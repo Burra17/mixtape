@@ -3,14 +3,14 @@ import { PlayerLobby } from '../features/lobby/components/playerLobby.tsx';
 import { Rejoining } from '../features/lobby/components/rejoining.tsx';
 import { usePlayerRejoin } from '../features/lobby/hooks/usePlayerRejoin.ts';
 import { PhasePlaceholder } from '../shared/components/phasePlaceholder.tsx';
-import { useGameStore } from '../store/gameStore.ts';
+import { useRoomGame } from '../store/gameStore.ts';
 import { usePlayerStore } from '../store/playerStore.ts';
 
 // Mobilens vy under spelet. Väljer fas utifrån serverns state.
 export const PlayerView = () => {
   const session = usePlayerStore((state) => state.session);
   const lastRoomCode = usePlayerStore((state) => state.lastRoomCode);
-  const phase = useGameStore((state) => state.game?.phase ?? 'lobby');
+  const phase = useRoomGame(session?.roomCode)?.phase ?? 'lobby';
   const rejoining = usePlayerRejoin(null);
 
   if (!session) {

@@ -162,6 +162,20 @@ public sealed class GameRoomPhaseTests
     }
 
     [Test]
+    public void PauseInTheLobby_LeavesNoClockAndTheFirstPhaseGetsItsWholeTime()
+    {
+        JoinPlayers(3);
+        _room.DisconnectHost(_now);
+        var back = _now.AddMinutes(10);
+        _room.ResumeHost(_room.HostToken, back);
+
+        Assert.That(_room.RemainingTime(back), Is.Null);
+
+        _room.StartGame(_room.HostToken, back);
+        Assert.That(_room.RemainingTime(back), Is.EqualTo(GameRoom.SubmittingDuration));
+    }
+
+    [Test]
     public void UpdateSettings_AsHostInTheLobby_ChangesTheSettings()
     {
         var result = _room.UpdateSettings(_room.HostToken, 8, 20);

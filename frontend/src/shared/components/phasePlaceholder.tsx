@@ -14,8 +14,7 @@ const TITLES: Record<Phase, string> = {
   gameOver: 'Spelet är slut',
 };
 
-// En tom vy med fasens namn, rundan och nedräkningen, för faser som inte har fått sitt innehåll än.
-// #18–#23 tar över en fas i taget, och när den sista är tagen tas platshållaren bort.
+// Tom vy för faser utan innehåll än. #18–#23 tar över en fas i taget, och sedan tas platshållaren bort.
 export const PhasePlaceholder = ({ screen }: { screen: 'host' | 'player' }) => {
   const game = useGameStore((state) => state.game);
   const seconds = useCountdown();

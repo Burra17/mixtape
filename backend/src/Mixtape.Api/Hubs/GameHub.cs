@@ -66,7 +66,7 @@ public sealed class GameHub(
         if (result.IsSuccess)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, result.Value.Session.RoomCode);
-            await Clients.Group(result.Value.Session.RoomCode).GameStateUpdated(result.Value.State);
+            await SendToRoomAsync(result.Value.State);
         }
 
         return HubResponse<HostSession>.From(result, room => room.Session);
@@ -117,7 +117,7 @@ public sealed class GameHub(
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, PlayerGroup(session.PlayerId));
         if (result.IsSuccess)
         {
-            await Clients.Group(result.Value.State.RoomCode).GameStateUpdated(result.Value.State);
+            await SendToRoomAsync(result.Value.State);
         }
     }
 
@@ -129,11 +129,11 @@ public sealed class GameHub(
         {
             var (removedId, state) = result.Value;
             await Clients.Group(PlayerGroup(removedId)).RemovedFromRoom();
-            await Clients.Group(state.RoomCode).GameStateUpdated(state);
+            await SendToRoomAsync(state);
         }
     }
 
-    // Null behåller inställningen som den är. Klienten läser bara felet ur svaret, och bilden går till hela rummet eftersom mobilerna också visar inställningarna.
+    // Klienten läser bara felet, och bilden går till hela rummet eftersom mobilerna också visar inställningarna.
     public async Task<HubResponse<GameState>> UpdateSettings(HostSession host, int? rounds, int? clipSeconds)
     {
         return await SendToRoomAsync(await updateSettings.HandleAsync(host, rounds, clipSeconds));
@@ -152,7 +152,7 @@ public sealed class GameHub(
             var result = await disconnect.HandleAsync(owner);
             if (result.IsSuccess)
             {
-                await Clients.Group(result.Value.RoomCode).GameStateUpdated(result.Value);
+                await SendToRoomAsync(result.Value);
             }
         }
 
@@ -164,18 +164,20 @@ public sealed class GameHub(
         var (session, state) = joined;
         await Groups.AddToGroupAsync(Context.ConnectionId, session.RoomCode);
         await Groups.AddToGroupAsync(Context.ConnectionId, PlayerGroup(session.PlayerId));
-        await Clients.Group(session.RoomCode).GameStateUpdated(state);
+        await SendToRoomAsync(state);
     }
 
     private async Task<HubResponse<GameState>> SendToRoomAsync(Result<GameState> result)
     {
         if (result.IsSuccess)
         {
-            await Clients.Group(result.Value.RoomCode).GameStateUpdated(result.Value);
+            await SendToRoomAsync(result.Value);
         }
 
         return HubResponse<GameState>.From(result);
     }
+
+    private Task SendToRoomAsync(GameState state) => Clients.Group(state.RoomCode).GameStateUpdated(state);
 
     // Spelarens egen grupp, så att servern når spelaren utan att spara ConnectionId, som byts vid varje återanslutning.
     private static string PlayerGroup(string playerId) => $"player:{playerId}";

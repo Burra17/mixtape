@@ -278,6 +278,21 @@ public sealed class GameHubTests
     }
 
     [Test]
+    public async Task GameStateUpdated_SendsThePhaseAsCamelCaseText()
+    {
+        await using var host = CreateConnection();
+        var raw = new TaskCompletionSource<JsonElement>();
+        // JsonElement tar emot det som står på tråden, oberoende av klientens converter.
+        host.On<JsonElement>(nameof(IGameClient.GameStateUpdated), state => raw.TrySetResult(state));
+        await host.StartAsync();
+
+        await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null);
+        var state = await raw.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.That(state.GetProperty("phase").GetString(), Is.EqualTo("lobby"));
+    }
+
+    [Test]
     public async Task StartGame_WithTooFewPlayers_ReturnsTheErrorCode()
     {
         await using var host = CreateConnection();

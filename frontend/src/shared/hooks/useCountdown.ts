@@ -3,8 +3,7 @@ import { useGameStore } from '../../store/gameStore.ts';
 
 const toSeconds = (ms: number) => Math.ceil(Math.max(ms, 0) / 1000);
 
-// Hela sekunder kvar av fasen, avrundat uppåt, eller null utan deadline. Deadline räknas från när bilden kom fram
-// enligt den här enhetens klocka, så en mobil vars klocka går fel räknar ändå rätt. Under paus står siffran still.
+// Hela sekunder kvar, räknat från när bilden kom fram enligt enhetens egen klocka, så att en mobil med fel klocka ändå räknar rätt.
 export const useCountdown = () => {
   const remainingMs = useGameStore((state) => state.game?.remainingMs ?? null);
   const isPaused = useGameStore((state) => state.game?.isPaused ?? false);
