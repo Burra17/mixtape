@@ -67,6 +67,17 @@ public sealed class GameRoomSubmitTests
     }
 
     [Test]
+    public void SubmitTrack_WithTheSameTitleButOtherWhitespace_ReturnsTrackTaken()
+    {
+        Start();
+        _room.SubmitTrack(_anna.Id, new SubmittedTrack(1, "Jag kommer", "Veronica Maggio"), Now);
+
+        var result = _room.SubmitTrack(_bertil.Id, new SubmittedTrack(2, "Jag\tkommer\n", "Veronica\u00a0Maggio"), Now);
+
+        Assert.That(result.Error, Is.EqualTo(EntryErrors.TrackTaken));
+    }
+
+    [Test]
     public void SubmitTrack_WithAnotherVersion_IsAccepted()
     {
         Start();
@@ -102,13 +113,13 @@ public sealed class GameRoomSubmitTests
     }
 
     [Test]
-    public void CanSearch_OnlyDuringSubmitting()
+    public void CanChooseTrack_OnlyDuringSubmitting()
     {
-        Assert.That(_room.CanSearch().Error, Is.EqualTo(RoomErrors.WrongPhase));
+        Assert.That(_room.CanChooseTrack().Error, Is.EqualTo(RoomErrors.WrongPhase));
 
         Start();
 
-        Assert.That(_room.CanSearch().IsSuccess, Is.True);
+        Assert.That(_room.CanChooseTrack().IsSuccess, Is.True);
     }
 
     [Test]
@@ -212,9 +223,9 @@ public sealed class GameRoomSubmitTests
         Assert.That(_room.Entries, Is.Empty);
     }
 
-    // Med en ensam ansluten spelare är alla klara efter ett bidrag, men ett bidrag räcker inte för en runda.
+    // Ett bidrag räcker inte för en runda, så de som är borta får tiden fram till deadline att komma tillbaka.
     [Test]
-    public void SubmitTrack_AsTheOnlyConnectedPlayer_SkipsTheRoundAtOnce()
+    public void SubmitTrack_AsTheOnlyConnectedPlayer_WaitsForTheDeadline()
     {
         Start();
         _room.Disconnect(_bertil.Id, Now);
@@ -222,8 +233,14 @@ public sealed class GameRoomSubmitTests
 
         _room.SubmitTrack(_anna.Id, Track(1, "Ett"), Now);
 
-        Assert.That(_room.Round, Is.EqualTo(2));
-        Assert.That(_room.SkippedRound, Is.True);
+        Assert.That(_room.Phase, Is.EqualTo(GamePhase.Submitting));
+        Assert.That(_room.Tick(Now.AddSeconds(1)), Is.False);
+
+        _room.Rejoin(_bertil.Token);
+        _room.SubmitTrack(_bertil.Id, Track(2, "Två"), Now.AddSeconds(10));
+
+        Assert.That(_room.Phase, Is.EqualTo(GamePhase.Playing));
+        Assert.That(_room.Round, Is.EqualTo(1));
     }
 
     [Test]

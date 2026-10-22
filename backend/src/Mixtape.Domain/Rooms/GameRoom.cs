@@ -152,8 +152,8 @@ public sealed class GameRoom
         return Result.Success();
     }
 
-    // Spelaren kan bara söka medan rundan tar emot bidrag.
-    public Result CanSearch() => Phase == GamePhase.Submitting ? Result.Success() : RoomErrors.WrongPhase;
+    // Spelaren kan bara söka och skicka in medan rundan tar emot bidrag.
+    public Result CanChooseTrack() => Phase == GamePhase.Submitting ? Result.Success() : RoomErrors.WrongPhase;
 
     // Bidraget är låst när det väl skickats in. Är alla klara går rummet vidare direkt, utan att vänta på nästa tick.
     public Result SubmitTrack(string playerId, SubmittedTrack track, DateTimeOffset now)
@@ -300,6 +300,7 @@ public sealed class GameRoom
     private bool CanCompleteEarly => !IsPaused && IsEveryoneDone;
 
     // Bara anslutna spelare räknas, så en mobil som är borta hindrar inte de andra. Utan någon ansluten gäller deadline.
+    // Med färre än 2 bidrag väntar inskicket till deadline, så att den som är borta hinner tillbaka innan rundan hoppas över.
     private bool IsEveryoneDone
     {
         get
@@ -307,7 +308,7 @@ public sealed class GameRoom
             var connected = _players.Where(player => player.IsConnected).ToList();
             return Phase switch
             {
-                GamePhase.Submitting => connected.Count > 0 && connected.All(player => HasSubmitted(player.Id)),
+                GamePhase.Submitting => _entries.Count >= 2 && connected.Count > 0 && connected.All(player => HasSubmitted(player.Id)),
                 _ => false,
             };
         }

@@ -7,13 +7,19 @@ namespace Mixtape.Application.Rooms;
 
 public sealed class SubmitTrackHandler(IGameRoomRepository rooms, IMusicCatalog catalog, IConnectionRegistry connections, TimeProvider time)
 {
-    // Låten hämtas från musikkällan före rummets lås, så att ingen väntar på Deezer med rummet låst. Då vet servern att låten
-    // finns och går att spela, och titeln och artisten kommer från källan och inte från klienten.
+    // Låten hämtas från musikkällan utanför rummets lås, så att servern vet att den går att spela utan att låsa rummet under tiden.
     public async Task<Result<GameState>> HandleAsync(string connectionId, long trackId)
     {
         if (connections.TryGetOwner(connectionId) is not { IsHost: false } owner)
         {
             return RoomErrors.NotFound;
+        }
+
+        // Fasen kontrolleras före Deezer, så att ett sent inskick får fasfelet och inte ett fel från musikkällan.
+        var allowed = await rooms.WithRoomAsync(owner.RoomCode, room => room.CanChooseTrack());
+        if (!allowed.IsSuccess)
+        {
+            return allowed.Error!;
         }
 
         var playable = await catalog.GetPlayableTrackAsync(trackId);

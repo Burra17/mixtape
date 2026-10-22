@@ -38,7 +38,7 @@ export const TrackSearch = ({ picker }: TrackSearchProps) => {
           onChange={(event) => setQuery(event.target.value)}
           maxLength={100}
           autoComplete='off'
-          className='min-h-12 w-full min-w-0 rounded-control border-2 border-ink bg-card px-4 text-lg font-semibold focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-ink'
+          className='min-h-12 w-full min-w-0 rounded-control border-2 border-ink bg-card px-4 text-lg font-semibold focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-ink lg:rounded-none'
         />
         <Button type='submit' disabled={busy || !isConnected || query.trim() === ''}>
           Sök
@@ -61,7 +61,7 @@ export const TrackSearch = ({ picker }: TrackSearchProps) => {
                     type='button'
                     aria-pressed={isSelected}
                     onClick={() => select(isSelected ? null : track)}
-                    className={`flex min-h-12 w-full rounded-control border-2 p-2 focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-ink ${isSelected ? 'border-ink bg-signal shadow-hard' : 'border-transparent'}`}
+                    className={`flex min-h-12 w-full rounded-control border-2 p-2 focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-ink lg:rounded-none ${isSelected ? 'border-ink bg-card shadow-hard' : 'border-transparent'}`}
                   >
                     <TrackRow track={track} />
                   </button>

@@ -30,7 +30,7 @@ export const PlayerSubmitting = () => {
       {hasSubmitted ? (
         <section className='flex flex-col gap-4 pb-12'>
           {picker.submitted && (
-            <div className='rounded-control border-2 border-ink bg-card p-3 shadow-hard'>
+            <div className='rounded-control border-2 border-ink bg-card p-3 shadow-hard lg:rounded-none'>
               <TrackRow track={picker.submitted} />
             </div>
           )}

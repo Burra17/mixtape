@@ -60,6 +60,18 @@ public sealed class SubmitTrackHandlerTests
         Assert.That(_catalog.Lookups, Is.Zero);
     }
 
+    [Test]
+    public async Task Handle_InTheLobby_ReturnsWrongPhaseWithoutLookingUpTheTrack()
+    {
+        var host = (await new CreateRoomHandler(_rooms, _connections, _time).HandleAsync(null, "host")).Value.Session;
+        await new JoinRoomHandler(_rooms, _connections, _time).HandleAsync(host.RoomCode, "Anna", "Anna");
+
+        var result = await _handler.HandleAsync("Anna", 44112901);
+
+        Assert.That(result.Error, Is.EqualTo(RoomErrors.WrongPhase));
+        Assert.That(_catalog.Lookups, Is.Zero);
+    }
+
     private async Task<IReadOnlyList<Entry>> EntriesAsync(StartedGame game) =>
         (await _rooms.WithRoomAsync<IReadOnlyList<Entry>>(game.Host.RoomCode, room => room.Entries.ToList())).Value;
 

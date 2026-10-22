@@ -22,7 +22,7 @@ public sealed class SearchTracksHandler(IMusicCatalog catalog, IConnectionRegist
         }
 
         // Fasen läses med rummets lås, men sökningen görs efter att låset släppts.
-        var allowed = await rooms.WithRoomAsync<bool>(owner.RoomCode, room => room.CanSearch() is { Error: { } error } ? error : true);
+        var allowed = await rooms.WithRoomAsync(owner.RoomCode, room => room.CanChooseTrack());
         if (!allowed.IsSuccess)
         {
             return allowed.Error!;
