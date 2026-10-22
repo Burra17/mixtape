@@ -1,7 +1,7 @@
 namespace Mixtape.Domain.Rooms;
 
-// Det rummet behöver veta om en inskickad låt för att känna igen dubbletter. Omslag och klipp hämtas färska vid uppspelningen.
-public sealed record SubmittedTrack(long Id, string Title, string Artist)
+// En inskickad låt med det som storskärmen visar och spelar. Klipplänken gäller i 15 minuter och förnyas efter en lång paus.
+public sealed record SubmittedTrack(long Id, string Title, string Artist, string Album, string CoverUrl, string PreviewUrl)
 {
     // Samma låt på singeln och på albumet har olika id men samma titel och artist. Olika versioner, som "Live", har olika titlar och räknas som olika låtar.
     public bool IsSameSongAs(SubmittedTrack other) =>

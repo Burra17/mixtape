@@ -38,7 +38,7 @@ public sealed class AdvancePhasesHandlerTests
         var sent = _notifier.Sent.Single();
         Assert.That(sent.RoomCode, Is.EqualTo(host.RoomCode));
         Assert.That(sent.Phase, Is.EqualTo(GamePhase.Playing));
-        Assert.That(sent.RemainingMs, Is.EqualTo(3 * 15_000));
+        Assert.That(sent.RemainingMs, Is.EqualTo(15_000));
     }
 
     [Test]
@@ -79,8 +79,8 @@ public sealed class AdvancePhasesHandlerTests
     private Task SubmitTwoAsync(StartedGame game) =>
         _rooms.WithRoomAsync<bool>(game.Host.RoomCode, room =>
         {
-            room.SubmitTrack(game.Players[0].PlayerId, new SubmittedTrack(1, "Ett", "Artist"), _time.GetUtcNow());
-            room.SubmitTrack(game.Players[1].PlayerId, new SubmittedTrack(2, "Två", "Artist"), _time.GetUtcNow());
+            room.SubmitTrack(game.Players[0].PlayerId, TestTrack.Of(1, "Ett", "Artist"), _time.GetUtcNow());
+            room.SubmitTrack(game.Players[1].PlayerId, TestTrack.Of(2, "Två", "Artist"), _time.GetUtcNow());
             return true;
         });
 

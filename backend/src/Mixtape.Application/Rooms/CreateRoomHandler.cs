@@ -20,7 +20,7 @@ public sealed class CreateRoomHandler(IGameRoomRepository rooms, IConnectionRegi
         GameRoom room;
         do
         {
-            room = GameRoom.Create(RoomCode.Generate(Random.Shared));
+            room = GameRoom.Create(RoomCode.Generate(Random.Shared), Random.Shared);
         }
         while (!rooms.TryAdd(room));
 

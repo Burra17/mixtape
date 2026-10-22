@@ -46,8 +46,8 @@ public sealed class GameRoomPromptTests
             _room.Tick(_now);
         }
 
-        // Fyra faser per runda, och samma prompt i alla fyra.
-        Assert.That(seen, Is.EqualTo(prompts.SelectMany(prompt => Enumerable.Repeat(prompt, 4))));
+        // Fem steg per runda (inskick, två klipp, röstning och avslöjande), och samma prompt i alla.
+        Assert.That(seen, Is.EqualTo(prompts.SelectMany(prompt => Enumerable.Repeat(prompt, 5))));
         Assert.That(_room.Prompt, Is.Null);
     }
 
@@ -86,7 +86,7 @@ public sealed class GameRoomPromptTests
     {
         foreach (var player in _room.Players.Take(2))
         {
-            _room.SubmitTrack(player.Id, new SubmittedTrack(player.ColorIndex, $"Låt {player.ColorIndex}", "Artist"), _now);
+            _room.SubmitTrack(player.Id, TestTrack.Of(player.ColorIndex, $"Låt {player.ColorIndex}", "Artist"), _now);
         }
     }
 }

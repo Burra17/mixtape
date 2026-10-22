@@ -90,13 +90,17 @@ public sealed class GameRoomPhaseTests
     {
         StartWithPlayers(3);
         SubmitTwoEntries();
-        var playing = GameSettings.Default.ClipLength * 3;
+        var clip = GameSettings.Default.ClipLength;
 
         AdvanceToNextPhase(GameRoom.SubmittingDuration);
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Playing));
-        Assert.That(_room.RemainingTime(_now), Is.EqualTo(playing));
+        Assert.That(_room.RemainingTime(_now), Is.EqualTo(clip));
 
-        AdvanceToNextPhase(playing);
+        AdvanceToNextPhase(clip);
+        Assert.That(_room.ClipNumber, Is.EqualTo(2));
+        Assert.That(_room.RemainingTime(_now), Is.EqualTo(clip));
+
+        AdvanceToNextPhase(clip);
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Voting));
         Assert.That(_room.RemainingTime(_now), Is.EqualTo(GameRoom.VotingDuration));
 
@@ -131,7 +135,8 @@ public sealed class GameRoomPhaseTests
         }
 
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.GameOver));
-        Assert.That(phaseChanges, Is.EqualTo(rounds * 4));
+        // Inskick, två klipp, röstning och avslöjande i varje runda.
+        Assert.That(phaseChanges, Is.EqualTo(rounds * 5));
         Assert.That(_room.Round, Is.EqualTo(rounds));
         Assert.That(_room.RemainingTime(_now), Is.Null);
         Assert.That(_room.Tick(_now.AddHours(1)), Is.False);
@@ -295,7 +300,7 @@ public sealed class GameRoomPhaseTests
     {
         foreach (var player in _room.Players.Take(2))
         {
-            _room.SubmitTrack(player.Id, new SubmittedTrack(player.ColorIndex, $"Låt {player.ColorIndex}", "Artist"), _now);
+            _room.SubmitTrack(player.Id, TestTrack.Of(player.ColorIndex, $"Låt {player.ColorIndex}", "Artist"), _now);
         }
     }
 

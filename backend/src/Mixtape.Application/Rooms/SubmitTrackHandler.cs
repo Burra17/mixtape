@@ -28,7 +28,7 @@ public sealed class SubmitTrackHandler(IGameRoomRepository rooms, IMusicCatalog 
             return playable.Error!;
         }
 
-        var track = new SubmittedTrack(playable.Value.Id, playable.Value.Title, playable.Value.Artist);
+        var track = playable.Value.ToSubmittedTrack();
         return await rooms.WithRoomAsync<GameState>(owner.RoomCode, room =>
         {
             var now = time.GetUtcNow();

@@ -33,7 +33,7 @@ public sealed class SubmitTrackHandlerTests
         var result = await _handler.HandleAsync("Anna", 44112901);
 
         Assert.That(result.Value.Players.Single(player => player.Id == game.Players[0].PlayerId).HasSubmitted, Is.True);
-        Assert.That(await EntriesAsync(game), Is.EqualTo(new[] { new Entry(game.Players[0].PlayerId, new SubmittedTrack(44112901, "Låt 44112901", "Artist")) }));
+        Assert.That(await EntriesAsync(game), Is.EqualTo(new[] { new Entry(game.Players[0].PlayerId, new SubmittedTrack(44112901, "Låt 44112901", "Artist", "Album", "omslag", "klipp"), _time.GetUtcNow()) }));
     }
 
     [Test]
