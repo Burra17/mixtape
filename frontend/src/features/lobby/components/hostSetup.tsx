@@ -2,7 +2,8 @@ import { Button } from '../../../shared/components/button.tsx';
 import { Card } from '../../../shared/components/card.tsx';
 import { Label } from '../../../shared/components/label.tsx';
 import { useIsConnected } from '../../../store/connectionStore.ts';
-import { useGameStore } from '../../../store/gameStore.ts';
+import { useRoomGame } from '../../../store/gameStore.ts';
+import { useHostStore } from '../../../store/hostStore.ts';
 import { useGameSetup } from '../hooks/useGameSetup.ts';
 
 type OptionRowProps = {
@@ -14,7 +15,7 @@ type OptionRowProps = {
   onChoose: (value: number) => void;
 };
 
-// En rad knappar där en i taget är vald. Den valda är svart, som en nedtryckt knapp.
+// Ett val, inte ett steg, så inte buttonStyles.ts: utan skugga, och den valda är svart med ljus text för att inte likna primärknappen.
 const OptionRow = ({ label, options, selected, format, disabled, onChoose }: OptionRowProps) => (
   <div role='group' aria-label={label} className='flex flex-col gap-2'>
     <Label>{label}</Label>
@@ -26,7 +27,7 @@ const OptionRow = ({ label, options, selected, format, disabled, onChoose }: Opt
           aria-pressed={option === selected}
           disabled={disabled}
           onClick={() => onChoose(option)}
-          className={`min-h-12 min-w-20 border-2 border-ink px-5 text-[clamp(1.125rem,1.6vw,1.5rem)] font-extrabold tabular-nums focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-50 ${option === selected ? 'bg-ink text-signal' : 'bg-card text-ink'}`}
+          className={`min-h-12 min-w-20 border-2 border-ink px-5 text-[clamp(1.125rem,1.6vw,1.5rem)] font-extrabold tabular-nums focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-50 ${option === selected ? 'bg-ink text-paper' : 'bg-card text-ink'}`}
         >
           {format(option)}
         </button>
@@ -37,7 +38,8 @@ const OptionRow = ({ label, options, selected, format, disabled, onChoose }: Opt
 
 // Värdens inställningar och "Starta spel" på storskärmen. Valen och gränsen för antal spelare kommer från servern.
 export const HostSetup = () => {
-  const game = useGameStore((state) => state.game);
+  const session = useHostStore((state) => state.session);
+  const game = useRoomGame(session?.roomCode);
   const isConnected = useIsConnected();
   const { choose, start, error } = useGameSetup();
 
