@@ -4,7 +4,7 @@ import { Label } from '../../../shared/components/label.tsx';
 import { useIsConnected } from '../../../store/connectionStore.ts';
 import { useRoomGame } from '../../../store/gameStore.ts';
 import { useHostStore } from '../../../store/hostStore.ts';
-import { PlayerChip } from './playerChip.tsx';
+import { PlayerChip } from '../../../shared/components/playerChip.tsx';
 
 // Spelarna i realtid. Ett klick på ett namn tar bort spelaren.
 export const HostPlayerList = () => {

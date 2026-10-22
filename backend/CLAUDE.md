@@ -45,7 +45,8 @@ Läs tiden från en injicerad `TimeProvider`. Domänen tar emot tiden som argume
 Fasernas klocka:
 
 - `PhaseClock` i Domain håller deadline för fasen som pågår. Under paus fryses tiden som är kvar.
-- `GameRoom.Tick(now)` byter fas när deadline passerat, och det är det enda stället där klockan driver spelet framåt.
+- `GameRoom.Tick(now)` byter fas när deadline passerat, och det är det enda stället där klockan driver spelet framåt. Tick byter också fas när alla anslutna spelare är klara (`IsEveryoneDone`), eftersom den sista som inte var klar kan ha tappat anslutningen.
+- En spelares eget anrop, som `SubmitTrack`, byter fas direkt när alla är klara, utan att vänta på nästa tick. Under paus går fasen aldrig vidare i förtid.
 - `GameClockService` i Infrastructure anropar `AdvancePhasesHandler` var 250:e ms. Handlern kör `Tick` på varje rum med rummets lås och skickar bilden för de rum som bytt fas via `IGameNotifier`.
 - `IGameNotifier` ligger i Application och implementeras i Api med hubbens kontext, eftersom bara Api känner till SignalR.
 

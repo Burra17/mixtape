@@ -11,7 +11,8 @@ import { usePlayerStore } from '../store/playerStore.ts';
 export const PlayerView = () => {
   const session = usePlayerStore((state) => state.session);
   const lastRoomCode = usePlayerStore((state) => state.lastRoomCode);
-  const phase = useRoomGame(session?.roomCode)?.phase ?? 'lobby';
+  const game = useRoomGame(session?.roomCode);
+  const phase = game?.phase ?? 'lobby';
   const rejoining = usePlayerRejoin(null);
 
   if (!session) {
@@ -21,6 +22,7 @@ export const PlayerView = () => {
   }
 
   if (phase === 'lobby') return <PlayerLobby session={session} />;
-  if (phase === 'submitting') return <PlayerSubmitting />;
+  // Nyckeln är rundan, så att sökningen börjar om när en överhoppad runda går direkt till nästa inskick.
+  if (phase === 'submitting') return <PlayerSubmitting key={game?.round} />;
   return <PhasePlaceholder screen='player' />;
 };

@@ -19,6 +19,7 @@ public sealed class GameHub(
     StartGameHandler startGame,
     DisconnectHandler disconnect,
     SearchTracksHandler searchTracks,
+    SubmitTrackHandler submitTrack,
     IConnectionRegistry connections,
     IJoinAddressProvider joinAddresses) : Hub<IGameClient>
 {
@@ -81,6 +82,12 @@ public sealed class GameHub(
     public async Task<HubResponse<IReadOnlyList<Track>>> Search(string? query)
     {
         return HubResponse<IReadOnlyList<Track>>.From(await searchTracks.HandleAsync(Context.ConnectionId, query));
+    }
+
+    // Spelaren känns igen via anslutningen, som vid sökningen. Bilden går till hela rummet, så att storskärmen ser vem som är klar.
+    public async Task<HubResponse<GameState>> SubmitTrack(long trackId)
+    {
+        return await SendToRoomAsync(await submitTrack.HandleAsync(Context.ConnectionId, trackId));
     }
 
     public async Task<HubResponse<PlayerSession>> JoinRoom(string? roomCode, string? name)

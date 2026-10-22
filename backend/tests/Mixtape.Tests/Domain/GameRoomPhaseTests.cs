@@ -89,6 +89,7 @@ public sealed class GameRoomPhaseTests
     public void Tick_GoesThroughThePhasesOfARoundWithTheirDurations()
     {
         StartWithPlayers(3);
+        SubmitTwoEntries();
         var playing = GameSettings.Default.ClipLength * 3;
 
         AdvanceToNextPhase(GameRoom.SubmittingDuration);
@@ -120,6 +121,11 @@ public sealed class GameRoomPhaseTests
         var phaseChanges = 0;
         while (_room.Phase != GamePhase.GameOver && phaseChanges < 100)
         {
+            if (_room.Phase == GamePhase.Submitting)
+            {
+                SubmitTwoEntries();
+            }
+
             AdvanceToNextPhase(_room.RemainingTime(_now)!.Value);
             phaseChanges++;
         }
@@ -148,6 +154,7 @@ public sealed class GameRoomPhaseTests
     public void DisconnectHost_FreezesThePhaseUntilTheHostIsBack()
     {
         StartWithPlayers(3);
+        SubmitTwoEntries();
         _room.DisconnectHost(_now.AddSeconds(33));
 
         Assert.That(_room.Tick(_now.AddMinutes(10)), Is.False);
@@ -281,6 +288,15 @@ public sealed class GameRoomPhaseTests
     {
         JoinPlayers(count);
         _room.StartGame(_room.HostToken, Prompts(), _now);
+    }
+
+    // Två bidrag räcker för att rundan inte hoppas över, men inte för att alla tre ska vara klara.
+    private void SubmitTwoEntries()
+    {
+        foreach (var player in _room.Players.Take(2))
+        {
+            _room.SubmitTrack(player.Id, new SubmittedTrack(player.ColorIndex, $"Låt {player.ColorIndex}", "Artist"), _now);
+        }
     }
 
     // Spolar fram till fasens deadline och låter klockan byta fas.

@@ -27,6 +27,10 @@ public sealed class GameRoom
 
     private readonly HashSet<string> _usedPrompts = [];
 
+    private readonly List<Entry> _entries = [];
+
+    private bool _previousRoundSkipped;
+
     private GameRoom(RoomCode code, string hostToken)
     {
         Code = code;
@@ -51,6 +55,12 @@ public sealed class GameRoom
     public IReadOnlyCollection<string> UsedPrompts => _usedPrompts;
 
     public IReadOnlyList<Player> Players => _players;
+
+    // Rundans bidrag. Nollställs när nästa runda börjar.
+    public IReadOnlyList<Entry> Entries => _entries;
+
+    // Sant under inskicket i rundan efter en runda som hoppades över, så att storskärmen kan förklara varför prompten byttes.
+    public bool SkippedRound => Phase == GamePhase.Submitting && _previousRoundSkipped;
 
     // Räknas upp vid varje ändring. Ögonblicksbilderna skickas utanför rummets lås och kan komma fram i fel ordning, så klienten behåller den med högst nummer.
     public int Revision { get; private set; }
@@ -78,6 +88,8 @@ public sealed class GameRoom
         hostToken is not null && CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(hostToken), Encoding.UTF8.GetBytes(HostToken));
 
     public bool IsAbandoned(DateTimeOffset now) => EmptySince is { } since && now - since >= AbandonedAfter;
+
+    public bool HasSubmitted(string playerId) => _entries.Any(entry => entry.PlayerId == playerId);
 
     // Tiden som är kvar av fasen, eller null i faser utan deadline.
     public TimeSpan? RemainingTime(DateTimeOffset now) => _clock.Remaining(now);
@@ -136,15 +148,51 @@ public sealed class GameRoom
         _prompts.Clear();
         _prompts.AddRange(prompts);
         _usedPrompts.UnionWith(prompts);
-        Round = 1;
-        Enter(GamePhase.Submitting, SubmittingDuration, now);
+        StartRound(1, skippedPrevious: false, now);
+        return Result.Success();
+    }
+
+    // Spelaren kan bara söka och skicka in medan rundan tar emot bidrag.
+    public Result CanChooseTrack() => Phase == GamePhase.Submitting ? Result.Success() : RoomErrors.WrongPhase;
+
+    // Bidraget är låst när det väl skickats in. Är alla klara går rummet vidare direkt, utan att vänta på nästa tick.
+    public Result SubmitTrack(string playerId, SubmittedTrack track, DateTimeOffset now)
+    {
+        if (Phase != GamePhase.Submitting)
+        {
+            return RoomErrors.WrongPhase;
+        }
+
+        if (_players.All(player => player.Id != playerId))
+        {
+            return PlayerErrors.NotFound;
+        }
+
+        if (HasSubmitted(playerId))
+        {
+            return EntryErrors.AlreadySubmitted;
+        }
+
+        if (_entries.Any(entry => entry.Track.IsSameSongAs(track)))
+        {
+            return EntryErrors.TrackTaken;
+        }
+
+        _entries.Add(new Entry(playerId, track));
+        Revision++;
+        if (CanCompleteEarly)
+        {
+            CompletePhase(now);
+        }
+
         return Result.Success();
     }
 
     // Anropas av klockan på servern. Ger true när fasen bytts, så att bilden bara skickas vid en ändring.
+    // Fasen tar också slut här när alla är klara, eftersom den sista som inte var klar kan ha tappat anslutningen.
     public bool Tick(DateTimeOffset now)
     {
-        if (!_clock.IsExpired(now))
+        if (!_clock.IsExpired(now) && !CanCompleteEarly)
         {
             return false;
         }
@@ -248,11 +296,32 @@ public sealed class GameRoom
         UpdateEmptySince(now);
     }
 
-    // Fasen är slut, vid sin deadline eller när alla är klara (#19), och nästa fas börjar med en ny klocka.
+    // Under paus står spelet still även när alla är klara. När storskärmen är tillbaka går fasen vidare vid nästa tick.
+    private bool CanCompleteEarly => !IsPaused && IsEveryoneDone;
+
+    // Bara anslutna spelare räknas, så en mobil som är borta hindrar inte de andra. Utan någon ansluten gäller deadline.
+    // Med färre än 2 bidrag väntar inskicket till deadline, så att den som är borta hinner tillbaka innan rundan hoppas över.
+    private bool IsEveryoneDone
+    {
+        get
+        {
+            var connected = _players.Where(player => player.IsConnected).ToList();
+            return Phase switch
+            {
+                GamePhase.Submitting => _entries.Count >= 2 && connected.Count > 0 && connected.All(player => HasSubmitted(player.Id)),
+                _ => false,
+            };
+        }
+    }
+
+    // Fasen är slut, vid sin deadline eller när alla är klara, och nästa fas börjar med en ny klocka.
     private void CompletePhase(DateTimeOffset now)
     {
         switch (Phase)
         {
+            case GamePhase.Submitting when _entries.Count < 2:
+                SkipRound(now);
+                break;
             case GamePhase.Submitting:
                 Enter(GamePhase.Playing, PlayingDuration, now);
                 break;
@@ -263,17 +332,42 @@ public sealed class GameRoom
                 Enter(GamePhase.Revealing, RevealingDuration, now);
                 break;
             case GamePhase.Revealing when Round < Settings.Rounds:
-                Round++;
-                Enter(GamePhase.Submitting, SubmittingDuration, now);
+                StartRound(Round + 1, skippedPrevious: false, now);
                 break;
             case GamePhase.Revealing:
-                Phase = GamePhase.GameOver;
-                _clock.Stop();
-                Revision++;
+                EndGame();
                 break;
             default:
                 throw new InvalidOperationException($"Fasen {Phase} har ingen deadline att nå.");
         }
+    }
+
+    // En runda med färre än 2 bidrag har inget att rösta om. Den räknas ändå som spelad, så att spelets längd går att förutse.
+    private void SkipRound(DateTimeOffset now)
+    {
+        if (Round < Settings.Rounds)
+        {
+            StartRound(Round + 1, skippedPrevious: true, now);
+        }
+        else
+        {
+            EndGame();
+        }
+    }
+
+    private void StartRound(int round, bool skippedPrevious, DateTimeOffset now)
+    {
+        Round = round;
+        _previousRoundSkipped = skippedPrevious;
+        _entries.Clear();
+        Enter(GamePhase.Submitting, SubmittingDuration, now);
+    }
+
+    private void EndGame()
+    {
+        Phase = GamePhase.GameOver;
+        _clock.Stop();
+        Revision++;
     }
 
     private void Enter(GamePhase phase, TimeSpan duration, DateTimeOffset now)

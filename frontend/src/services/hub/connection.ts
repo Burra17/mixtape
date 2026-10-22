@@ -129,5 +129,8 @@ export const updateSettings = (host: HostSession, rounds: number | null, clipSec
 
 export const startGame = (host: HostSession) => connection.invoke<HubResponse<GameState>>(serverMethods.startGame, host);
 
-// Bara en spelare i ett rum får söka. Sökrutan som använder den kommer i #19.
+// Bara en spelare i ett rum får söka, och bara under inskicket.
 export const search = (query: string) => connection.invoke<HubResponse<Track[]>>(serverMethods.search, query);
+
+// Bidraget är låst efteråt. Den nya bilden, där spelaren är klar, kommer med GameStateUpdated.
+export const submitTrack = (trackId: number) => connection.invoke<HubResponse<GameState>>(serverMethods.submitTrack, trackId);

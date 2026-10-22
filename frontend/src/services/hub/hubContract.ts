@@ -12,6 +12,7 @@ export const serverMethods = {
   updateSettings: 'UpdateSettings',
   startGame: 'StartGame',
   search: 'Search',
+  submitTrack: 'SubmitTrack',
 } as const;
 
 export const clientEvents = {
@@ -57,6 +58,8 @@ export type GamePlayer = {
   colorIndex: number;
   // Platsen behålls när anslutningen tappas, så en spelare kan finnas kvar utan att vara nåbar.
   isConnected: boolean;
+  // Att spelaren skickat in, men aldrig vilken låt. Den stannar på servern till avslöjandet.
+  hasSubmitted: boolean;
 };
 
 // SettingsState i Application/Rooms.
@@ -76,6 +79,8 @@ export type GameState = {
   round: number;
   // Rundans prompt, från inskicket till avslöjandet. null i lobbyn och i gameOver.
   prompt: string | null;
+  // Sant under inskicket i rundan efter en runda som hoppades över för att färre än 2 skickade in.
+  skippedRound: boolean;
   // Tiden som var kvar av fasen när bilden skapades, eller null i faser utan deadline. Oberoende av mobilens klocka.
   remainingMs: number | null;
   settings: SettingsState;

@@ -37,6 +37,11 @@ public sealed class GameRoomPromptTests
         while (_room.Phase != GamePhase.GameOver)
         {
             seen.Add(_room.Prompt);
+            if (_room.Phase == GamePhase.Submitting)
+            {
+                SubmitTwoEntries();
+            }
+
             _now += _room.RemainingTime(_now)!.Value;
             _room.Tick(_now);
         }
@@ -74,5 +79,14 @@ public sealed class GameRoomPromptTests
         _room.StartGame("fel", ["A", "B", "C", "D", "E"], _now);
 
         Assert.That(_room.UsedPrompts, Is.Empty);
+    }
+
+    // Två bidrag, så att rundan inte hoppas över.
+    private void SubmitTwoEntries()
+    {
+        foreach (var player in _room.Players.Take(2))
+        {
+            _room.SubmitTrack(player.Id, new SubmittedTrack(player.ColorIndex, $"Låt {player.ColorIndex}", "Artist"), _now);
+        }
     }
 }

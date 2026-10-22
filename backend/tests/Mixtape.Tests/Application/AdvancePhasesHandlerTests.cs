@@ -1,3 +1,4 @@
+using Mixtape.Application.Connections;
 using Mixtape.Application.Rooms;
 using Mixtape.Domain.Rooms;
 using Mixtape.Infrastructure.Connections;
@@ -10,6 +11,7 @@ public sealed class AdvancePhasesHandlerTests
     private FakeTimeProvider _time = null!;
     private InMemoryGameRoomRepository _rooms = null!;
     private RecordingNotifier _notifier = null!;
+    private InMemoryConnectionRegistry _connections = null!;
     private AdvancePhasesHandler _advance = null!;
 
     [SetUp]
@@ -18,13 +20,16 @@ public sealed class AdvancePhasesHandlerTests
         _time = new FakeTimeProvider(new DateTimeOffset(2026, 10, 20, 20, 0, 0, TimeSpan.Zero));
         _rooms = new InMemoryGameRoomRepository();
         _notifier = new RecordingNotifier();
+        _connections = new InMemoryConnectionRegistry();
         _advance = new AdvancePhasesHandler(_rooms, _notifier, _time);
     }
 
     [Test]
     public async Task Handle_AfterTheDeadline_SendsTheNextPhaseOnce()
     {
-        var host = await StartGameAsync();
+        var game = await GameStarter.StartAsync(_rooms, _connections, _time);
+        var host = game.Host;
+        await SubmitTwoAsync(game);
 
         _time.Advance(GameRoom.SubmittingDuration);
         await _advance.HandleAsync();
@@ -39,7 +44,7 @@ public sealed class AdvancePhasesHandlerTests
     [Test]
     public async Task Handle_BeforeTheDeadline_SendsNothing()
     {
-        await StartGameAsync();
+        await GameStarter.StartAsync(_rooms, _connections, _time);
 
         _time.Advance(GameRoom.SubmittingDuration - TimeSpan.FromSeconds(1));
         await _advance.HandleAsync();
@@ -50,7 +55,7 @@ public sealed class AdvancePhasesHandlerTests
     [Test]
     public async Task Handle_RoomsInTheLobby_SendsNothing()
     {
-        await new CreateRoomHandler(_rooms, new InMemoryConnectionRegistry(), _time).HandleAsync(null, "host");
+        await new CreateRoomHandler(_rooms, _connections, _time).HandleAsync(null, "host");
 
         _time.Advance(TimeSpan.FromHours(1));
         await _advance.HandleAsync();
@@ -58,26 +63,26 @@ public sealed class AdvancePhasesHandlerTests
         Assert.That(_notifier.Sent, Is.Empty);
     }
 
-    private async Task<HostSession> StartGameAsync()
+    [Test]
+    public async Task Handle_WhenTheLastPlayerWhoHadNotSubmittedDisconnects_SendsTheNextPhase()
     {
-        var connections = new InMemoryConnectionRegistry();
-        var host = (await new CreateRoomHandler(_rooms, connections, _time).HandleAsync(null, "host")).Value.Session;
-        var join = new JoinRoomHandler(_rooms, connections, _time);
-        foreach (var name in new[] { "Anna", "Bertil", "Cecilia" })
+        var game = await GameStarter.StartAsync(_rooms, _connections, _time);
+        await SubmitTwoAsync(game);
+
+        await new DisconnectHandler(_rooms, _connections, _time).HandleAsync(_connections.Unregister("Cecilia")!);
+        await _advance.HandleAsync();
+
+        Assert.That(_notifier.Sent.Single().Phase, Is.EqualTo(GamePhase.Playing));
+    }
+
+    // Två bidrag, så att rundan inte hoppas över vid deadline, men Cecilia är inte klar.
+    private Task SubmitTwoAsync(StartedGame game) =>
+        _rooms.WithRoomAsync<bool>(game.Host.RoomCode, room =>
         {
-            await join.HandleAsync(host.RoomCode, name, name);
-        }
-
-        await new StartGameHandler(_rooms, new NumberedPrompts(), _time).HandleAsync(host);
-        return host;
-    }
-
-    // Testet handlar om klockan, så promptarna behöver inte komma från den riktiga banken.
-    private sealed class NumberedPrompts : IPromptProvider
-    {
-        public IReadOnlyList<string> Draw(int count, IReadOnlyCollection<string> used) =>
-            Enumerable.Range(1, count).Select(round => $"Prompt {round}").ToList();
-    }
+            room.SubmitTrack(game.Players[0].PlayerId, new SubmittedTrack(1, "Ett", "Artist"), _time.GetUtcNow());
+            room.SubmitTrack(game.Players[1].PlayerId, new SubmittedTrack(2, "Två", "Artist"), _time.GetUtcNow());
+            return true;
+        });
 
     private sealed class RecordingNotifier : IGameNotifier
     {
