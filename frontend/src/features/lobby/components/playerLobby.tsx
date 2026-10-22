@@ -2,9 +2,9 @@ import type { PlayerSession } from '../../../services/hub/hubContract.ts';
 import { Button } from '../../../shared/components/button.tsx';
 import { Label } from '../../../shared/components/label.tsx';
 import { PausedNotice } from '../../../shared/components/pausedNotice.tsx';
+import { playerText } from '../../../shared/components/playerColors.ts';
 import { useIsConnected } from '../../../store/connectionStore.ts';
 import { usePlayerLobby } from '../hooks/usePlayerLobby.ts';
-import { playerText } from './playerColors.ts';
 
 // Mobilen i lobbyn: ditt namn stort i din färg, hur många som är med och "Lämna".
 export const PlayerLobby = ({ session }: { session: PlayerSession }) => {

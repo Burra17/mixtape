@@ -1,4 +1,4 @@
-import type { GamePlayer } from '../../../services/hub/hubContract.ts';
+import type { GamePlayer } from '../../services/hub/hubContract.ts';
 import { playerBackground } from './playerColors.ts';
 
 const graphemes = new Intl.Segmenter('sv', { granularity: 'grapheme' });
