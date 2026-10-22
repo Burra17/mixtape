@@ -12,7 +12,7 @@ public sealed class PromptBank : IPromptProvider
     private readonly IReadOnlyList<string> _prompts;
     private readonly Random _random;
 
-    // Kastar om banken är trasig. Den skapas när tjänsterna registreras, så att en trasig bank stoppar backenden redan vid starten.
+    // Kastar om banken är trasig.
     public PromptBank(IReadOnlyList<string> prompts, Random random)
     {
         Validate(prompts);

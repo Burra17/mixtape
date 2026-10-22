@@ -130,7 +130,7 @@ public sealed class GameRoom
 
         if (prompts.Count != Settings.Rounds || prompts.Distinct().Count() != prompts.Count)
         {
-            throw new ArgumentException($"{Settings.Rounds} olika promptar behövs, men {prompts.Distinct().Count()} av {prompts.Count} var olika.", nameof(prompts));
+            throw new ArgumentException($"En prompt per runda behövs, alla olika: {Settings.Rounds} rundor men {prompts.Count} promptar, varav {prompts.Distinct().Count()} olika.", nameof(prompts));
         }
 
         _prompts.Clear();

@@ -1,7 +1,6 @@
 using Mixtape.Application.Rooms;
 using Mixtape.Domain.Rooms;
 using Mixtape.Infrastructure.Connections;
-using Mixtape.Infrastructure.Prompts;
 using Mixtape.Infrastructure.Rooms;
 
 namespace Mixtape.Tests.Application;
@@ -69,8 +68,15 @@ public sealed class AdvancePhasesHandlerTests
             await join.HandleAsync(host.RoomCode, name, name);
         }
 
-        await new StartGameHandler(_rooms, PromptBank.LoadEmbedded(new Random(1)), _time).HandleAsync(host);
+        await new StartGameHandler(_rooms, new NumberedPrompts(), _time).HandleAsync(host);
         return host;
+    }
+
+    // Testet handlar om klockan, så promptarna behöver inte komma från den riktiga banken.
+    private sealed class NumberedPrompts : IPromptProvider
+    {
+        public IReadOnlyList<string> Draw(int count, IReadOnlyCollection<string> used) =>
+            Enumerable.Range(1, count).Select(round => $"Prompt {round}").ToList();
     }
 
     private sealed class RecordingNotifier : IGameNotifier

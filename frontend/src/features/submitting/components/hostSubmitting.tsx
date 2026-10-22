@@ -1,16 +1,17 @@
+import { Countdown } from '../../../shared/components/countdown.tsx';
 import { Label } from '../../../shared/components/label.tsx';
 import { Marquee } from '../../../shared/components/marquee.tsx';
-import { useCountdown } from '../../../shared/hooks/useCountdown.ts';
-import { useGameStore } from '../../../store/gameStore.ts';
+import { useRoundText } from '../../../shared/hooks/useRoundText.ts';
+import { useRoomGame } from '../../../store/gameStore.ts';
+import { useHostStore } from '../../../store/hostStore.ts';
 
 // Storskärmen under inskicket: rundans prompt stort och nedräkningen. Vilka som skickat in kommer i #19.
 export const HostSubmitting = () => {
-  const game = useGameStore((state) => state.game);
-  const seconds = useCountdown();
+  const session = useHostStore((state) => state.session);
+  const game = useRoomGame(session?.roomCode);
+  const round = useRoundText();
 
   if (!game?.prompt) return null;
-
-  const round = `Runda ${game.round} av ${game.settings.rounds}`;
 
   return (
     <div className='flex min-h-dvh flex-col'>
@@ -18,7 +19,7 @@ export const HostSubmitting = () => {
       <main className='flex flex-1 flex-col justify-center gap-8 px-6 py-12 lg:px-[6vw]'>
         <Label>{round}</Label>
         <h1 className='max-w-[22ch] self-start bg-signal px-4 pt-3 pb-1 text-[clamp(2.5rem,6vw,6.5rem)] text-display'>{game.prompt}</h1>
-        {seconds !== null && <p className='text-[clamp(4rem,10vw,10rem)] font-black tabular-nums'>{seconds}</p>}
+        <Countdown screen='host' />
       </main>
     </div>
   );
