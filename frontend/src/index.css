@@ -44,6 +44,7 @@
   --shadow-hard: 4px 4px 0 var(--color-ink);
   --shadow-hard-pressed: 2px 2px 0 var(--color-ink);
 
+  /* Varvtiden skrivs över i Marquee, som räknar den från textens längd. */
   --animate-marquee: marquee 22s linear infinite;
   --animate-reel: spin 3.2s linear infinite;
 
