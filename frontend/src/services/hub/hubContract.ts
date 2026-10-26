@@ -72,7 +72,6 @@ export type GamePlayer = {
 export type SettingsState = {
   rounds: number;
   clipSeconds: number;
-  // Betänketiden i inskicket.
   submittingSeconds: number;
 };
 

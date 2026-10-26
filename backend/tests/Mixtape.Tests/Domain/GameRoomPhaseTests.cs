@@ -163,13 +163,13 @@ public sealed class GameRoomPhaseTests
         _room.DisconnectHost(_now.AddSeconds(33));
 
         Assert.That(_room.Tick(_now.AddMinutes(10)), Is.False);
-        Assert.That(_room.RemainingTime(_now.AddMinutes(10)), Is.EqualTo(TimeSpan.FromSeconds(57)));
+        Assert.That(_room.RemainingTime(_now.AddMinutes(10)), Is.EqualTo(GameSettings.Default.SubmittingDuration - TimeSpan.FromSeconds(33)));
 
         var back = _now.AddMinutes(10);
         _room.ResumeHost(_room.HostToken, back);
 
-        Assert.That(_room.Tick(back.AddSeconds(56)), Is.False);
-        Assert.That(_room.Tick(back.AddSeconds(57)), Is.True);
+        Assert.That(_room.Tick(back + GameSettings.Default.SubmittingDuration - TimeSpan.FromSeconds(34)), Is.False);
+        Assert.That(_room.Tick(back + GameSettings.Default.SubmittingDuration - TimeSpan.FromSeconds(33)), Is.True);
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Playing));
     }
 

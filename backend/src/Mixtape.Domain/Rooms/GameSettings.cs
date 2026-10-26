@@ -24,7 +24,6 @@ public sealed record GameSettings
 
     public int ClipSeconds { get; }
 
-    // Betänketiden i inskicket.
     public int SubmittingSeconds { get; }
 
     public TimeSpan ClipLength => TimeSpan.FromSeconds(ClipSeconds);
