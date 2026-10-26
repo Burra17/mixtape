@@ -20,7 +20,7 @@ public sealed class GameRoomGameOverTests
         _anna = _room.Join("Anna").Value;
         _bertil = _room.Join("Bertil").Value;
         _cecilia = _room.Join("Cecilia").Value;
-        _room.UpdateSettings(_room.HostToken, 3, 10);
+        _room.UpdateSettings(_room.HostToken, 3, 10, null);
         _room.StartGame(_room.HostToken, ["Prompt 1", "Prompt 2", "Prompt 3"], _now);
     }
 
@@ -64,7 +64,7 @@ public sealed class GameRoomGameOverTests
 
         Assert.That(_room.Players, Is.EqualTo(new[] { _anna, _bertil, _cecilia }));
         Assert.That(_cecilia.IsConnected, Is.False);
-        Assert.That(_room.Settings, Is.EqualTo(GameSettings.Create(3, 10).Value));
+        Assert.That(_room.Settings, Is.EqualTo(GameSettings.Create(3, 10, 90).Value));
         Assert.That(_room.UsedPrompts, Is.EquivalentTo(new[] { "Prompt 1", "Prompt 2", "Prompt 3" }));
     }
 

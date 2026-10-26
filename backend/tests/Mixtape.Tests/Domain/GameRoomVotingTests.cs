@@ -91,7 +91,7 @@ public sealed class GameRoomVotingTests
     public void Vote_ByAPlayerWithoutAnEntry_IsAccepted()
     {
         SubmitFor(_anna, _bertil);
-        _now += GameRoom.SubmittingDuration;
+        _now += GameSettings.Default.SubmittingDuration;
         _room.Tick(_now);
         PlayAllClips();
 
@@ -149,12 +149,12 @@ public sealed class GameRoomVotingTests
     }
 
     [Test]
-    public void Tick_AfterTheVotingDuration_GoesToRevealing()
+    public void Tick_AfterThirtySeconds_GoesToRevealing()
     {
         StartVoting();
 
-        Assert.That(_room.Tick(_now + GameRoom.VotingDuration - TimeSpan.FromMilliseconds(1)), Is.False);
-        Assert.That(_room.Tick(_now + GameRoom.VotingDuration), Is.True);
+        Assert.That(_room.Tick(_now + TimeSpan.FromSeconds(30) - TimeSpan.FromMilliseconds(1)), Is.False);
+        Assert.That(_room.Tick(_now + TimeSpan.FromSeconds(30)), Is.True);
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Revealing));
     }
 

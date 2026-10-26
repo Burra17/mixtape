@@ -12,9 +12,7 @@ public sealed class GameRoom
     // Så länge får ett rum stå helt tomt innan det städas bort.
     public static readonly TimeSpan AbandonedAfter = TimeSpan.FromMinutes(30);
 
-    public static readonly TimeSpan SubmittingDuration = TimeSpan.FromSeconds(45);
-
-    public static readonly TimeSpan VotingDuration = TimeSpan.FromSeconds(20);
+    public static readonly TimeSpan VotingDuration = TimeSpan.FromSeconds(30);
 
     // Storskärmen visar bidragen först och ställningen de sista 8 sekunderna. Delningen står i frontendens revealing-feature.
     public static readonly TimeSpan RevealingDuration = TimeSpan.FromSeconds(20);
@@ -126,8 +124,8 @@ public sealed class GameRoom
     // Tiden som är kvar av fasen, eller null i faser utan deadline.
     public TimeSpan? RemainingTime(DateTimeOffset now) => _clock.Remaining(now);
 
-    // Bara inställningen som ändras skickas, och null behåller den andra. Två snabba klick skriver då inte över varandra med ett gammalt värde.
-    public Result UpdateSettings(string? hostToken, int? rounds, int? clipSeconds)
+    // Bara inställningen som ändras skickas, och null behåller de andra. Två snabba klick skriver då inte över varandra med ett gammalt värde.
+    public Result UpdateSettings(string? hostToken, int? rounds, int? clipSeconds, int? submittingSeconds)
     {
         if (!IsHost(hostToken))
         {
@@ -139,7 +137,7 @@ public sealed class GameRoom
             return RoomErrors.AlreadyStarted;
         }
 
-        var parsed = GameSettings.Create(rounds ?? Settings.Rounds, clipSeconds ?? Settings.ClipSeconds);
+        var parsed = GameSettings.Create(rounds ?? Settings.Rounds, clipSeconds ?? Settings.ClipSeconds, submittingSeconds ?? Settings.SubmittingSeconds);
         if (!parsed.IsSuccess)
         {
             return parsed.Error!;
@@ -518,7 +516,7 @@ public sealed class GameRoom
         _previousRoundSkipped = skippedPrevious;
         _entries.Clear();
         _votes.Clear();
-        Enter(GamePhase.Submitting, SubmittingDuration, now);
+        Enter(GamePhase.Submitting, Settings.SubmittingDuration, now);
     }
 
     private void EndGame()

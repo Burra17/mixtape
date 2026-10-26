@@ -163,9 +163,9 @@ public sealed class GameHub(
     }
 
     // Klienten läser bara felet, och bilden går till hela rummet eftersom mobilerna också visar inställningarna.
-    public async Task<HubResponse<GameState>> UpdateSettings(HostSession host, int? rounds, int? clipSeconds)
+    public async Task<HubResponse<GameState>> UpdateSettings(HostSession host, int? rounds, int? clipSeconds, int? submittingSeconds)
     {
-        return await SendToRoomAsync(await updateSettings.HandleAsync(host, rounds, clipSeconds));
+        return await SendToRoomAsync(await updateSettings.HandleAsync(host, rounds, clipSeconds, submittingSeconds));
     }
 
     public async Task<HubResponse<GameState>> StartGame(HostSession host)

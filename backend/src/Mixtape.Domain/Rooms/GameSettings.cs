@@ -9,20 +9,30 @@ public sealed record GameSettings
 
     public static readonly IReadOnlyList<int> ClipSecondsOptions = [10, 15, 20];
 
-    public static readonly GameSettings Default = new(5, 15);
+    public static readonly IReadOnlyList<int> SubmittingSecondsOptions = [60, 90, 120];
 
-    private GameSettings(int rounds, int clipSeconds)
+    public static readonly GameSettings Default = new(5, 15, 90);
+
+    private GameSettings(int rounds, int clipSeconds, int submittingSeconds)
     {
         Rounds = rounds;
         ClipSeconds = clipSeconds;
+        SubmittingSeconds = submittingSeconds;
     }
 
     public int Rounds { get; }
 
     public int ClipSeconds { get; }
 
+    // Betänketiden i inskicket.
+    public int SubmittingSeconds { get; }
+
     public TimeSpan ClipLength => TimeSpan.FromSeconds(ClipSeconds);
 
-    public static Result<GameSettings> Create(int rounds, int clipSeconds) =>
-        RoundOptions.Contains(rounds) && ClipSecondsOptions.Contains(clipSeconds) ? new GameSettings(rounds, clipSeconds) : RoomErrors.InvalidSettings;
+    public TimeSpan SubmittingDuration => TimeSpan.FromSeconds(SubmittingSeconds);
+
+    public static Result<GameSettings> Create(int rounds, int clipSeconds, int submittingSeconds) =>
+        RoundOptions.Contains(rounds) && ClipSecondsOptions.Contains(clipSeconds) && SubmittingSecondsOptions.Contains(submittingSeconds)
+            ? new GameSettings(rounds, clipSeconds, submittingSeconds)
+            : RoomErrors.InvalidSettings;
 }

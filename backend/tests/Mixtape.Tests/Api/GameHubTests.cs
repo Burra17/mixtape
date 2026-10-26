@@ -266,7 +266,7 @@ public sealed class GameHubTests
         await anna.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Anna");
         await host.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Bertil");
         await host.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Cecilia");
-        var settings = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.UpdateSettings), created, 3, 10);
+        var settings = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.UpdateSettings), created, 3, 10, 60);
         var start = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.StartGame), created);
         var state = await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
@@ -274,8 +274,8 @@ public sealed class GameHubTests
         Assert.That(start.Error, Is.Null);
         Assert.That(state.Round, Is.EqualTo(1));
         Assert.That(state.Prompt, Is.Not.Null.And.Not.Empty);
-        Assert.That(state.Settings, Is.EqualTo(new SettingsState(3, 10)));
-        Assert.That(state.RemainingMs, Is.InRange(40_000, 45_000));
+        Assert.That(state.Settings, Is.EqualTo(new SettingsState(3, 10, 60)));
+        Assert.That(state.RemainingMs, Is.InRange(55_000, 60_000));
     }
 
     [Test]

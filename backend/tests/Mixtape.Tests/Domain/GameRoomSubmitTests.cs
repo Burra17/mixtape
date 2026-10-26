@@ -201,7 +201,7 @@ public sealed class GameRoomSubmitTests
         }
 
         Assert.That(_room.Tick(Now.AddSeconds(1)), Is.False);
-        Assert.That(_room.Tick(Now + GameRoom.SubmittingDuration), Is.True);
+        Assert.That(_room.Tick(Now + GameSettings.Default.SubmittingDuration), Is.True);
     }
 
     [TestCase(0)]
@@ -214,7 +214,7 @@ public sealed class GameRoomSubmitTests
             _room.SubmitTrack(player.Id, Track(player.ColorIndex, "Ensam"), Now);
         }
 
-        _room.Tick(Now + GameRoom.SubmittingDuration);
+        _room.Tick(Now + GameSettings.Default.SubmittingDuration);
 
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Submitting));
         Assert.That(_room.Round, Is.EqualTo(2));
@@ -247,7 +247,7 @@ public sealed class GameRoomSubmitTests
     public void SkippedRound_IsClearedWhenTheRoundMovesOn()
     {
         Start();
-        _room.Tick(Now + GameRoom.SubmittingDuration);
+        _room.Tick(Now + GameSettings.Default.SubmittingDuration);
 
         _room.SubmitTrack(_anna.Id, Track(1, "Ett"), Now);
         _room.SubmitTrack(_bertil.Id, Track(2, "Två"), Now);
@@ -260,13 +260,13 @@ public sealed class GameRoomSubmitTests
     [Test]
     public void Tick_WhenTheLastRoundIsSkipped_EndsTheGame()
     {
-        _room.UpdateSettings(_room.HostToken, 3, 15);
+        _room.UpdateSettings(_room.HostToken, 3, 15, null);
         Start();
 
         var now = Now;
         for (var round = 1; round <= 3; round++)
         {
-            now += GameRoom.SubmittingDuration;
+            now += GameSettings.Default.SubmittingDuration;
             Assert.That(_room.Tick(now), Is.True);
         }
 

@@ -22,7 +22,7 @@ export const PlayerLobby = ({ session }: { session: PlayerSession }) => {
               {game.players.length} av {game.maxPlayers} spelare
             </p>
             <p className='text-lg font-bold'>
-              {game.settings.rounds} rundor · {game.settings.clipSeconds} s klipp
+              {game.settings.rounds} rundor · {game.settings.clipSeconds} s klipp · {game.settings.submittingSeconds} s betänketid
             </p>
             <p className='text-lg font-medium text-muted'>Väntar på att spelet startar</p>
             {game.isPaused && <PausedNotice />}

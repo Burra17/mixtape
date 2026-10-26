@@ -72,6 +72,8 @@ export type GamePlayer = {
 export type SettingsState = {
   rounds: number;
   clipSeconds: number;
+  // Betänketiden i inskicket.
+  submittingSeconds: number;
 };
 
 // GameState i Application/Rooms, som kommer med GameStateUpdated.
@@ -100,6 +102,7 @@ export type GameState = {
   settings: SettingsState;
   roundOptions: number[];
   clipSecondsOptions: number[];
+  submittingSecondsOptions: number[];
   players: GamePlayer[];
   minPlayers: number;
   maxPlayers: number;
