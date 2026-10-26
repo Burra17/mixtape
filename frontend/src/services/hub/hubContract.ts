@@ -14,6 +14,8 @@ export const serverMethods = {
   search: 'Search',
   submitTrack: 'SubmitTrack',
   getClip: 'GetClip',
+  vote: 'Vote',
+  getBallot: 'GetBallot',
 } as const;
 
 export const clientEvents = {
@@ -61,6 +63,8 @@ export type GamePlayer = {
   isConnected: boolean;
   // Att spelaren skickat in, men aldrig vilken låt. Den stannar på servern till avslöjandet.
   hasSubmitted: boolean;
+  // Att spelaren röstat, men aldrig på vilket bidrag.
+  hasVoted: boolean;
 };
 
 // SettingsState i Application/Rooms.
@@ -84,6 +88,8 @@ export type GameState = {
   skippedRound: boolean;
   // Klippet som spelas, eller null utanför uppspelningen.
   nowPlaying: NowPlaying | null;
+  // Bidragen att rösta på, i uppspelningens ordning, eller null utanför röstningen.
+  ballot: BallotEntry[] | null;
   // Tiden som var kvar av fasen när bilden skapades, eller null i faser utan deadline. Oberoende av mobilens klocka.
   remainingMs: number | null;
   settings: SettingsState;
@@ -103,6 +109,20 @@ export type NowPlaying = {
   artist: string;
   album: string;
   coverUrl: string;
+};
+
+// BallotEntry i Application/Rooms. number är platsen i uppspelningen och det som Vote tar emot. Ingenting om vem som valde låten.
+export type BallotEntry = {
+  number: number;
+  title: string;
+  artist: string;
+  coverUrl: string;
+};
+
+// Ballot i Application/Rooms, bara till spelaren själv. Numret på det egna bidraget och på bidraget spelaren röstat på, eller null.
+export type Ballot = {
+  ownEntry: number | null;
+  votedEntry: number | null;
 };
 
 // Clip i Application/Rooms, bara till storskärmen. index visar vilket klipp länken gäller.
