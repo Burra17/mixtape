@@ -25,7 +25,12 @@ public sealed class Player
     // Platsen behålls när anslutningen tappas. Flaggan säger bara om mobilen är nåbar just nu.
     public bool IsConnected { get; private set; } = true;
 
+    // Poängen för hela spelet. Varje röst på spelarens bidrag ger 1.
+    public int Score { get; private set; }
+
     internal static Player Create(PlayerName name, int colorIndex) => new(name, colorIndex);
+
+    internal void AddPoints(int points) => Score += points;
 
     // Ger true om flaggan ändrades, så att rummet bara räknar upp sin revision vid en verklig ändring.
     internal bool SetConnected(bool connected)
