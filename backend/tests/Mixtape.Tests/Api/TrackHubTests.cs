@@ -9,20 +9,27 @@ using Mixtape.Api.Hubs;
 using Mixtape.Application.Music;
 using Mixtape.Application.Rooms;
 using Mixtape.Domain.Common;
+using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Tests.Api;
 
-// Sökningen och inskicket, de två anropen som går till musikkällan.
+// Låtarna genom rundan: sökningen, inskicket, uppspelningen och röstningen.
 public sealed class TrackHubTests
 {
     private WebApplicationFactory<Program> _factory = null!;
+    private FakeTimeProvider _time = null!;
 
-    // Deezer byts mot en fast lista, så att testet aldrig går mot nätet.
+    // Deezer byts mot en fast lista, så att testet aldrig går mot nätet. Klockan spolas fram av testet, men serverns tick går i realtid.
     [OneTimeSetUp]
     public void StartApi()
     {
+        _time = new FakeTimeProvider(new DateTimeOffset(2026, 10, 26, 20, 0, 0, TimeSpan.Zero));
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-            builder.ConfigureTestServices(services => services.AddSingleton<IMusicCatalog, FixedCatalog>()));
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddSingleton<IMusicCatalog, FixedCatalog>();
+                services.AddSingleton<TimeProvider>(_time);
+            }));
     }
 
     [OneTimeTearDown]
@@ -148,6 +155,88 @@ public sealed class TrackHubTests
         foreach (var player in players)
         {
             await player.DisposeAsync();
+        }
+    }
+
+    // Under röstningen ser alla bidragen och vem som röstat, men varken vem som valde vad eller länkarna.
+    [Test]
+    public async Task Voting_TellsTheRoomTheBallotWithoutWhoOrTheLink()
+    {
+        await using var host = CreateConnection();
+        var players = new[] { CreateConnection(), CreateConnection(), CreateConnection() };
+        await Task.WhenAll(players.Select(player => player.StartAsync()).Append(host.StartAsync()));
+
+        var (_, sessions) = await StartPlayingAsync(host, players);
+        var state = await PlayAllClipsAsync(players[0]);
+
+        var ballot = state.GetProperty("ballot");
+        Assert.That(ballot.EnumerateArray().Select(entry => entry.GetProperty("number").GetInt32()), Is.EqualTo(new[] { 1, 2, 3 }));
+        Assert.That(ballot.EnumerateArray().Select(entry => entry.GetProperty("title").GetString()), Is.EquivalentTo(new[] { "Låt 1", "Låt 2", "Låt 3" }));
+        Assert.That(sessions, Has.None.Matches<PlayerSession>(session => ballot.GetRawText().Contains(session.PlayerId)));
+        Assert.That(state.GetRawText(), Does.Not.Contain("https://klipp/"));
+        Assert.That(state.GetProperty("players").EnumerateArray().Select(player => player.GetProperty("hasVoted").GetBoolean()), Has.All.False);
+
+        foreach (var player in players)
+        {
+            await player.DisposeAsync();
+        }
+    }
+
+    // Varje mobil får bara sin egen del: vilket bidrag som är dess eget och vad den röstat på. Storskärmen får ingenting.
+    [Test]
+    public async Task GetBallot_GivesEachPlayerTheirOwnEntryAndVote()
+    {
+        await using var host = CreateConnection();
+        var players = new[] { CreateConnection(), CreateConnection(), CreateConnection() };
+        await Task.WhenAll(players.Select(player => player.StartAsync()).Append(host.StartAsync()));
+
+        await StartPlayingAsync(host, players);
+        var state = await PlayAllClipsAsync(players[0]);
+        var titles = state.GetProperty("ballot").EnumerateArray().ToDictionary(entry => entry.GetProperty("number").GetInt32(), entry => entry.GetProperty("title").GetString());
+
+        var ballots = new List<Ballot>();
+        foreach (var player in players)
+        {
+            ballots.Add((await player.InvokeAsync<HubResponse<Ballot>>(nameof(GameHub.GetBallot))).Value!);
+        }
+
+        // Spelare i skickade in låt i + 1, så det egna numret pekar på den låten.
+        for (var i = 0; i < players.Length; i++)
+        {
+            Assert.That(titles[ballots[i].OwnEntry!.Value], Is.EqualTo($"Låt {i + 1}"));
+            Assert.That(ballots[i].VotedEntry, Is.Null);
+        }
+
+        var own = await players[0].InvokeAsync<HubResponse<GameState>>(nameof(GameHub.Vote), ballots[0].OwnEntry!.Value);
+        var other = ballots[1].OwnEntry!.Value;
+        var voted = await players[0].InvokeAsync<HubResponse<GameState>>(nameof(GameHub.Vote), other);
+        var after = (await players[0].InvokeAsync<HubResponse<Ballot>>(nameof(GameHub.GetBallot))).Value!;
+        var asHost = await host.InvokeAsync<HubResponse<Ballot>>(nameof(GameHub.GetBallot));
+
+        Assert.That(own.Error?.Code, Is.EqualTo("vote.own_entry"));
+        Assert.That(voted.Value!.Players.Count(player => player.HasVoted), Is.EqualTo(1));
+        Assert.That(after.VotedEntry, Is.EqualTo(other));
+        Assert.That(asHost.Error?.Code, Is.EqualTo("room.not_found"));
+
+        foreach (var player in players)
+        {
+            await player.DisposeAsync();
+        }
+    }
+
+    // Klockan spolas fram ett klipp i taget, eftersom servern byter klipp högst en gång per tick. Ger bilden när röstningen börjat.
+    private async Task<JsonElement> PlayAllClipsAsync(HubConnection listener)
+    {
+        while (true)
+        {
+            var next = new TaskCompletionSource<JsonElement>();
+            using var subscription = listener.On<JsonElement>(nameof(IGameClient.GameStateUpdated), state => next.TrySetResult(state));
+            _time.Advance(TimeSpan.FromSeconds(GameSettings.Default.ClipSeconds));
+            var state = await next.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            if (state.GetProperty("phase").GetString() == "voting")
+            {
+                return state;
+            }
         }
     }
 

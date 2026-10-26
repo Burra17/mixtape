@@ -21,6 +21,8 @@ public sealed class GameHub(
     SearchTracksHandler searchTracks,
     SubmitTrackHandler submitTrack,
     GetClipHandler getClip,
+    VoteHandler vote,
+    GetBallotHandler getBallot,
     IConnectionRegistry connections,
     IJoinAddressProvider joinAddresses) : Hub<IGameClient>
 {
@@ -95,6 +97,18 @@ public sealed class GameHub(
     public async Task<HubResponse<Clip>> GetClip(HostSession host)
     {
         return HubResponse<Clip>.From(await getClip.HandleAsync(host));
+    }
+
+    // Spelaren känns igen via anslutningen. Bilden går till hela rummet, så att storskärmen ser vem som röstat.
+    public async Task<HubResponse<GameState>> Vote(int entry)
+    {
+        return await SendToRoomAsync(await vote.HandleAsync(Context.ConnectionId, entry));
+    }
+
+    // Bara till spelaren själv: det egna bidraget och den egna rösten. Mobilen hämtar dem när röstningen börjar och efter en återanslutning.
+    public async Task<HubResponse<Ballot>> GetBallot()
+    {
+        return HubResponse<Ballot>.From(await getBallot.HandleAsync(Context.ConnectionId));
     }
 
     public async Task<HubResponse<PlayerSession>> JoinRoom(string? roomCode, string? name)

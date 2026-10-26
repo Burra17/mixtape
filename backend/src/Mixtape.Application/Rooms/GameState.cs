@@ -12,6 +12,7 @@ public sealed record GameState(
     string? Prompt,
     bool SkippedRound,
     NowPlaying? NowPlaying,
+    IReadOnlyList<BallotEntry>? Ballot,
     int? RemainingMs,
     SettingsState Settings,
     IReadOnlyList<int> RoundOptions,
@@ -32,11 +33,14 @@ public sealed record GameState(
             room.Prompt,
             room.SkippedRound,
             room.CurrentClip is { Track: var track } ? new NowPlaying(room.ClipNumber, room.Entries.Count, track.Title, track.Artist, track.Album, track.CoverUrl) : null,
+            room.Phase == GamePhase.Voting
+                ? room.Entries.Select((entry, index) => new BallotEntry(index + 1, entry.Track.Title, entry.Track.Artist, entry.Track.CoverUrl)).ToList()
+                : null,
             room.RemainingTime(now) is { } remaining ? (int)Math.Ceiling(remaining.TotalMilliseconds) : null,
             new SettingsState(room.Settings.Rounds, room.Settings.ClipSeconds),
             GameSettings.RoundOptions,
             GameSettings.ClipSecondsOptions,
-            room.Players.Select(player => new GamePlayer(player.Id, player.Name.Value, player.ColorIndex, player.IsConnected, room.HasSubmitted(player.Id))).ToList(),
+            room.Players.Select(player => new GamePlayer(player.Id, player.Name.Value, player.ColorIndex, player.IsConnected, room.HasSubmitted(player.Id), room.HasVoted(player.Id))).ToList(),
             GameRoom.MinPlayers,
             GameRoom.MaxPlayers,
             room.CanStart);
