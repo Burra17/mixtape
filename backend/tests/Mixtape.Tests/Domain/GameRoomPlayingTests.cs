@@ -69,7 +69,7 @@ public sealed class GameRoomPlayingTests
             room.Join(name);
         }
 
-        room.UpdateSettings(room.HostToken, 3, 20);
+        room.UpdateSettings(room.HostToken, 3, 20, null);
         room.StartGame(room.HostToken, ["A", "B", "C"], _now);
         foreach (var player in room.Players)
         {

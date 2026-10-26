@@ -31,7 +31,7 @@ public sealed class AdvancePhasesHandlerTests
         var host = game.Host;
         await SubmitTwoAsync(game);
 
-        _time.Advance(GameRoom.SubmittingDuration);
+        _time.Advance(GameSettings.Default.SubmittingDuration);
         await _advance.HandleAsync();
         await _advance.HandleAsync();
 
@@ -46,7 +46,7 @@ public sealed class AdvancePhasesHandlerTests
     {
         await GameStarter.StartAsync(_rooms, _connections, _time);
 
-        _time.Advance(GameRoom.SubmittingDuration - TimeSpan.FromSeconds(1));
+        _time.Advance(GameSettings.Default.SubmittingDuration - TimeSpan.FromSeconds(1));
         await _advance.HandleAsync();
 
         Assert.That(_notifier.Sent, Is.Empty);

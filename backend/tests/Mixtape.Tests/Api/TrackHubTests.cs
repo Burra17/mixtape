@@ -323,7 +323,7 @@ public sealed class TrackHubTests
         }
     }
 
-    // Klockan spolas fram en minut i taget, längre än någon fas. Servern byter högst en fas eller ett klipp per tick, så ingen fas hoppas över.
+    // Klockan spolas fram tre minuter i taget, längre än någon fas. Servern byter högst en fas eller ett klipp per tick, så ingen fas hoppas över.
     // Ger bilden när rummet nått fasen.
     private async Task<JsonElement> AdvanceUntilAsync(HubConnection listener, string phase)
     {
@@ -331,7 +331,7 @@ public sealed class TrackHubTests
         {
             var next = new TaskCompletionSource<JsonElement>();
             using var subscription = listener.On<JsonElement>(nameof(IGameClient.GameStateUpdated), state => next.TrySetResult(state));
-            _time.Advance(TimeSpan.FromMinutes(1));
+            _time.Advance(TimeSpan.FromMinutes(3));
             var state = await next.Task.WaitAsync(TimeSpan.FromSeconds(5));
             if (state.GetProperty("phase").GetString() == phase)
             {

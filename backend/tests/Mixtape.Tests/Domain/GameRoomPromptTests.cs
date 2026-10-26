@@ -29,7 +29,7 @@ public sealed class GameRoomPromptTests
     [Test]
     public void Prompt_FollowsTheRoundThroughAllItsPhasesAndIsNullAfterTheGame()
     {
-        _room.UpdateSettings(_room.HostToken, 8, null);
+        _room.UpdateSettings(_room.HostToken, 8, null, null);
         var prompts = Enumerable.Range(1, 8).Select(round => $"Prompt {round}").ToList();
         _room.StartGame(_room.HostToken, prompts, _now);
 

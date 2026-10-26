@@ -8,9 +8,9 @@ import { useHostStore } from '../../../store/hostStore.ts';
 export const useGameSetup = () => {
   const { error, run } = useHubCall();
 
-  const choose = (rounds: number | null, clipSeconds: number | null) => {
+  const choose = (rounds: number | null, clipSeconds: number | null, submittingSeconds: number | null) => {
     const { session } = useHostStore.getState();
-    if (session) void run(() => updateSettings(session, rounds, clipSeconds));
+    if (session) void run(() => updateSettings(session, rounds, clipSeconds, submittingSeconds));
   };
 
   // Ljudet låses upp först, medan webbläsaren fortfarande räknar anropet som en del av klicket.

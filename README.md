@@ -8,14 +8,14 @@ Det första spelläget. Spelarna tävlar om att välja den bästa låten till en
 
 3–8 spelare går med genom att skanna QR-koden på storskärmen. Varje runda har fyra faser:
 
-1. **Inskick (45 s).** Storskärmen visar en prompt, till exempel "Låten som spelas när du inser att du gått på fel tåg". Alla söker fram en låt i mobilen och skickar in den. Ett inskickat bidrag är låst. Har någon redan valt samma låt får man välja en annan.
+1. **Inskick (60–120 s).** Storskärmen visar en prompt, till exempel "Låten som spelas när du inser att du gått på fel tåg". Alla söker fram en låt i mobilen och skickar in den. Ett inskickat bidrag är låst. Har någon redan valt samma låt får man välja en annan.
 2. **Uppspelning.** Storskärmen spelar ett klipp av varje bidrag i slumpad ordning och visar omslag, titel och artist, men inte vem som valde låten.
-3. **Röstning (20 s).** Alla röstar på sin favorit, men inte på sin egen. Den som inte skickade in får också rösta.
+3. **Röstning (30 s).** Alla röstar på sin favorit, men inte på sin egen. Den som inte skickade in får också rösta.
 4. **Avslöjande.** Storskärmen visar vem som valde vad. Varje röst ger 1 poäng.
 
 Faserna går vidare så fort alla är klara. Kommer färre än två bidrag in hoppas rundan över.
 
-I lobbyn väljer värden antalet rundor (3, 5 eller 8, standard 5) och klipplängden (10, 15 eller 20 s, standard 15). Efter sista rundan visas slutställningen, och "Spela igen" startar ett nytt spel med samma spelare i samma rum.
+I lobbyn väljer värden antalet rundor (3, 5 eller 8, standard 5), klipplängden (10, 15 eller 20 s, standard 15) och betänketiden i inskicket (60, 90 eller 120 s, standard 90). Efter sista rundan visas slutställningen, och "Spela igen" startar ett nytt spel med samma spelare i samma rum.
 
 ## Struktur
 

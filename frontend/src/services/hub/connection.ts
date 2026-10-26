@@ -137,8 +137,8 @@ export const removePlayer = (host: HostSession, playerId: string) =>
   connection.invoke(serverMethods.removePlayer, host, playerId).catch(() => undefined);
 
 // null behåller inställningen som den är. Den nya bilden kommer med GameStateUpdated.
-export const updateSettings = (host: HostSession, rounds: number | null, clipSeconds: number | null) =>
-  connection.invoke<HubResponse<GameState>>(serverMethods.updateSettings, host, rounds, clipSeconds);
+export const updateSettings = (host: HostSession, rounds: number | null, clipSeconds: number | null, submittingSeconds: number | null) =>
+  connection.invoke<HubResponse<GameState>>(serverMethods.updateSettings, host, rounds, clipSeconds, submittingSeconds);
 
 export const startGame = (host: HostSession) => connection.invoke<HubResponse<GameState>>(serverMethods.startGame, host);
 

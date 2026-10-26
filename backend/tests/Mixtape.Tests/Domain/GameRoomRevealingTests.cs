@@ -137,7 +137,7 @@ public sealed class GameRoomRevealingTests
 
         if (_room.Phase == GamePhase.Submitting)
         {
-            _now += GameRoom.SubmittingDuration;
+            _now += GameSettings.Default.SubmittingDuration;
             _room.Tick(_now);
         }
 
