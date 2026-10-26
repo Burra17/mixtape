@@ -24,7 +24,7 @@ public sealed class GameRoomGameOverTests
         _room.StartGame(_room.HostToken, ["Prompt 1", "Prompt 2", "Prompt 3"], _now);
     }
 
-    // Anna och Bertil röstar på varandra i första rundan, och resten av rundorna hoppas över.
+    // Anna och Bertil röstar på varandra i sista rundan, och Cecilia röstar inte.
     [Test]
     public void GameOver_WithEqualScores_SharesTheVictory()
     {
@@ -38,6 +38,8 @@ public sealed class GameRoomGameOverTests
     public void PlayAgain_ResetsTheScoresAndTheRoundAndGoesToTheLobby()
     {
         PlayToTheEnd();
+        Assert.That(_room.Entries, Is.Not.Empty);
+        Assert.That(_room.HasVoted(_anna.Id), Is.True);
 
         var result = _room.PlayAgain(_room.HostToken);
 
@@ -96,8 +98,15 @@ public sealed class GameRoomGameOverTests
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.GameOver));
     }
 
+    // De två första rundorna hoppas över och den sista spelas, så att slutställningen har bidrag och röster kvar som PlayAgain måste tömma.
     private void PlayToTheEnd()
     {
+        while (_room.Round < _room.Settings.Rounds)
+        {
+            _now += _room.RemainingTime(_now)!.Value;
+            _room.Tick(_now);
+        }
+
         _room.SubmitTrack(_anna.Id, TestTrack.Of(1, "Ett"), _now);
         _room.SubmitTrack(_bertil.Id, TestTrack.Of(2, "Två"), _now);
         AdvanceUntil(GamePhase.Voting);

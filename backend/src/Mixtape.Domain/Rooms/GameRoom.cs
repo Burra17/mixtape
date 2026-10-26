@@ -209,6 +209,7 @@ public sealed class GameRoom
         _entries.Clear();
         _votes.Clear();
         Phase = GamePhase.Lobby;
+        _clock.Stop();
         Revision++;
         return Result.Success();
     }
