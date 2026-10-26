@@ -27,6 +27,7 @@ public static class DependencyInjection
         services.AddTransient<GetClipHandler>();
         services.AddTransient<VoteHandler>();
         services.AddTransient<GetBallotHandler>();
+        services.AddTransient<PlayAgainHandler>();
         return services;
     }
 }
