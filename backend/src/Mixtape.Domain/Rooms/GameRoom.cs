@@ -31,6 +31,9 @@ public sealed class GameRoom
 
     private readonly Random _random;
 
+    // Rundans röster: spelarens id och numret på bidraget som fick rösten. Nollställs när nästa runda börjar.
+    private readonly Dictionary<string, int> _votes = [];
+
     private bool _previousRoundSkipped;
 
     // Klippet som spelas, som plats i bidragen. Bidragen står i uppspelningens ordning när uppspelningen börjat.
@@ -70,7 +73,6 @@ public sealed class GameRoom
 
     // 1 för det första klippet.
     public int ClipNumber => _clipIndex + 1;
-
     // Sant under inskicket i rundan efter en runda som hoppades över, så att storskärmen kan förklara varför prompten byttes.
     public bool SkippedRound => Phase == GamePhase.Submitting && _previousRoundSkipped;
 
@@ -100,6 +102,14 @@ public sealed class GameRoom
     public bool IsAbandoned(DateTimeOffset now) => EmptySince is { } since && now - since >= AbandonedAfter;
 
     public bool HasSubmitted(string playerId) => _entries.Any(entry => entry.PlayerId == playerId);
+
+    public bool HasVoted(string playerId) => _votes.ContainsKey(playerId);
+
+    // Numret på spelarens eget bidrag, 1 för det första i uppspelningen, eller null om spelaren inte skickade in.
+    public int? EntryNumberOf(string playerId) => _entries.FindIndex(entry => entry.PlayerId == playerId) is >= 0 and var index ? index + 1 : null;
+
+    // Numret på bidraget som spelaren röstade på, eller null.
+    public int? VoteOf(string playerId) => _votes.TryGetValue(playerId, out var entry) ? entry : null;
 
     // Tiden som är kvar av fasen, eller null i faser utan deadline.
     public TimeSpan? RemainingTime(DateTimeOffset now) => _clock.Remaining(now);
@@ -189,6 +199,47 @@ public sealed class GameRoom
         }
 
         _entries.Add(new Entry(playerId, track, now));
+        Revision++;
+        if (CanCompleteEarly)
+        {
+            CompletePhase(now);
+        }
+
+        return Result.Success();
+    }
+
+    // Spelaren kan bara se sin egen röstsedel medan rundan röstar.
+    public Result CanVote() => Phase == GamePhase.Voting ? Result.Success() : RoomErrors.WrongPhase;
+
+    // entry är bidragets nummer i uppspelningen. Rösten är låst när den väl lagts. Har alla röstat går rummet vidare direkt.
+    public Result Vote(string playerId, int entry, DateTimeOffset now)
+    {
+        if (Phase != GamePhase.Voting)
+        {
+            return RoomErrors.WrongPhase;
+        }
+
+        if (_players.All(player => player.Id != playerId))
+        {
+            return PlayerErrors.NotFound;
+        }
+
+        if (HasVoted(playerId))
+        {
+            return VoteErrors.AlreadyVoted;
+        }
+
+        if (entry < 1 || entry > _entries.Count)
+        {
+            return VoteErrors.NotFound;
+        }
+
+        if (EntryNumberOf(playerId) == entry)
+        {
+            return VoteErrors.OwnEntry;
+        }
+
+        _votes[playerId] = entry;
         Revision++;
         if (CanCompleteEarly)
         {
@@ -347,6 +398,7 @@ public sealed class GameRoom
             return Phase switch
             {
                 GamePhase.Submitting => _entries.Count >= 2 && connected.Count > 0 && connected.All(player => HasSubmitted(player.Id)),
+                GamePhase.Voting => connected.Count > 0 && connected.All(player => HasVoted(player.Id)),
                 _ => false,
             };
         }
@@ -413,6 +465,7 @@ public sealed class GameRoom
         Round = round;
         _previousRoundSkipped = skippedPrevious;
         _entries.Clear();
+        _votes.Clear();
         Enter(GamePhase.Submitting, SubmittingDuration, now);
     }
 
