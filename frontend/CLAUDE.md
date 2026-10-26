@@ -54,14 +54,15 @@ Riktningen är vald i #31, med We Are Rewind som förebild: varmt off-white, sva
 
 - **Färger:** `paper` (bakgrund), `card` (ytor), `ink` (text, ramar och skuggor), `muted` (sekundär text) och `signal` (gult, sparsamt: textbandet, rumskoden, prompten och primärknappens text).
 - **Spelare:** varje spelare har en av `player-1` till `player-8`. En spelare visas som en färgruta med initialen i vit text, och namnet i `ink` bredvid. Namnet står alltid med, så att ingen behöver skilja spelarna åt bara på färgen.
-- **Typografi:** Archivo genomgående. Rubriker, rumskoden och prompten använder `text-display` (full bredd, vikt 900, versaler). Brödtext är vanlig Archivo.
+- **Typografi:** Archivo genomgående. Rubriker, rumskoden och prompten använder `text-display` (full bredd, vikt 900, versaler). Brödtext är vanlig Archivo. Det enda undantaget är det handskrivna ordet på kassettens etikett, som använder `font-marker` (Permanent Marker).
 - **Etiketter:** `<Label>` skriver `[RUMSKOD]` i versaler med hakparentes. Använd den för rubriker på paneler och statusrader.
 - **Paneler:** `<Card>` för det som hör ihop, som rumskoden eller spelarlistan.
 - **Former:** ramar är `border-2 border-ink`. På storskärmen är hörnen skarpa. På mobilen får knappar, fält och paneler `rounded-control`, eftersom stora tryckytor ska vara lätta att träffa med tummen. Mönstret är `rounded-control lg:rounded-none`.
 - **Knappar:** `<Button>` och `<LinkButton>` delar utseende via `buttonStyles.ts`. `primary` är svart med gul text och används en gång per skärm, för det viktigaste steget. Tryckytor är minst 48 px höga (`min-h-12`).
 - **Fält:** `bg-card`, `border-2 border-ink`, `min-h-12` och samma radie som knapparna. Fokus visas med samma ram som knapparnas (`outline-ink`).
 - **Storlekar på storskärmen:** text i `/host` som ska läsas på avstånd skalar med skärmen via `clamp()` och viewport-enheter. Startsidan och mobilens vyer använder fasta storlekar.
-- **Rörelse:** storskärmen rör sig hela tiden, med `<Marquee>` och `<Reels>`. Mobilen ligger still. Animationer skrivs som `lg:motion-safe:animate-…`, så att de bara körs från `lg` och bara när "minska rörelse" är avstängt. `motion-reduce:animate-none` bredvid `lg:animate-…` fungerar inte, eftersom brytpunkten kommer senare i CSS:en och vinner. Stora ögonblick som avslöjandet hör till #24.
+- **Kassetten:** `<Cassette>` står på startsidan och på storskärmens första vy. Etikettens ränder (`stripe-red`, `stripe-orange`, `stripe-blue` och `stripe-magenta`) och skalets färger är tema-variabler.
+- **Rörelse:** storskärmen rör sig hela tiden, med `<Marquee>` och kassettens spolar. Mobilen ligger still. Animationer skrivs som `lg:motion-safe:animate-…`, så att de bara körs från `lg` och bara när "minska rörelse" är avstängt. `motion-reduce:animate-none` bredvid `lg:animate-…` fungerar inte, eftersom brytpunkten kommer senare i CSS:en och vinner. Stora ögonblick som avslöjandet hör till #24.
 - **Layout:** vänsterställt som standard, som hos förebilden. Centrera bara det som är ensamt i fokus, som rumskoden.
 
 ## Namngivning

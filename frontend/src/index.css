@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 /* standard.css har både vikt- och breddaxeln, så rubrikerna kan bli extra breda. */
 @import '@fontsource-variable/archivo/standard.css';
+/* Bara kassettetikettens handskrivna ord, så bara den latinska delen laddas. */
+@import '@fontsource/permanent-marker/latin-400.css';
 
 /* Stilen är platt: färgfält, svarta ramar och hårda skuggor. Komponenterna använder färgerna via klasser som bg-paper och text-signal. */
 @theme {
@@ -20,7 +22,19 @@
   --color-player-7: #00727e;
   --color-player-8: #7a5a12;
 
+  /* Kassetten: platt grått skal, mörkare fönster och brunt band. */
+  --color-shell: #c9cfd2;
+  --color-shell-window: #4a4f53;
+  --color-tape: #6b4a2b;
+
+  /* Etikettens ränder uppifrån och ned. Orange är ljusare än player-3, som etiketternas orange. */
+  --color-stripe-red: var(--color-player-1);
+  --color-stripe-orange: #e8822a;
+  --color-stripe-blue: var(--color-player-2);
+  --color-stripe-magenta: var(--color-player-4);
+
   --font-sans: 'Archivo Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-marker: 'Permanent Marker', cursive;
   --tracking-label: 0.12em;
 
   /* Skarpa hörn på storskärmen. Mobilens knappar och fält får den lilla radien. */
