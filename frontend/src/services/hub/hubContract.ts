@@ -16,6 +16,7 @@ export const serverMethods = {
   getClip: 'GetClip',
   vote: 'Vote',
   getBallot: 'GetBallot',
+  playAgain: 'PlayAgain',
 } as const;
 
 export const clientEvents = {
@@ -92,7 +93,7 @@ export type GameState = {
   ballot: BallotEntry[] | null;
   // Bidragen med vem som valde dem och antal röster, i uppspelningens ordning, eller null utanför avslöjandet.
   reveal: RevealedEntry[] | null;
-  // Alla spelare sorterade efter placering, eller null utanför avslöjandet.
+  // Alla spelare sorterade efter placering i avslöjandet och slutställningen, annars null. Vinnarna är de med place 1.
   standings: GameStanding[] | null;
   // Tiden som var kvar av fasen när bilden skapades, eller null i faser utan deadline. Oberoende av mobilens klocka.
   remainingMs: number | null;

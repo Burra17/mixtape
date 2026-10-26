@@ -142,6 +142,9 @@ export const updateSettings = (host: HostSession, rounds: number | null, clipSec
 
 export const startGame = (host: HostSession) => connection.invoke<HubResponse<GameState>>(serverMethods.startGame, host);
 
+// Tillbaka till lobbyn med samma spelare. Bilden av lobbyn kommer med GameStateUpdated till hela rummet.
+export const playAgain = (host: HostSession) => connection.invoke<HubResponse<GameState>>(serverMethods.playAgain, host);
+
 // Bara en spelare i ett rum får söka, och bara under inskicket.
 export const search = (query: string) => connection.invoke<HubResponse<Track[]>>(serverMethods.search, query);
 
