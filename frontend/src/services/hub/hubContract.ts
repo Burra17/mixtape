@@ -90,6 +90,10 @@ export type GameState = {
   nowPlaying: NowPlaying | null;
   // Bidragen att rösta på, i uppspelningens ordning, eller null utanför röstningen.
   ballot: BallotEntry[] | null;
+  // Bidragen med vem som valde dem och antal röster, i uppspelningens ordning, eller null utanför avslöjandet.
+  reveal: RevealedEntry[] | null;
+  // Alla spelare sorterade efter placering, eller null utanför avslöjandet.
+  standings: GameStanding[] | null;
   // Tiden som var kvar av fasen när bilden skapades, eller null i faser utan deadline. Oberoende av mobilens klocka.
   remainingMs: number | null;
   settings: SettingsState;
@@ -123,6 +127,24 @@ export type BallotEntry = {
 export type Ballot = {
   ownEntry: number | null;
   votedEntry: number | null;
+};
+
+// RevealedEntry i Application/Rooms. Vem som valde låten lämnar servern först när röstningen är slut.
+export type RevealedEntry = {
+  number: number;
+  title: string;
+  artist: string;
+  coverUrl: string;
+  playerId: string;
+  votes: number;
+};
+
+// GameStanding i Application/Rooms. score gäller hela spelet och roundPoints rundan. place delas vid lika poäng, som 1, 1, 3.
+export type GameStanding = {
+  playerId: string;
+  score: number;
+  roundPoints: number;
+  place: number;
 };
 
 // Clip i Application/Rooms, bara till storskärmen. index visar vilket klipp länken gäller.

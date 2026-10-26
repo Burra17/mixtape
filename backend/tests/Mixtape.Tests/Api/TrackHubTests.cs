@@ -224,6 +224,68 @@ public sealed class TrackHubTests
         }
     }
 
+    // Först i avslöjandet får alla veta vem som valde vad, hur många röster låten fick och hur ställningen ser ut.
+    [Test]
+    public async Task Revealing_TellsTheRoomWhoPickedWhatAndTheStandings()
+    {
+        await using var host = CreateConnection();
+        var players = new[] { CreateConnection(), CreateConnection(), CreateConnection() };
+        await Task.WhenAll(players.Select(player => player.StartAsync()).Append(host.StartAsync()));
+
+        var (_, sessions) = await StartPlayingAsync(host, players);
+        var voting = await PlayAllClipsAsync(players[0]);
+        var revealing = new TaskCompletionSource<JsonElement>();
+        players[0].On<JsonElement>(nameof(IGameClient.GameStateUpdated), state =>
+        {
+            if (state.GetProperty("phase").GetString() == "revealing")
+            {
+                revealing.TrySetResult(state);
+            }
+        });
+
+        var own = new List<int>();
+        foreach (var player in players)
+        {
+            own.Add((await player.InvokeAsync<HubResponse<Ballot>>(nameof(GameHub.GetBallot))).Value!.OwnEntry!.Value);
+        }
+
+        // Olika många röster per bidrag, så att ett antal som hamnar hos fel ägare syns: spelare 2 får två, spelare 0 en och spelare 1 ingen.
+        await players[0].InvokeAsync<HubResponse<GameState>>(nameof(GameHub.Vote), own[2]);
+        await players[1].InvokeAsync<HubResponse<GameState>>(nameof(GameHub.Vote), own[2]);
+        await players[2].InvokeAsync<HubResponse<GameState>>(nameof(GameHub.Vote), own[0]);
+        var votesByOwner = new[] { 1, 0, 2 };
+
+        var state = await revealing.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.That(voting.GetProperty("reveal").ValueKind, Is.EqualTo(JsonValueKind.Null));
+        Assert.That(voting.GetProperty("standings").ValueKind, Is.EqualTo(JsonValueKind.Null));
+
+        // Spelare i skickade in låt i + 1, så ägaren av varje bidrag går att kontrollera på titeln.
+        var reveal = state.GetProperty("reveal").EnumerateArray().ToList();
+        Assert.That(reveal.Select(entry => entry.GetProperty("number").GetInt32()), Is.EqualTo(new[] { 1, 2, 3 }));
+        foreach (var entry in reveal)
+        {
+            var owner = int.Parse(entry.GetProperty("title").GetString()!["Låt ".Length..]) - 1;
+            Assert.That(entry.GetProperty("playerId").GetString(), Is.EqualTo(sessions[owner].PlayerId));
+            Assert.That(entry.GetProperty("votes").GetInt32(), Is.EqualTo(votesByOwner[owner]));
+        }
+
+        var standings = state.GetProperty("standings").EnumerateArray()
+            .Select(standing => (standing.GetProperty("playerId").GetString(), standing.GetProperty("score").GetInt32(), standing.GetProperty("roundPoints").GetInt32(), standing.GetProperty("place").GetInt32()));
+        Assert.That(standings, Is.EqualTo(new[]
+        {
+            (sessions[2].PlayerId, 2, 2, 1),
+            (sessions[0].PlayerId, 1, 1, 2),
+            (sessions[1].PlayerId, 0, 0, 3),
+        }));
+        Assert.That(state.GetRawText(), Does.Not.Contain("https://klipp/"));
+
+        foreach (var player in players)
+        {
+            await player.DisposeAsync();
+        }
+    }
+
     // Klockan spolas fram ett klipp i taget, eftersom servern byter klipp högst en gång per tick. Ger bilden när röstningen börjat.
     private async Task<JsonElement> PlayAllClipsAsync(HubConnection listener)
     {

@@ -3,6 +3,7 @@ import { PlayerLobby } from '../features/lobby/components/playerLobby.tsx';
 import { Rejoining } from '../features/lobby/components/rejoining.tsx';
 import { usePlayerRejoin } from '../features/lobby/hooks/usePlayerRejoin.ts';
 import { PlayerPlaying } from '../features/playing/components/playerPlaying.tsx';
+import { PlayerRevealing } from '../features/revealing/components/playerRevealing.tsx';
 import { PlayerSubmitting } from '../features/submitting/components/playerSubmitting.tsx';
 import { PlayerVoting } from '../features/voting/components/playerVoting.tsx';
 import { PhasePlaceholder } from '../shared/components/phasePlaceholder.tsx';
@@ -29,5 +30,6 @@ export const PlayerView = () => {
   if (phase === 'playing') return <PlayerPlaying />;
   // Nyckeln är rundan, så att röstsedeln och markeringen börjar om i varje runda.
   if (phase === 'voting') return <PlayerVoting key={game?.round} />;
+  if (phase === 'revealing') return <PlayerRevealing />;
   return <PhasePlaceholder screen='player' />;
 };

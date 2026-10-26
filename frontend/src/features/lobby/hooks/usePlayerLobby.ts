@@ -1,6 +1,7 @@
 import { leaveRoom } from '../../../services/hub/connection.ts';
 import type { PlayerSession } from '../../../services/hub/hubContract.ts';
 import { clearPlayerSession } from '../../../services/storage/playerSessionStorage.ts';
+import { findPlayer } from '../../../shared/components/findPlayer.ts';
 import { useRoomGame } from '../../../store/gameStore.ts';
 import { usePlayerStore } from '../../../store/playerStore.ts';
 
@@ -16,7 +17,7 @@ export const usePlayerLobby = (session: PlayerSession) => {
 
   return {
     game,
-    me: game?.players.find((player) => player.id === session.playerId) ?? null,
+    me: findPlayer(game?.players ?? [], session.playerId) ?? null,
     leave,
   };
 };

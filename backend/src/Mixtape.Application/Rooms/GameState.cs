@@ -13,6 +13,8 @@ public sealed record GameState(
     bool SkippedRound,
     NowPlaying? NowPlaying,
     IReadOnlyList<BallotEntry>? Ballot,
+    IReadOnlyList<RevealedEntry>? Reveal,
+    IReadOnlyList<GameStanding>? Standings,
     int? RemainingMs,
     SettingsState Settings,
     IReadOnlyList<int> RoundOptions,
@@ -35,6 +37,13 @@ public sealed record GameState(
             room.CurrentClip is { Track: var track } ? new NowPlaying(room.ClipNumber, room.Entries.Count, track.Title, track.Artist, track.Album, track.CoverUrl) : null,
             room.Phase == GamePhase.Voting
                 ? room.Entries.Select((entry, index) => new BallotEntry(index + 1, entry.Track.Title, entry.Track.Artist, entry.Track.CoverUrl)).ToList()
+                : null,
+            // Vem som valde vad lämnar servern först här, när röstningen är slut.
+            room.Phase == GamePhase.Revealing
+                ? room.Entries.Select((entry, index) => new RevealedEntry(index + 1, entry.Track.Title, entry.Track.Artist, entry.Track.CoverUrl, entry.PlayerId, room.VotesFor(index + 1))).ToList()
+                : null,
+            room.Phase == GamePhase.Revealing
+                ? room.Standings.Select(standing => new GameStanding(standing.Player.Id, standing.Player.Score, room.RoundPointsOf(standing.Player.Id), standing.Place)).ToList()
                 : null,
             room.RemainingTime(now) is { } remaining ? (int)Math.Ceiling(remaining.TotalMilliseconds) : null,
             new SettingsState(room.Settings.Rounds, room.Settings.ClipSeconds),
