@@ -13,6 +13,7 @@ export const serverMethods = {
   startGame: 'StartGame',
   search: 'Search',
   submitTrack: 'SubmitTrack',
+  getClip: 'GetClip',
 } as const;
 
 export const clientEvents = {
@@ -81,6 +82,8 @@ export type GameState = {
   prompt: string | null;
   // Sant under inskicket i rundan efter en runda som hoppades över för att färre än 2 skickade in.
   skippedRound: boolean;
+  // Klippet som spelas, eller null utanför uppspelningen.
+  nowPlaying: NowPlaying | null;
   // Tiden som var kvar av fasen när bilden skapades, eller null i faser utan deadline. Oberoende av mobilens klocka.
   remainingMs: number | null;
   settings: SettingsState;
@@ -90,6 +93,22 @@ export type GameState = {
   minPlayers: number;
   maxPlayers: number;
   canStart: boolean;
+};
+
+// NowPlaying i Application/Rooms. Ingen länk och ingenting om vem som valde låten. index är 1 för det första klippet.
+export type NowPlaying = {
+  index: number;
+  count: number;
+  title: string;
+  artist: string;
+  album: string;
+  coverUrl: string;
+};
+
+// Clip i Application/Rooms, bara till storskärmen. index visar vilket klipp länken gäller.
+export type Clip = {
+  index: number;
+  previewUrl: string;
 };
 
 // Track i Application/Music. Ingen klipplänk, eftersom den slutar gälla efter 15 minuter och hämtas färsk inför uppspelningen.

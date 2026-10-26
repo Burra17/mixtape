@@ -96,7 +96,7 @@ public sealed class TrackHubTests
         Assert.That(result.Error, Is.Null);
         var done = state.GetProperty("players").EnumerateArray().Single(player => player.GetProperty("hasSubmitted").GetBoolean());
         Assert.That(done.GetProperty("id").GetString(), Is.EqualTo(annaId));
-        Assert.That(state.GetRawText(), Does.Not.Contain("Jag kommer").And.Not.Contain(FixedCatalog.Tracks[0].Id.ToString()));
+        Assert.That(state.GetRawText(), Does.Not.Contain($"Låt {FixedCatalog.Tracks[0].Id}").And.Not.Contain(FixedCatalog.Tracks[0].Id.ToString()));
     }
 
     [Test]
@@ -111,6 +111,63 @@ public sealed class TrackHubTests
         var result = await anna.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.SubmitTrack), FixedCatalog.Tracks[0].Id);
 
         Assert.That(result.Error?.Code, Is.EqualTo("entry.track_taken"));
+    }
+
+    // Under uppspelningen ser alla vilken låt som spelas, men varken vem som valde den eller länken till klippet.
+    [Test]
+    public async Task Playing_TellsTheRoomWhatIsPlayingWithoutWhoOrTheLink()
+    {
+        await using var host = CreateConnection();
+        var players = new[] { CreateConnection(), CreateConnection(), CreateConnection() };
+        var playing = new TaskCompletionSource<JsonElement>();
+        players[0].On<JsonElement>(nameof(IGameClient.GameStateUpdated), state =>
+        {
+            if (state.GetProperty("phase").GetString() == "playing")
+            {
+                playing.TrySetResult(state);
+            }
+        });
+        await Task.WhenAll(players.Select(player => player.StartAsync()).Append(host.StartAsync()));
+
+        var (room, sessions) = await StartPlayingAsync(host, players);
+        var state = await playing.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var clip = await host.InvokeAsync<HubResponse<Clip>>(nameof(GameHub.GetClip), room);
+        // Spelaren har bara sin egen hemliga token, och den öppnar inte värdens anrop.
+        var asPlayer = await players[0].InvokeAsync<HubResponse<Clip>>(nameof(GameHub.GetClip), room with { HostToken = sessions[0].PlayerToken });
+
+        var nowPlaying = state.GetProperty("nowPlaying");
+        Assert.That(nowPlaying.GetProperty("index").GetInt32(), Is.EqualTo(1));
+        Assert.That(nowPlaying.GetProperty("count").GetInt32(), Is.EqualTo(3));
+        Assert.That(nowPlaying.GetProperty("title").GetString(), Does.StartWith("Låt "));
+        // Spelarnas id står med rätta i players, så id:t letas bara i nowPlaying. Länken får inte finnas någonstans i bilden.
+        Assert.That(sessions, Has.None.Matches<PlayerSession>(session => nowPlaying.GetRawText().Contains(session.PlayerId)));
+        Assert.That(state.GetRawText(), Does.Not.Contain("https://klipp/"));
+        Assert.That(clip.Value!.PreviewUrl, Does.StartWith("https://klipp/"));
+        Assert.That(asPlayer.Error?.Code, Is.EqualTo("room.not_found"));
+
+        foreach (var player in players)
+        {
+            await player.DisposeAsync();
+        }
+    }
+
+    // Tre spelare med var sin anslutning går med, och alla skickar in, så att rummet går direkt till uppspelningen. Ger spelarnas sessioner.
+    private static async Task<(HostSession Room, List<PlayerSession> Sessions)> StartPlayingAsync(HubConnection host, HubConnection[] players)
+    {
+        var room = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
+        var sessions = new List<PlayerSession>();
+        foreach (var (player, name) in players.Zip(["Anna", "Bertil", "Cecilia"]))
+        {
+            sessions.Add((await player.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), room.RoomCode, name)).Value!);
+        }
+
+        await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.StartGame), room);
+        for (var i = 0; i < players.Length; i++)
+        {
+            await players[i].InvokeAsync<HubResponse<GameState>>(nameof(GameHub.SubmitTrack), (long)(i + 1));
+        }
+
+        return (room, sessions);
     }
 
     // Anna har en egen anslutning. Storskärmens anslutning går med som Bertil och sedan Cecilia, så att spelet kan starta,
@@ -145,6 +202,6 @@ public sealed class TrackHubTests
             Task.FromResult(Result<IReadOnlyList<Track>>.Success(Tracks));
 
         public Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default) =>
-            Task.FromResult(Result<PlayableTrack>.Success(new PlayableTrack(trackId, "Jag kommer", "Veronica Maggio", "Satan i gatan", "c", "klipp")));
+            Task.FromResult(Result<PlayableTrack>.Success(new PlayableTrack(trackId, $"Låt {trackId}", "Artist", "Album", "omslag", $"https://klipp/{trackId}")));
     }
 }

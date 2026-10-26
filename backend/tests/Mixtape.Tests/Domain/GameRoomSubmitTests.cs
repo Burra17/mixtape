@@ -14,7 +14,7 @@ public sealed class GameRoomSubmitTests
     [SetUp]
     public void SetUp()
     {
-        _room = GameRoom.Create(RoomCode.Parse("BCDF")!);
+        _room = GameRoom.Create(RoomCode.Parse("BCDF")!, Random.Shared);
         _anna = _room.Join("Anna").Value;
         _bertil = _room.Join("Bertil").Value;
         _cecilia = _room.Join("Cecilia").Value;
@@ -29,7 +29,7 @@ public sealed class GameRoomSubmitTests
 
         Assert.That(result.IsSuccess, Is.True);
         Assert.That(_room.HasSubmitted(_anna.Id), Is.True);
-        Assert.That(_room.Entries, Is.EqualTo(new[] { new Entry(_anna.Id, Track(1, "Jag kommer")) }));
+        Assert.That(_room.Entries, Is.EqualTo(new[] { new Entry(_anna.Id, Track(1, "Jag kommer"), Now) }));
     }
 
     [Test]
@@ -59,9 +59,9 @@ public sealed class GameRoomSubmitTests
     public void SubmitTrack_WithTheSameTitleAndArtistInOtherCase_ReturnsTrackTaken()
     {
         Start();
-        _room.SubmitTrack(_anna.Id, new SubmittedTrack(1, "Jag kommer", "Veronica Maggio"), Now);
+        _room.SubmitTrack(_anna.Id, TestTrack.Of(1, "Jag kommer", "Veronica Maggio"), Now);
 
-        var result = _room.SubmitTrack(_bertil.Id, new SubmittedTrack(2, " jag  KOMMER ", "veronica maggio"), Now);
+        var result = _room.SubmitTrack(_bertil.Id, TestTrack.Of(2, " jag  KOMMER ", "veronica maggio"), Now);
 
         Assert.That(result.Error, Is.EqualTo(EntryErrors.TrackTaken));
     }
@@ -70,9 +70,9 @@ public sealed class GameRoomSubmitTests
     public void SubmitTrack_WithTheSameTitleButOtherWhitespace_ReturnsTrackTaken()
     {
         Start();
-        _room.SubmitTrack(_anna.Id, new SubmittedTrack(1, "Jag kommer", "Veronica Maggio"), Now);
+        _room.SubmitTrack(_anna.Id, TestTrack.Of(1, "Jag kommer", "Veronica Maggio"), Now);
 
-        var result = _room.SubmitTrack(_bertil.Id, new SubmittedTrack(2, "Jag\tkommer\n", "Veronica\u00a0Maggio"), Now);
+        var result = _room.SubmitTrack(_bertil.Id, TestTrack.Of(2, "Jag\tkommer\n", "Veronica\u00a0Maggio"), Now);
 
         Assert.That(result.Error, Is.EqualTo(EntryErrors.TrackTaken));
     }
@@ -81,9 +81,9 @@ public sealed class GameRoomSubmitTests
     public void SubmitTrack_WithAnotherVersion_IsAccepted()
     {
         Start();
-        _room.SubmitTrack(_anna.Id, new SubmittedTrack(1, "Jag kommer", "Veronica Maggio"), Now);
+        _room.SubmitTrack(_anna.Id, TestTrack.Of(1, "Jag kommer", "Veronica Maggio"), Now);
 
-        var result = _room.SubmitTrack(_bertil.Id, new SubmittedTrack(2, "Jag kommer (Live)", "Veronica Maggio"), Now);
+        var result = _room.SubmitTrack(_bertil.Id, TestTrack.Of(2, "Jag kommer (Live)", "Veronica Maggio"), Now);
 
         Assert.That(result.IsSuccess, Is.True);
     }
@@ -133,7 +133,7 @@ public sealed class GameRoomSubmitTests
         _room.SubmitTrack(_cecilia.Id, Track(3, "Tre"), Now.AddSeconds(5));
 
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Playing));
-        Assert.That(_room.RemainingTime(Now.AddSeconds(5)), Is.EqualTo(GameSettings.Default.ClipLength * 3));
+        Assert.That(_room.RemainingTime(Now.AddSeconds(5)), Is.EqualTo(GameSettings.Default.ClipLength));
     }
 
     [Test]
@@ -305,5 +305,5 @@ public sealed class GameRoomSubmitTests
         }
     }
 
-    private static SubmittedTrack Track(long id, string title) => new(id, title, "Artist");
+    private static SubmittedTrack Track(long id, string title) => TestTrack.Of(id, title);
 }

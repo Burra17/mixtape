@@ -24,6 +24,7 @@ public static class DependencyInjection
         services.AddTransient<CleanUpRoomsHandler>();
         services.AddTransient<SearchTracksHandler>();
         services.AddTransient<SubmitTrackHandler>();
+        services.AddTransient<GetClipHandler>();
         return services;
     }
 }

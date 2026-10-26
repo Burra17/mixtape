@@ -1,0 +1,56 @@
+import { useEffect, useState } from 'react';
+import { playClip, stopClip } from '../../../services/audio/audioPlayer.ts';
+import { getClip } from '../../../services/hub/connection.ts';
+import { useIsConnected } from '../../../store/connectionStore.ts';
+import { useGameStore, useRoomGame } from '../../../store/gameStore.ts';
+import { useHostStore } from '../../../store/hostStore.ts';
+
+// Hur långt in i klippet servern är, räknat från när bilden kom fram, så att ljudet slutar samtidigt som serverns klocka.
+const secondsPlayed = () => {
+  const { game, receivedAt } = useGameStore.getState();
+  if (!game || game.remainingMs === null) return 0;
+  const left = game.remainingMs - (Date.now() - receivedAt);
+  return Math.max(0, game.settings.clipSeconds - left / 1000);
+};
+
+// Storskärmen spelar klippet som servern säger. Ett nytt klipp, en hävd paus och en återanslutning hämtar länken och börjar där servern är.
+// Servern äger klockan, så ett klipp som inte går att spela visas ändå, och TV:n följer klockan till nästa klipp.
+export const useClipPlayback = () => {
+  const session = useHostStore((state) => state.session);
+  const game = useRoomGame(session?.roomCode);
+  const isConnected = useIsConnected();
+  const [failedIndex, setFailedIndex] = useState<number | null>(null);
+
+  const index = game?.nowPlaying?.index ?? null;
+  const canPlay = session !== null && index !== null && !game?.isPaused && isConnected;
+
+  useEffect(() => {
+    if (!canPlay || !session) return;
+    let cancelled = false;
+
+    const start = async () => {
+      const response = await getClip(session).catch(() => null);
+      if (cancelled) return;
+      // Ett svar för ett klipp som redan bytts ut kastas. Bilden för det nya klippet startar sin egen hämtning.
+      if (response?.value && response.value.index !== index) return;
+
+      try {
+        if (!response?.value) throw new Error(response?.error?.message ?? 'Kunde inte nå servern.');
+        await playClip(response.value.previewUrl, secondsPlayed());
+        setFailedIndex(null);
+      } catch (error) {
+        if (cancelled) return;
+        console.error(`Klipp ${index} gick inte att spela.`, error);
+        setFailedIndex(index);
+      }
+    };
+
+    void start();
+    return () => {
+      cancelled = true;
+      stopClip();
+    };
+  }, [canPlay, session, index]);
+
+  return { failed: failedIndex !== null && failedIndex === index };
+};

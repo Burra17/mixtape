@@ -29,12 +29,18 @@ public sealed class GameRoom
 
     private readonly List<Entry> _entries = [];
 
+    private readonly Random _random;
+
     private bool _previousRoundSkipped;
 
-    private GameRoom(RoomCode code, string hostToken)
+    // Klippet som spelas, som plats i bidragen. Bidragen står i uppspelningens ordning när uppspelningen börjat.
+    private int _clipIndex;
+
+    private GameRoom(RoomCode code, string hostToken, Random random)
     {
         Code = code;
         HostToken = hostToken;
+        _random = random;
     }
 
     public RoomCode Code { get; }
@@ -56,8 +62,14 @@ public sealed class GameRoom
 
     public IReadOnlyList<Player> Players => _players;
 
-    // Rundans bidrag. Nollställs när nästa runda börjar.
+    // Rundans bidrag, i uppspelningens slumpade ordning från och med uppspelningen. Nollställs när nästa runda börjar.
     public IReadOnlyList<Entry> Entries => _entries;
+
+    // Bidraget som spelas, eller null utanför uppspelningen.
+    public Entry? CurrentClip => Phase == GamePhase.Playing ? _entries[_clipIndex] : null;
+
+    // 1 för det första klippet.
+    public int ClipNumber => _clipIndex + 1;
 
     // Sant under inskicket i rundan efter en runda som hoppades över, så att storskärmen kan förklara varför prompten byttes.
     public bool SkippedRound => Phase == GamePhase.Submitting && _previousRoundSkipped;
@@ -77,11 +89,9 @@ public sealed class GameRoom
 
     private bool IsAnyoneConnected => IsHostConnected || _players.Any(player => player.IsConnected);
 
-    // Platshållare tills #20 spelar ett klipp per bidrag.
-    private TimeSpan PlayingDuration => Settings.ClipLength * _players.Count;
-
-    // Ett nytt rum börjar i lobbyn med en egen hemlig värd-token.
-    public static GameRoom Create(RoomCode code) => new(code, SecretToken.Create());
+    // Ett nytt rum börjar i lobbyn med en egen hemlig värd-token. random slumpar uppspelningens ordning, och testerna seedar den.
+    // Avsteg från #20, som ville ha random som argument när uppspelningen börjar: den börjar både i Tick och i det sista inskicket, och båda vägarna skulle då behöva den.
+    public static GameRoom Create(RoomCode code, Random random) => new(code, SecretToken.Create(), random);
 
     // Jämför i konstant tid, så att svarstiden inte avslöjar hur stor del av en gissad token som stämde.
     public bool IsHost(string? hostToken) =>
@@ -178,11 +188,39 @@ public sealed class GameRoom
             return EntryErrors.TrackTaken;
         }
 
-        _entries.Add(new Entry(playerId, track));
+        _entries.Add(new Entry(playerId, track, now));
         Revision++;
         if (CanCompleteEarly)
         {
             CompletePhase(now);
+        }
+
+        return Result.Success();
+    }
+
+    // Storskärmen hämtar klippets länk själv, så att länken aldrig finns i bilden som alla får.
+    public Result<Entry> CurrentClipFor(string? hostToken)
+    {
+        if (!IsHost(hostToken))
+        {
+            return RoomErrors.NotFound;
+        }
+
+        return CurrentClip is { } clip ? clip : RoomErrors.WrongPhase;
+    }
+
+    // En ny länk för en låt efter en lång paus. Låten letas upp på id, eftersom klippet kan ha bytts medan länken hämtades.
+    public Result RenewLink(long trackId, string previewUrl, DateTimeOffset now)
+    {
+        if (Phase != GamePhase.Playing)
+        {
+            return RoomErrors.WrongPhase;
+        }
+
+        var index = _entries.FindIndex(entry => entry.Track.Id == trackId);
+        if (index >= 0)
+        {
+            _entries[index] = _entries[index] with { Track = _entries[index].Track with { PreviewUrl = previewUrl }, LinkFetchedAt = now };
         }
 
         return Result.Success();
@@ -323,7 +361,11 @@ public sealed class GameRoom
                 SkipRound(now);
                 break;
             case GamePhase.Submitting:
-                Enter(GamePhase.Playing, PlayingDuration, now);
+                StartPlaying(now);
+                break;
+            case GamePhase.Playing when _clipIndex < _entries.Count - 1:
+                _clipIndex++;
+                Enter(GamePhase.Playing, Settings.ClipLength, now);
                 break;
             case GamePhase.Playing:
                 Enter(GamePhase.Voting, VotingDuration, now);
@@ -353,6 +395,17 @@ public sealed class GameRoom
         {
             EndGame();
         }
+    }
+
+    // Ordningen slumpas här, så att den inte avslöjar i vilken ordning bidragen kom in.
+    private void StartPlaying(DateTimeOffset now)
+    {
+        var shuffled = _entries.ToArray();
+        _random.Shuffle(shuffled);
+        _entries.Clear();
+        _entries.AddRange(shuffled);
+        _clipIndex = 0;
+        Enter(GamePhase.Playing, Settings.ClipLength, now);
     }
 
     private void StartRound(int round, bool skippedPrevious, DateTimeOffset now)

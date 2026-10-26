@@ -20,6 +20,7 @@ public sealed class GameHub(
     DisconnectHandler disconnect,
     SearchTracksHandler searchTracks,
     SubmitTrackHandler submitTrack,
+    GetClipHandler getClip,
     IConnectionRegistry connections,
     IJoinAddressProvider joinAddresses) : Hub<IGameClient>
 {
@@ -88,6 +89,12 @@ public sealed class GameHub(
     public async Task<HubResponse<GameState>> SubmitTrack(long trackId)
     {
         return await SendToRoomAsync(await submitTrack.HandleAsync(Context.ConnectionId, trackId));
+    }
+
+    // Bara storskärmen får länken till klippet. Den hämtar den själv för varje nytt klipp och efter en omladdning.
+    public async Task<HubResponse<Clip>> GetClip(HostSession host)
+    {
+        return HubResponse<Clip>.From(await getClip.HandleAsync(host));
     }
 
     public async Task<HubResponse<PlayerSession>> JoinRoom(string? roomCode, string? name)
