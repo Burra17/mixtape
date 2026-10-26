@@ -90,7 +90,8 @@ public sealed class GameRoom
     private bool IsAnyoneConnected => IsHostConnected || _players.Any(player => player.IsConnected);
 
     // Ett nytt rum börjar i lobbyn med en egen hemlig värd-token. random slumpar uppspelningens ordning, och testerna seedar den.
-    public static GameRoom Create(RoomCode code, Random? random = null) => new(code, SecretToken.Create(), random ?? Random.Shared);
+    // Avsteg från #20, som ville ha random som argument när uppspelningen börjar: den börjar både i Tick och i det sista inskicket, och båda vägarna skulle då behöva den.
+    public static GameRoom Create(RoomCode code, Random random) => new(code, SecretToken.Create(), random);
 
     // Jämför i konstant tid, så att svarstiden inte avslöjar hur stor del av en gissad token som stämde.
     public bool IsHost(string? hostToken) =>

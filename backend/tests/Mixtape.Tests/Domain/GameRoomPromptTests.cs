@@ -12,7 +12,7 @@ public sealed class GameRoomPromptTests
     [SetUp]
     public void SetUp()
     {
-        _room = GameRoom.Create(RoomCode.Parse("BCDF")!);
+        _room = GameRoom.Create(RoomCode.Parse("BCDF")!, Random.Shared);
         _now = Now;
         foreach (var name in new[] { "Anna", "Bertil", "Cecilia" })
         {

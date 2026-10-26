@@ -129,18 +129,19 @@ public sealed class TrackHubTests
         });
         await Task.WhenAll(players.Select(player => player.StartAsync()).Append(host.StartAsync()));
 
-        var (room, ids) = await StartPlayingAsync(host, players);
+        var (room, sessions) = await StartPlayingAsync(host, players);
         var state = await playing.Task.WaitAsync(TimeSpan.FromSeconds(5));
         var clip = await host.InvokeAsync<HubResponse<Clip>>(nameof(GameHub.GetClip), room);
-        var asPlayer = await players[0].InvokeAsync<HubResponse<Clip>>(nameof(GameHub.GetClip), room with { HostToken = "fel" });
+        // Spelaren har bara sin egen hemliga token, och den öppnar inte värdens anrop.
+        var asPlayer = await players[0].InvokeAsync<HubResponse<Clip>>(nameof(GameHub.GetClip), room with { HostToken = sessions[0].PlayerToken });
 
         var nowPlaying = state.GetProperty("nowPlaying");
         Assert.That(nowPlaying.GetProperty("index").GetInt32(), Is.EqualTo(1));
         Assert.That(nowPlaying.GetProperty("count").GetInt32(), Is.EqualTo(3));
         Assert.That(nowPlaying.GetProperty("title").GetString(), Does.StartWith("Låt "));
-        var raw = nowPlaying.GetRawText();
-        Assert.That(raw, Does.Not.Contain("klipp"));
-        Assert.That(ids, Has.None.Matches<string>(id => raw.Contains(id)));
+        // Spelarnas id står med rätta i players, så id:t letas bara i nowPlaying. Länken får inte finnas någonstans i bilden.
+        Assert.That(sessions, Has.None.Matches<PlayerSession>(session => nowPlaying.GetRawText().Contains(session.PlayerId)));
+        Assert.That(state.GetRawText(), Does.Not.Contain("https://klipp/"));
         Assert.That(clip.Value!.PreviewUrl, Does.StartWith("https://klipp/"));
         Assert.That(asPlayer.Error?.Code, Is.EqualTo("room.not_found"));
 
@@ -150,14 +151,14 @@ public sealed class TrackHubTests
         }
     }
 
-    // Tre spelare med var sin anslutning går med, och alla skickar in, så att rummet går direkt till uppspelningen. Ger spelarnas id.
-    private static async Task<(HostSession Room, List<string> PlayerIds)> StartPlayingAsync(HubConnection host, HubConnection[] players)
+    // Tre spelare med var sin anslutning går med, och alla skickar in, så att rummet går direkt till uppspelningen. Ger spelarnas sessioner.
+    private static async Task<(HostSession Room, List<PlayerSession> Sessions)> StartPlayingAsync(HubConnection host, HubConnection[] players)
     {
         var room = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
-        var ids = new List<string>();
+        var sessions = new List<PlayerSession>();
         foreach (var (player, name) in players.Zip(["Anna", "Bertil", "Cecilia"]))
         {
-            ids.Add((await player.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), room.RoomCode, name)).Value!.PlayerId);
+            sessions.Add((await player.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), room.RoomCode, name)).Value!);
         }
 
         await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.StartGame), room);
@@ -166,7 +167,7 @@ public sealed class TrackHubTests
             await players[i].InvokeAsync<HubResponse<GameState>>(nameof(GameHub.SubmitTrack), (long)(i + 1));
         }
 
-        return (room, ids);
+        return (room, sessions);
     }
 
     // Anna har en egen anslutning. Storskärmens anslutning går med som Bertil och sedan Cecilia, så att spelet kan starta,

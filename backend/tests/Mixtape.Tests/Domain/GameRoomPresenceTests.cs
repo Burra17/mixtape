@@ -11,7 +11,7 @@ public sealed class GameRoomPresenceTests
     [SetUp]
     public void SetUp()
     {
-        _room = GameRoom.Create(RoomCode.Parse("BCDF")!);
+        _room = GameRoom.Create(RoomCode.Parse("BCDF")!, Random.Shared);
     }
 
     [Test]

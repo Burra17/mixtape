@@ -12,7 +12,7 @@ public sealed class GameRoomPhaseTests
     [SetUp]
     public void SetUp()
     {
-        _room = GameRoom.Create(RoomCode.Parse("BCDF")!);
+        _room = GameRoom.Create(RoomCode.Parse("BCDF")!, Random.Shared);
         _now = Now;
     }
 

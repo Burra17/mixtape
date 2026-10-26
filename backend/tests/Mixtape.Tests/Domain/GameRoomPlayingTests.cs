@@ -63,7 +63,7 @@ public sealed class GameRoomPlayingTests
     [Test]
     public void Tick_FollowsTheClipLengthFromTheSettings()
     {
-        var room = GameRoom.Create(RoomCode.Parse("BCDF")!);
+        var room = GameRoom.Create(RoomCode.Parse("BCDF")!, Random.Shared);
         foreach (var name in new[] { "Anna", "Bertil", "Cecilia" })
         {
             room.Join(name);

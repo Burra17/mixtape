@@ -42,13 +42,7 @@ public sealed class GetClipHandlerTests
     public async Task Handle_AfterALongPause_FetchesANewLink()
     {
         var game = await StartPlayingAsync();
-        await _rooms.WithRoomAsync(game.Host.RoomCode, room =>
-        {
-            room.DisconnectHost(_time.GetUtcNow());
-            return Result.Success();
-        });
-        _time.Advance(Entry.LinkMaxAge);
-        await new ResumeRoomHandler(_rooms, _connections, _time).HandleAsync(game.Host, "host");
+        await PauseUntilTheLinkIsOldAsync(game);
 
         var clip = (await _handler.HandleAsync(game.Host)).Value;
         var again = (await _handler.HandleAsync(game.Host)).Value;
@@ -56,6 +50,19 @@ public sealed class GetClipHandlerTests
         Assert.That(clip.PreviewUrl, Does.StartWith("https://ny/"));
         Assert.That(again.PreviewUrl, Is.EqualTo(clip.PreviewUrl));
         Assert.That(_catalog.Lookups, Is.EqualTo(1));
+    }
+
+    // Storskärmen får musikfelet och visar raden om att klippet inte gick att spela, medan klockan går vidare.
+    [Test]
+    public async Task Handle_WhenDeezerFailsToRenewTheLink_ReturnsTheMusicError()
+    {
+        var game = await StartPlayingAsync();
+        await PauseUntilTheLinkIsOldAsync(game);
+        _catalog.Failure = MusicErrors.Unavailable;
+
+        var result = await _handler.HandleAsync(game.Host);
+
+        Assert.That(result.Error, Is.EqualTo(MusicErrors.Unavailable));
     }
 
     [Test]
@@ -94,9 +101,24 @@ public sealed class GetClipHandlerTests
         return game;
     }
 
+    // Värden kopplas från, tiden går tills länken är för gammal, och värden återansluter.
+    private async Task PauseUntilTheLinkIsOldAsync(StartedGame game)
+    {
+        await _rooms.WithRoomAsync(game.Host.RoomCode, room =>
+        {
+            room.DisconnectHost(_time.GetUtcNow());
+            return Result.Success();
+        });
+        _time.Advance(Entry.LinkMaxAge);
+        await new ResumeRoomHandler(_rooms, _connections, _time).HandleAsync(game.Host, "host");
+    }
+
     private sealed class CountingCatalog : IMusicCatalog
     {
         public int Lookups { get; private set; }
+
+        // Sätts av testet som låter Deezer svara med ett fel.
+        public Error? Failure { get; set; }
 
         public Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException("Uppspelningen söker inte.");
@@ -104,6 +126,11 @@ public sealed class GetClipHandlerTests
         public Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default)
         {
             Lookups++;
+            if (Failure is not null)
+            {
+                return Task.FromResult(Result<PlayableTrack>.Failure(Failure));
+            }
+
             return Task.FromResult(Result<PlayableTrack>.Success(new PlayableTrack(trackId, $"Låt {trackId}", "Artist", "Album", "omslag", $"https://ny/{trackId}")));
         }
     }
