@@ -42,7 +42,7 @@ public sealed record GameState(
             room.Phase == GamePhase.Revealing
                 ? room.Entries.Select((entry, index) => new RevealedEntry(index + 1, entry.Track.Title, entry.Track.Artist, entry.Track.CoverUrl, entry.PlayerId, room.VotesFor(index + 1))).ToList()
                 : null,
-            room.Phase == GamePhase.Revealing
+            room.Phase is GamePhase.Revealing or GamePhase.GameOver
                 ? room.Standings.Select(standing => new GameStanding(standing.Player.Id, standing.Player.Score, room.RoundPointsOf(standing.Player.Id), standing.Place)).ToList()
                 : null,
             room.RemainingTime(now) is { } remaining ? (int)Math.Ceiling(remaining.TotalMilliseconds) : null,

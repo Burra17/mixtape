@@ -32,6 +32,9 @@ public sealed class Player
 
     internal void AddPoints(int points) => Score += points;
 
+    // Inför ett nytt spel i samma rum.
+    internal void ResetScore() => Score = 0;
+
     // Ger true om flaggan ändrades, så att rummet bara räknar upp sin revision vid en verklig ändring.
     internal bool SetConnected(bool connected)
     {

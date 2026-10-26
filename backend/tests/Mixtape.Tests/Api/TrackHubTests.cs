@@ -9,7 +9,6 @@ using Mixtape.Api.Hubs;
 using Mixtape.Application.Music;
 using Mixtape.Application.Rooms;
 using Mixtape.Domain.Common;
-using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Tests.Api;
 
@@ -167,7 +166,7 @@ public sealed class TrackHubTests
         await Task.WhenAll(players.Select(player => player.StartAsync()).Append(host.StartAsync()));
 
         var (_, sessions) = await StartPlayingAsync(host, players);
-        var state = await PlayAllClipsAsync(players[0]);
+        var state = await AdvanceUntilAsync(players[0], "voting");
 
         var ballot = state.GetProperty("ballot");
         Assert.That(ballot.EnumerateArray().Select(entry => entry.GetProperty("number").GetInt32()), Is.EqualTo(new[] { 1, 2, 3 }));
@@ -191,7 +190,7 @@ public sealed class TrackHubTests
         await Task.WhenAll(players.Select(player => player.StartAsync()).Append(host.StartAsync()));
 
         await StartPlayingAsync(host, players);
-        var state = await PlayAllClipsAsync(players[0]);
+        var state = await AdvanceUntilAsync(players[0], "voting");
         var titles = state.GetProperty("ballot").EnumerateArray().ToDictionary(entry => entry.GetProperty("number").GetInt32(), entry => entry.GetProperty("title").GetString());
 
         var ballots = new List<Ballot>();
@@ -233,7 +232,7 @@ public sealed class TrackHubTests
         await Task.WhenAll(players.Select(player => player.StartAsync()).Append(host.StartAsync()));
 
         var (_, sessions) = await StartPlayingAsync(host, players);
-        var voting = await PlayAllClipsAsync(players[0]);
+        var voting = await AdvanceUntilAsync(players[0], "voting");
         var revealing = new TaskCompletionSource<JsonElement>();
         players[0].On<JsonElement>(nameof(IGameClient.GameStateUpdated), state =>
         {
@@ -286,16 +285,55 @@ public sealed class TrackHubTests
         }
     }
 
-    // Klockan spolas fram ett klipp i taget, eftersom servern byter klipp högst en gång per tick. Ger bilden när röstningen börjat.
-    private async Task<JsonElement> PlayAllClipsAsync(HubConnection listener)
+    // Ingen röstar och resten av rundorna hoppas över, så spelet tar slut. Slutställningen går till alla, och "Spela igen" tar alla tillbaka till lobbyn.
+    [Test]
+    public async Task GameOver_TellsTheRoomTheFinalStandings_AndPlayAgainGoesBackToTheLobby()
+    {
+        await using var host = CreateConnection();
+        var players = new[] { CreateConnection(), CreateConnection(), CreateConnection() };
+        await Task.WhenAll(players.Select(player => player.StartAsync()).Append(host.StartAsync()));
+
+        var (room, sessions) = await StartPlayingAsync(host, players);
+        var gameOver = await AdvanceUntilAsync(players[0], "gameOver");
+
+        var lobby = new TaskCompletionSource<JsonElement>();
+        players[1].On<JsonElement>(nameof(IGameClient.GameStateUpdated), state =>
+        {
+            if (state.GetProperty("phase").GetString() == "lobby")
+            {
+                lobby.TrySetResult(state);
+            }
+        });
+        // Spelaren har bara sin egen hemliga token, och den öppnar inte värdens anrop.
+        var asPlayer = await players[0].InvokeAsync<HubResponse<GameState>>(nameof(GameHub.PlayAgain), room with { HostToken = sessions[0].PlayerToken });
+        var asHost = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.PlayAgain), room);
+        var state = await lobby.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.That(gameOver.GetProperty("reveal").ValueKind, Is.EqualTo(JsonValueKind.Null));
+        Assert.That(gameOver.GetProperty("standings").EnumerateArray().Select(standing => standing.GetProperty("playerId").GetString()), Is.EquivalentTo(sessions.Select(session => session.PlayerId)));
+        Assert.That(asPlayer.Error?.Code, Is.EqualTo("room.not_found"));
+        Assert.That(asHost.Error, Is.Null);
+        Assert.That(state.GetProperty("round").GetInt32(), Is.Zero);
+        Assert.That(state.GetProperty("standings").ValueKind, Is.EqualTo(JsonValueKind.Null));
+        Assert.That(state.GetProperty("players").EnumerateArray().Select(player => player.GetProperty("id").GetString()), Is.EqualTo(sessions.Select(session => session.PlayerId)));
+
+        foreach (var player in players)
+        {
+            await player.DisposeAsync();
+        }
+    }
+
+    // Klockan spolas fram en minut i taget, längre än någon fas. Servern byter högst en fas eller ett klipp per tick, så ingen fas hoppas över.
+    // Ger bilden när rummet nått fasen.
+    private async Task<JsonElement> AdvanceUntilAsync(HubConnection listener, string phase)
     {
         while (true)
         {
             var next = new TaskCompletionSource<JsonElement>();
             using var subscription = listener.On<JsonElement>(nameof(IGameClient.GameStateUpdated), state => next.TrySetResult(state));
-            _time.Advance(TimeSpan.FromSeconds(GameSettings.Default.ClipSeconds));
+            _time.Advance(TimeSpan.FromMinutes(1));
             var state = await next.Task.WaitAsync(TimeSpan.FromSeconds(5));
-            if (state.GetProperty("phase").GetString() == "voting")
+            if (state.GetProperty("phase").GetString() == phase)
             {
                 return state;
             }

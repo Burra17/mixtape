@@ -23,6 +23,7 @@ public sealed class GameHub(
     GetClipHandler getClip,
     VoteHandler vote,
     GetBallotHandler getBallot,
+    PlayAgainHandler playAgain,
     IConnectionRegistry connections,
     IJoinAddressProvider joinAddresses) : Hub<IGameClient>
 {
@@ -170,6 +171,12 @@ public sealed class GameHub(
     public async Task<HubResponse<GameState>> StartGame(HostSession host)
     {
         return await SendToRoomAsync(await startGame.HandleAsync(host));
+    }
+
+    // Bilden av lobbyn går till hela rummet, så att mobilerna lämnar slutställningen samtidigt som storskärmen.
+    public async Task<HubResponse<GameState>> PlayAgain(HostSession host)
+    {
+        return await SendToRoomAsync(await playAgain.HandleAsync(host));
     }
 
     // Spelaren eller storskärmen markeras som borta men behåller sin plats. En borttagen spelare eller ett rum som inte finns längre ger fel, och då finns inget att berätta.
