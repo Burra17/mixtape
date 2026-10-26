@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { joinRoom, startConnection } from '../../../services/hub/connection.ts';
+import { joinRoom, startConnection, UNREACHABLE } from '../../../services/hub/connection.ts';
 import { savePlayerSession } from '../../../services/storage/playerSessionStorage.ts';
 import { useConnectionStore } from '../../../store/connectionStore.ts';
 import { usePlayerStore } from '../../../store/playerStore.ts';
@@ -19,7 +19,7 @@ export const useJoinRoom = () => {
     setBusy(false);
 
     if (!response?.value) {
-      setError(response?.error?.message ?? 'Kunde inte nå servern. Försök igen.');
+      setError(response?.error?.message ?? UNREACHABLE);
       return;
     }
 

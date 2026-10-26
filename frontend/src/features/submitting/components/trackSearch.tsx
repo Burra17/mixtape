@@ -1,14 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { Button } from '../../../shared/components/button.tsx';
+import { ErrorLine } from '../../../shared/components/errorLine.tsx';
 import { useIsConnected } from '../../../store/connectionStore.ts';
 import type { useTrackPicker } from '../hooks/useTrackPicker.ts';
 import { TrackRow } from './trackRow.tsx';
-
-const ErrorLine = ({ error }: { error: string }) => (
-  <p role='alert' className='text-lg font-bold'>
-    {error}
-  </p>
-);
 
 type TrackSearchProps = {
   picker: ReturnType<typeof useTrackPicker>;

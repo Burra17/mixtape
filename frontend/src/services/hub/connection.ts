@@ -6,6 +6,7 @@ import { clearPlayerSession } from '../storage/playerSessionStorage.ts';
 import {
   clientEvents,
   serverMethods,
+  type Ballot,
   type Clip,
   type HostSession,
   type GameState,
@@ -13,6 +14,9 @@ import {
   type PlayerSession,
   type Track,
 } from './hubContract.ts';
+
+// Det spelaren ser när ett anrop inte fick något svar från servern.
+export const UNREACHABLE = 'Kunde inte nå servern. Försök igen.';
 
 // Två snabba försök först, eftersom de flesta avbrott är ett kort hack i wifi. Sedan var 5:e sekund.
 const FIRST_RETRY_DELAYS_MS = [0, 2000];
@@ -146,3 +150,9 @@ export const submitTrack = (trackId: number) => connection.invoke<HubResponse<Ga
 
 // Bara storskärmen får länken till klippet som spelas. Den finns aldrig i GameState.
 export const getClip = (host: HostSession) => connection.invoke<HubResponse<Clip>>(serverMethods.getClip, host);
+
+// Rösten är låst efteråt. Den nya bilden, där spelaren har röstat, kommer med GameStateUpdated.
+export const vote = (entry: number) => connection.invoke<HubResponse<GameState>>(serverMethods.vote, entry);
+
+// Bara spelaren själv får veta vilket bidrag som är dess eget. Det står aldrig i GameState.
+export const getBallot = () => connection.invoke<HubResponse<Ballot>>(serverMethods.getBallot);

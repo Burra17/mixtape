@@ -91,7 +91,7 @@ public sealed class GameHubTests
 
         Assert.That(joined.Value!.PlayerToken, Has.Length.EqualTo(32));
         Assert.That(lobbies[0].Players, Is.Empty);
-        Assert.That(lobbies[^1].Players.Single(), Is.EqualTo(new GamePlayer(joined.Value.PlayerId, "Anna", 1, true, false)));
+        Assert.That(lobbies[^1].Players.Single(), Is.EqualTo(new GamePlayer(joined.Value.PlayerId, "Anna", 1, true, false, false)));
     }
 
     [Test]
