@@ -184,6 +184,35 @@ public sealed class GameRoom
         return Result.Success();
     }
 
+    // Efter slutställningen: samma spelare, även de som är borta, och samma inställningar, men poängen börjar om i lobbyn.
+    // De använda promptarna står kvar, så att nästa StartGame drar nya.
+    public Result PlayAgain(string? hostToken)
+    {
+        if (!IsHost(hostToken))
+        {
+            return RoomErrors.NotFound;
+        }
+
+        if (Phase != GamePhase.GameOver)
+        {
+            return RoomErrors.WrongPhase;
+        }
+
+        foreach (var player in _players)
+        {
+            player.ResetScore();
+        }
+
+        Round = 0;
+        _previousRoundSkipped = false;
+        _prompts.Clear();
+        _entries.Clear();
+        _votes.Clear();
+        Phase = GamePhase.Lobby;
+        Revision++;
+        return Result.Success();
+    }
+
     // Spelaren kan bara söka och skicka in medan rundan tar emot bidrag.
     public Result CanChooseTrack() => Phase == GamePhase.Submitting ? Result.Success() : RoomErrors.WrongPhase;
 
