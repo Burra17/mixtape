@@ -13,7 +13,7 @@ export const HostVoting = () => {
   const game = useRoomGame(session?.roomCode);
   const round = useRoundText();
 
-  if (!game) return null;
+  if (!game?.prompt) return null;
 
   return (
     <div className='flex min-h-dvh flex-col'>
