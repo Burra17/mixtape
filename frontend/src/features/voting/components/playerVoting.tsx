@@ -13,7 +13,7 @@ export const PlayerVoting = () => {
   const session = usePlayerStore((state) => state.session);
   const game = useRoomGame(session?.roomCode);
   const isConnected = useIsConnected();
-  const { ownEntry, votedEntry, selected, select, error, busy, castVote } = useBallot();
+  const { ownEntry, votedEntry, ballotError, selected, select, error, busy, castVote } = useBallot();
 
   if (!game?.ballot) return null;
 
@@ -26,6 +26,7 @@ export const PlayerVoting = () => {
       <p className='font-bold [overflow-wrap:anywhere]'>{game.prompt}</p>
       <Countdown screen='player' />
       {game.isPaused && <PausedNotice />}
+      {ballotError && <ErrorLine error={ballotError} />}
 
       {hasVoted ? (
         <section className='flex flex-col gap-4 pb-12'>

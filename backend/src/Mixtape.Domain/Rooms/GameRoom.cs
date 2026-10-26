@@ -73,6 +73,7 @@ public sealed class GameRoom
 
     // 1 för det första klippet.
     public int ClipNumber => _clipIndex + 1;
+
     // Sant under inskicket i rundan efter en runda som hoppades över, så att storskärmen kan förklara varför prompten byttes.
     public bool SkippedRound => Phase == GamePhase.Submitting && _previousRoundSkipped;
 

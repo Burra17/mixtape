@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { search, submitTrack } from '../../../services/hub/connection.ts';
+import { search, submitTrack, UNREACHABLE } from '../../../services/hub/connection.ts';
 import type { Track } from '../../../services/hub/hubContract.ts';
-
-const UNREACHABLE = 'Kunde inte nå servern. Försök igen.';
 
 // Felen där låten inte går att välja, så att markeringen tas bort och spelaren väljer en annan.
 const PICK_ANOTHER = ['entry.track_taken', 'music.track_unavailable'];

@@ -15,6 +15,9 @@ import {
   type Track,
 } from './hubContract.ts';
 
+// Det spelaren ser när ett anrop inte fick något svar från servern.
+export const UNREACHABLE = 'Kunde inte nå servern. Försök igen.';
+
 // Två snabba försök först, eftersom de flesta avbrott är ett kort hack i wifi. Sedan var 5:e sekund.
 const FIRST_RETRY_DELAYS_MS = [0, 2000];
 const RETRY_INTERVAL_MS = 5000;
