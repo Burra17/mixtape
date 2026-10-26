@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { unlockAudio } from '../../../services/audio/audioPlayer.ts';
-import { checkRoom, createRoom, getJoinAddresses, resumeRoom, startConnection } from '../../../services/hub/connection.ts';
+import { checkRoom, createRoom, getJoinAddresses, resumeRoom, startConnection, UNREACHABLE } from '../../../services/hub/connection.ts';
 import type { HostSession, HubError, HubResponse } from '../../../services/hub/hubContract.ts';
 import { clearHostSession, loadHostSession, saveHostSession } from '../../../services/storage/hostSessionStorage.ts';
 import { useConnectionStore } from '../../../store/connectionStore.ts';
@@ -8,11 +8,9 @@ import { useHostStore } from '../../../store/hostStore.ts';
 
 const { show, setJoinAddresses, setError, showRoomClosed } = useHostStore.getState();
 
-const FAILED = 'Något gick fel. Försök igen.';
-
 const enterLobby = (response: HubResponse<HostSession>) => {
   if (!response.value) {
-    setError(response.error?.message ?? FAILED);
+    setError(response.error?.message ?? UNREACHABLE);
     return;
   }
 
@@ -82,13 +80,13 @@ export const useHostRoom = () => {
   }, [epoch]);
 
   return {
-    create: () => createRoom(null).then(enterLobby, () => setError(FAILED)),
+    create: () => createRoom(null).then(enterLobby, () => setError(UNREACHABLE)),
     // Klicket tar tillbaka rummet och häver pausen, och det är också klicket som låser upp ljudet.
     resume: () => {
       unlockAudio();
       const { session } = useHostStore.getState();
-      if (session) void resumeRoom(session).then(enterLobby, () => setError(FAILED));
+      if (session) void resumeRoom(session).then(enterLobby, () => setError(UNREACHABLE));
     },
-    startOver: () => createRoom(useHostStore.getState().session).then(enterLobby, () => setError(FAILED)),
+    startOver: () => createRoom(useHostStore.getState().session).then(enterLobby, () => setError(UNREACHABLE)),
   };
 };

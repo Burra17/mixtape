@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getBallot, UNREACHABLE, vote } from '../../../services/hub/connection.ts';
 import type { Ballot } from '../../../services/hub/hubContract.ts';
+import { useHubCall } from '../../../shared/hooks/useHubCall.ts';
 import { usePlayerStore } from '../../../store/playerStore.ts';
 
 // Mobilens röstsedel. Det egna bidraget och den egna rösten kommer från servern, bara till den här spelaren. Markeringen är mobilens eget UI-state.
@@ -11,8 +12,7 @@ export const useBallot = () => {
   // Utan röstsedeln vet mobilen inte vilket bidrag som är dess eget, så spelaren får veta det. Nästa återanslutning hämtar den igen.
   const [ballotError, setBallotError] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const { busy, error, run } = useHubCall();
 
   useEffect(() => {
     let cancelled = false;
@@ -30,15 +30,8 @@ export const useBallot = () => {
 
   const castVote = async () => {
     if (selected === null) return;
-    setBusy(true);
-    setError(null);
-    const response = await vote(selected).catch(() => null);
-    setBusy(false);
-
-    if (!response?.value) {
-      setError(response?.error?.message ?? UNREACHABLE);
-      return;
-    }
+    const response = await run(() => vote(selected));
+    if (response.error) return;
 
     setBallot((previous) => ({ ownEntry: previous?.ownEntry ?? null, votedEntry: selected }));
   };

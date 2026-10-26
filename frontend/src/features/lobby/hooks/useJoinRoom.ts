@@ -1,27 +1,22 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { joinRoom, startConnection, UNREACHABLE } from '../../../services/hub/connection.ts';
+import { joinRoom, startConnection } from '../../../services/hub/connection.ts';
 import { savePlayerSession } from '../../../services/storage/playerSessionStorage.ts';
+import { useHubCall } from '../../../shared/hooks/useHubCall.ts';
 import { useConnectionStore } from '../../../store/connectionStore.ts';
 import { usePlayerStore } from '../../../store/playerStore.ts';
 
 // Mobilen går med i ett rum och fortsätter till /play. Felet och väntan är bara formulärets eget state.
 export const useJoinRoom = () => {
   const navigate = useNavigate();
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const { busy, error, run } = useHubCall();
 
   const join = async (roomCode: string, name: string) => {
-    setBusy(true);
-    setError(null);
-
-    const response = (await startConnection()) ? await joinRoom(roomCode, name).catch(() => null) : null;
-    setBusy(false);
-
-    if (!response?.value) {
-      setError(response?.error?.message ?? UNREACHABLE);
-      return;
-    }
+    // Anslutningen startas inuti anropet, så att en anslutning som inte kommer upp visas som ett anrop utan svar.
+    const response = await run(async () => {
+      if (!(await startConnection())) throw new Error('Anslutningen kom inte upp.');
+      return joinRoom(roomCode, name);
+    });
+    if (response.error) return;
 
     savePlayerSession(response.value);
     usePlayerStore.getState().joined(response.value, useConnectionStore.getState().epoch);

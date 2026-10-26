@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { search, submitTrack, UNREACHABLE } from '../../../services/hub/connection.ts';
+import { search, submitTrack } from '../../../services/hub/connection.ts';
 import type { Track } from '../../../services/hub/hubContract.ts';
+import { useHubCall } from '../../../shared/hooks/useHubCall.ts';
 
 // Felen där låten inte går att välja, så att markeringen tas bort och spelaren väljer en annan.
 const PICK_ANOTHER = ['entry.track_taken', 'music.track_unavailable'];
@@ -10,19 +11,11 @@ export const useTrackPicker = () => {
   const [results, setResults] = useState<Track[] | null>(null);
   const [selected, setSelected] = useState<Track | null>(null);
   const [submitted, setSubmitted] = useState<Track | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const { busy, error, run } = useHubCall();
 
   const find = async (query: string) => {
-    setBusy(true);
-    setError(null);
-    const response = await search(query).catch(() => null);
-    setBusy(false);
-
-    if (!response?.value) {
-      setError(response?.error?.message ?? UNREACHABLE);
-      return;
-    }
+    const response = await run(() => search(query));
+    if (response.error) return;
 
     setResults(response.value);
     setSelected(null);
@@ -30,14 +23,9 @@ export const useTrackPicker = () => {
 
   const submit = async () => {
     if (!selected) return;
-    setBusy(true);
-    setError(null);
-    const response = await submitTrack(selected.id).catch(() => null);
-    setBusy(false);
-
-    if (!response?.value) {
-      setError(response?.error?.message ?? UNREACHABLE);
-      if (response?.error && PICK_ANOTHER.includes(response.error.code)) setSelected(null);
+    const response = await run(() => submitTrack(selected.id));
+    if (response.error) {
+      if (PICK_ANOTHER.includes(response.error.code)) setSelected(null);
       return;
     }
 
