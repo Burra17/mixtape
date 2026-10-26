@@ -1,9 +1,9 @@
 // Etikettens ränder uppifrån och ned, i fallande tjocklek som på 80-talets kassetter.
 const STRIPES = [
-  { y: 18, height: 10, color: 'fill-stripe-red' },
-  { y: 28, height: 8, color: 'fill-stripe-orange' },
-  { y: 36, height: 6, color: 'fill-stripe-blue' },
-  { y: 42, height: 4, color: 'fill-stripe-magenta' },
+  { y: 18, height: 10, fillClass: 'fill-stripe-red' },
+  { y: 28, height: 8, fillClass: 'fill-stripe-orange' },
+  { y: 36, height: 6, fillClass: 'fill-stripe-blue' },
+  { y: 42, height: 4, fillClass: 'fill-stripe-magenta' },
 ];
 
 const SCREWS = [
@@ -30,8 +30,8 @@ export const Cassette = ({ className = '' }: { className?: string }) => (
       <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r={4} className='fill-paper stroke-ink' strokeWidth={2} />
     ))}
     <rect x={30} y={18} width={260} height={118} className='fill-card' />
-    {STRIPES.map(({ y, height, color }) => (
-      <rect key={y} x={30} y={y} width={260} height={height} className={color} />
+    {STRIPES.map(({ y, height, fillClass }) => (
+      <rect key={y} x={30} y={y} width={260} height={height} className={fillClass} />
     ))}
     {/* Etikettens ram ritas efter ränderna, så att den ligger ovanpå dem. */}
     <rect x={30} y={18} width={260} height={118} className='fill-none stroke-ink' strokeWidth={2.5} />

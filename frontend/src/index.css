@@ -27,7 +27,7 @@
   --color-shell-window: #4a4f53;
   --color-tape: #6b4a2b;
 
-  /* Etikettens ränder uppifrån och ned. Orange är ljusare än player-3, som etiketternas orange. */
+  /* Etikettens ränder uppifrån och ned. Spelarfärgerna valdes efter ränderna i #31, så ränderna följer dem. Orange har ett eget, ljusare värde, eftersom player-3 är för mörk för en etikett. */
   --color-stripe-red: var(--color-player-1);
   --color-stripe-orange: #e8822a;
   --color-stripe-blue: var(--color-player-2);

@@ -10,7 +10,7 @@ type HostStartProps = {
   onStartOver: () => void;
 };
 
-// Storskärmen innan ett rum visas: skapa ett nytt, eller välj om det sparade rummet ska fortsätta. Samma upplägg med kassetten som startsidan.
+// Storskärmen innan ett rum visas: skapa ett nytt, eller välj om det sparade rummet ska fortsätta.
 export const HostStart = ({ onCreate, onResume, onStartOver }: HostStartProps) => {
   const screen = useHostStore((state) => state.screen);
   const session = useHostStore((state) => state.session);
