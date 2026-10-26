@@ -116,9 +116,10 @@ public sealed class GameRoom
     public int VotesFor(int entry) => _votes.Values.Count(vote => vote == entry);
 
     // Rösterna på spelarens eget bidrag i rundan, alltså rundans poäng. 0 för den som inte skickade in.
+    // Avsteg från #22, som ville spara rundans poäng i rummet: de räknas ur rösterna, som ligger kvar tills nästa runda börjar och även efter sista rundan, så en egen kopia kan aldrig skilja sig från dem.
     public int RoundPointsOf(string playerId) => EntryNumberOf(playerId) is { } entry ? VotesFor(entry) : 0;
 
-    // Flest poäng först. Vid lika poäng delas placeringen, och spelarna står i den ordning de gick med.
+    // Flest poäng först. Vid lika poäng delas placeringen, och spelarna står i den ordning de gick med, eftersom OrderByDescending är stabil och _players står i den ordningen.
     public IReadOnlyList<Standing> Standings =>
         _players.OrderByDescending(player => player.Score).Select(player => new Standing(player, 1 + _players.Count(other => other.Score > player.Score))).ToList();
 

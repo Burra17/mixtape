@@ -243,12 +243,17 @@ public sealed class TrackHubTests
             }
         });
 
-        // Varje spelare röstar på bidraget efter sitt eget, så att alla bidrag får en röst.
+        var own = new List<int>();
         foreach (var player in players)
         {
-            var own = (await player.InvokeAsync<HubResponse<Ballot>>(nameof(GameHub.GetBallot))).Value!.OwnEntry!.Value;
-            await player.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.Vote), own % players.Length + 1);
+            own.Add((await player.InvokeAsync<HubResponse<Ballot>>(nameof(GameHub.GetBallot))).Value!.OwnEntry!.Value);
         }
+
+        // Olika många röster per bidrag, så att ett antal som hamnar hos fel ägare syns: spelare 2 får två, spelare 0 en och spelare 1 ingen.
+        await players[0].InvokeAsync<HubResponse<GameState>>(nameof(GameHub.Vote), own[2]);
+        await players[1].InvokeAsync<HubResponse<GameState>>(nameof(GameHub.Vote), own[2]);
+        await players[2].InvokeAsync<HubResponse<GameState>>(nameof(GameHub.Vote), own[0]);
+        var votesByOwner = new[] { 1, 0, 2 };
 
         var state = await revealing.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
@@ -262,12 +267,17 @@ public sealed class TrackHubTests
         {
             var owner = int.Parse(entry.GetProperty("title").GetString()!["Låt ".Length..]) - 1;
             Assert.That(entry.GetProperty("playerId").GetString(), Is.EqualTo(sessions[owner].PlayerId));
-            Assert.That(entry.GetProperty("votes").GetInt32(), Is.EqualTo(1));
+            Assert.That(entry.GetProperty("votes").GetInt32(), Is.EqualTo(votesByOwner[owner]));
         }
 
-        var standings = state.GetProperty("standings").EnumerateArray().ToList();
-        Assert.That(standings.Select(standing => standing.GetProperty("playerId").GetString()), Is.EquivalentTo(sessions.Select(session => session.PlayerId)));
-        Assert.That(standings.Select(standing => (standing.GetProperty("score").GetInt32(), standing.GetProperty("roundPoints").GetInt32(), standing.GetProperty("place").GetInt32())), Has.All.EqualTo((1, 1, 1)));
+        var standings = state.GetProperty("standings").EnumerateArray()
+            .Select(standing => (standing.GetProperty("playerId").GetString(), standing.GetProperty("score").GetInt32(), standing.GetProperty("roundPoints").GetInt32(), standing.GetProperty("place").GetInt32()));
+        Assert.That(standings, Is.EqualTo(new[]
+        {
+            (sessions[2].PlayerId, 2, 2, 1),
+            (sessions[0].PlayerId, 1, 1, 2),
+            (sessions[1].PlayerId, 0, 0, 3),
+        }));
         Assert.That(state.GetRawText(), Does.Not.Contain("https://klipp/"));
 
         foreach (var player in players)

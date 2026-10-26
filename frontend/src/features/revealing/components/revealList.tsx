@@ -1,4 +1,5 @@
 import type { GamePlayer, RevealedEntry } from '../../../services/hub/hubContract.ts';
+import { findPlayer } from '../../../shared/components/findPlayer.ts';
 import { PlayerChip } from '../../../shared/components/playerChip.tsx';
 
 type RevealListProps = {
@@ -12,7 +13,7 @@ const votesText = (votes: number) => (votes === 1 ? '1 röst' : `${votes} röste
 export const RevealList = ({ reveal, players }: RevealListProps) => (
   <ol aria-label='Vem som valde vad' className='flex flex-col gap-5 text-[clamp(1.1rem,1.6vw,1.6rem)]'>
     {reveal.map((entry) => {
-      const owner = players.find((player) => player.id === entry.playerId);
+      const owner = findPlayer(players, entry.playerId);
       return (
         <li key={entry.number} className='flex items-center gap-5'>
           <span className='w-[1.5em] shrink-0 font-black tabular-nums'>{entry.number}</span>

@@ -1,4 +1,5 @@
 import { Countdown } from '../../../shared/components/countdown.tsx';
+import { findPlayer } from '../../../shared/components/findPlayer.ts';
 import { Label } from '../../../shared/components/label.tsx';
 import { PausedNotice } from '../../../shared/components/pausedNotice.tsx';
 import { useRoundText } from '../../../shared/hooks/useRoundText.ts';
@@ -18,7 +19,7 @@ export const PlayerSubmitting = () => {
   if (!game?.prompt) return null;
 
   // Servern säger om spelaren är klar, så att "Inskickad" står kvar efter en omladdning. Låten visas bara fram till dess.
-  const hasSubmitted = game.players.find((player) => player.id === session?.playerId)?.hasSubmitted ?? false;
+  const hasSubmitted = findPlayer(game.players, session?.playerId)?.hasSubmitted ?? false;
 
   return (
     <main className='flex min-h-dvh flex-col gap-6 px-6 pt-12'>

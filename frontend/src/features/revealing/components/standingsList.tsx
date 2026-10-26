@@ -1,4 +1,5 @@
 import type { GamePlayer, GameStanding } from '../../../services/hub/hubContract.ts';
+import { findPlayer } from '../../../shared/components/findPlayer.ts';
 import { PlayerChip } from '../../../shared/components/playerChip.tsx';
 
 type StandingsListProps = {
@@ -10,7 +11,7 @@ type StandingsListProps = {
 export const StandingsList = ({ standings, players }: StandingsListProps) => (
   <ol aria-label='Ställningen' className='flex flex-col gap-4 text-[clamp(1.25rem,2vw,2rem)]'>
     {standings.map((standing) => {
-      const player = players.find((candidate) => candidate.id === standing.playerId);
+      const player = findPlayer(players, standing.playerId);
       return (
         <li key={standing.playerId} className='flex items-center gap-6'>
           <span className='w-[2em] shrink-0 font-black tabular-nums'>{standing.place}.</span>

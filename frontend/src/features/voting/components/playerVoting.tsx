@@ -1,6 +1,7 @@
 import { Button } from '../../../shared/components/button.tsx';
 import { Countdown } from '../../../shared/components/countdown.tsx';
 import { ErrorLine } from '../../../shared/components/errorLine.tsx';
+import { findPlayer } from '../../../shared/components/findPlayer.ts';
 import { PausedNotice } from '../../../shared/components/pausedNotice.tsx';
 import { useIsConnected } from '../../../store/connectionStore.ts';
 import { useRoomGame } from '../../../store/gameStore.ts';
@@ -18,7 +19,7 @@ export const PlayerVoting = () => {
   if (!game?.ballot) return null;
 
   // Servern säger om spelaren har röstat, så att "Röst lagd" står kvar efter en omladdning.
-  const hasVoted = game.players.find((player) => player.id === session?.playerId)?.hasVoted ?? false;
+  const hasVoted = findPlayer(game.players, session?.playerId)?.hasVoted ?? false;
   const voted = game.ballot.find((entry) => entry.number === votedEntry);
 
   return (
