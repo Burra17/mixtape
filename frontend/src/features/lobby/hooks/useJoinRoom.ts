@@ -12,10 +12,7 @@ export const useJoinRoom = () => {
 
   const join = async (roomCode: string, name: string) => {
     // Anslutningen startas inuti anropet, så att en anslutning som inte kommer upp visas som ett anrop utan svar.
-    const response = await run(async () => {
-      if (!(await startConnection())) throw new Error('Anslutningen kom inte upp.');
-      return joinRoom(roomCode, name);
-    });
+    const response = await run(async () => ((await startConnection()) ? joinRoom(roomCode, name) : null));
     if (response.error) return;
 
     savePlayerSession(response.value);
