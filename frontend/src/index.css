@@ -44,7 +44,6 @@
   --shadow-hard: 4px 4px 0 var(--color-ink);
   --shadow-hard-pressed: 2px 2px 0 var(--color-ink);
 
-  --animate-marquee: marquee 22s linear infinite;
   --animate-reel: spin 3.2s linear infinite;
 
   @keyframes marquee {
@@ -55,6 +54,11 @@
       transform: translateX(-50%);
     }
   }
+}
+
+/* inline gör att --marquee-duration läses på bandet, där Marquee sätter den, och inte på :root. 22s gäller om den saknas. */
+@theme inline {
+  --animate-marquee: marquee var(--marquee-duration, 22s) linear infinite;
 }
 
 /* Rubrikstilen: Archivo i full bredd och vikt, i versaler. */
