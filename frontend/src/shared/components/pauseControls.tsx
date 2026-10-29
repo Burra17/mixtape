@@ -1,25 +1,26 @@
 import { useHostPause } from '../hooks/useHostPause.ts';
 import { Button } from './button.tsx';
+import { iconButtonClasses } from './buttonStyles.ts';
 
 // Storskärmens paus i faser med nedräkning: en ikonknapp i hörnet, och ett kort över fasen när värden pausat.
-// Pausknappen har spelets enda ikon, ritad för hand. När fler ikoner behövs tas ett ikonpaket in.
 export const PauseControls = () => {
   const { isPausedByHost, toggle, busy, error } = useHostPause();
 
   if (!isPausedByHost) {
     return (
-      <button
-        type='button'
-        aria-label='Pausa'
-        onClick={() => void toggle()}
-        disabled={busy}
-        className='fixed right-6 bottom-6 grid size-12 place-items-center border-2 border-ink bg-card shadow-hard transition-transform focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-ink active:translate-x-0.5 active:translate-y-0.5 active:shadow-hard-pressed'
-      >
-        <svg viewBox='0 0 20 20' aria-hidden='true' className='size-5 fill-ink'>
-          <rect x={3} y={2} width={5} height={16} />
-          <rect x={12} y={2} width={5} height={16} />
-        </svg>
-      </button>
+      <div className='fixed right-6 bottom-6 flex items-center gap-4'>
+        {error && (
+          <p role='alert' className='border-2 border-ink bg-card px-3 py-2 font-bold'>
+            {error}
+          </p>
+        )}
+        <button type='button' aria-label='Pausa' onClick={() => void toggle()} disabled={busy} className={iconButtonClasses}>
+          <svg viewBox='0 0 20 20' aria-hidden='true' className='size-5 fill-ink'>
+            <rect x={3} y={2} width={5} height={16} />
+            <rect x={12} y={2} width={5} height={16} />
+          </svg>
+        </button>
+      </div>
     );
   }
 

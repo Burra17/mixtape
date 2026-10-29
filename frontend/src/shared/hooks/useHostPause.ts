@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useEffectEvent } from 'react';
 import { continueGame, pauseGame } from '../../services/hub/connection.ts';
 import { useRoomGame } from '../../store/gameStore.ts';
 import { useHostStore } from '../../store/hostStore.ts';
@@ -15,16 +15,19 @@ export const useHostPause = () => {
     await run(() => (isPausedByHost ? continueGame(session) : pauseGame(session)));
   };
 
+  // useEffectEvent läser alltid den senaste toggle, så lyssnaren kopplas bara en gång.
+  const onSpace = useEffectEvent(() => void toggle());
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.code !== 'Space' || event.repeat) return;
       if (event.target instanceof HTMLElement && event.target.closest('button, input, textarea, select')) return;
       event.preventDefault();
-      void toggle();
+      onSpace();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  });
+  }, []);
 
   return { isPausedByHost, toggle, busy, error };
 };

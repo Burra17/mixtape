@@ -120,6 +120,12 @@ public sealed class GameRoomPauseTests
     }
 
     [Test]
+    public void Continue_InTheLobby_ReturnsWrongPhase()
+    {
+        Assert.That(_room.Continue(_room.HostToken, Now).Error, Is.EqualTo(RoomErrors.WrongPhase));
+    }
+
+    [Test]
     public void Pause_AtGameOver_ReturnsWrongPhase()
     {
         _room.UpdateSettings(_room.HostToken, 3, null, null);
