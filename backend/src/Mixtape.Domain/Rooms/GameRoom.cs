@@ -484,6 +484,36 @@ public sealed class GameRoom
         UpdateEmptySince(now);
     }
 
+    // Värden avslutar i förtid och alla går till slutställningen. Bara färdiga rundor räknas, så en avbruten runda tas bort med sina röster.
+    // Klockan återupptas innan den stoppas, eftersom en fryst klocka annars skulle frysa första fasen i nästa spel.
+    public Result End(string? hostToken, DateTimeOffset now)
+    {
+        if (!IsHost(hostToken))
+        {
+            return RoomErrors.NotFound;
+        }
+
+        if (!HasDeadline)
+        {
+            return RoomErrors.WrongPhase;
+        }
+
+        if (Phase != GamePhase.Revealing)
+        {
+            _entries.Clear();
+            _votes.Clear();
+        }
+
+        IsPausedByHost = false;
+        if (IsHostConnected)
+        {
+            _clock.Resume(now);
+        }
+
+        EndGame();
+        return Result.Success();
+    }
+
     private bool HasDeadline => Phase is GamePhase.Submitting or GamePhase.Playing or GamePhase.Voting or GamePhase.Revealing;
 
     // Under paus står spelet still även när alla är klara. När storskärmen är tillbaka går fasen vidare vid nästa tick.
