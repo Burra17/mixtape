@@ -18,3 +18,21 @@ export const playClip = (url: string, from: number) => {
 };
 
 export const stopClip = () => audio.pause();
+
+// Om ljud faktiskt hörs just nu. Elementets egna händelser, så att ett klipp som buffrar, får ett fel eller tar slut räknas som tyst.
+let isPlaying = false;
+const listeners = new Set<() => void>();
+const setPlaying = (playing: boolean) => {
+  if (playing === isPlaying) return;
+  isPlaying = playing;
+  listeners.forEach((listener) => listener());
+};
+audio.addEventListener('playing', () => setPlaying(true));
+for (const event of ['pause', 'ended', 'waiting', 'error', 'emptied']) audio.addEventListener(event, () => setPlaying(false));
+
+// För useSyncExternalStore.
+export const subscribeToPlaying = (listener: () => void) => {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+};
+export const getIsPlaying = () => isPlaying;

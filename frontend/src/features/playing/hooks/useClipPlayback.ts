@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { playClip, stopClip } from '../../../services/audio/audioPlayer.ts';
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import { getIsPlaying, playClip, stopClip, subscribeToPlaying } from '../../../services/audio/audioPlayer.ts';
 import { getClip } from '../../../services/hub/connection.ts';
 import { useIsConnected } from '../../../store/connectionStore.ts';
 import { useGameStore, useRoomGame } from '../../../store/gameStore.ts';
@@ -15,13 +15,13 @@ const secondsPlayed = () => {
 
 // Storskärmen spelar klippet som servern säger. Ett nytt klipp, en hävd paus och en återanslutning hämtar länken och börjar där servern är.
 // Servern äger klockan, så ett klipp som inte går att spela visas ändå, och TV:n följer klockan till nästa klipp.
-// playing är sant bara när ljudet faktiskt spelas, inte medan länken hämtas, under paus eller utan anslutning.
+// playing är sant bara när ljudet faktiskt hörs, inte medan länken hämtas, under paus, utan anslutning eller när klippet buffrar.
 export const useClipPlayback = () => {
   const session = useHostStore((state) => state.session);
   const game = useRoomGame(session?.roomCode);
   const isConnected = useIsConnected();
   const [failedIndex, setFailedIndex] = useState<number | null>(null);
-  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const isPlaying = useSyncExternalStore(subscribeToPlaying, getIsPlaying);
 
   const index = game?.nowPlaying?.index ?? null;
   const canPlay = session !== null && index !== null && !game?.isPaused && isConnected;
@@ -39,8 +39,7 @@ export const useClipPlayback = () => {
       try {
         if (!response?.value) throw new Error(response?.error?.message ?? 'Kunde inte nå servern.');
         await playClip(response.value.previewUrl, secondsPlayed());
-        setFailedIndex(null);
-        if (!cancelled) setPlayingIndex(index);
+        if (!cancelled) setFailedIndex(null);
       } catch (error) {
         if (cancelled) return;
         console.error(`Klipp ${index} gick inte att spela.`, error);
@@ -52,12 +51,11 @@ export const useClipPlayback = () => {
     return () => {
       cancelled = true;
       stopClip();
-      setPlayingIndex(null);
     };
   }, [canPlay, session, index]);
 
   return {
     failed: failedIndex !== null && failedIndex === index,
-    playing: canPlay && playingIndex !== null && playingIndex === index,
+    playing: canPlay && isPlaying,
   };
 };
