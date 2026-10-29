@@ -17,6 +17,8 @@ export const serverMethods = {
   vote: 'Vote',
   getBallot: 'GetBallot',
   playAgain: 'PlayAgain',
+  pauseGame: 'PauseGame',
+  continueGame: 'ContinueGame',
 } as const;
 
 export const clientEvents = {
@@ -75,13 +77,18 @@ export type SettingsState = {
   submittingSeconds: number;
 };
 
+// PauseReason i Domain/Rooms.
+export type PauseReason = 'hostAway' | 'pausedByHost';
+
 // GameState i Application/Rooms, som kommer med GameStateUpdated.
 export type GameState = {
   roomCode: string;
   revision: number;
   phase: Phase;
-  // Storskärmen är borta och spelet står still.
+  // Spelet står still, för att storskärmen är borta eller värden pausat.
   isPaused: boolean;
+  // Varför spelet står still, eller null. hostAway vinner om båda gäller.
+  pauseReason: PauseReason | null;
   // 0 i lobbyn.
   round: number;
   // Rundans prompt, från inskicket till avslöjandet. null i lobbyn och i gameOver.
