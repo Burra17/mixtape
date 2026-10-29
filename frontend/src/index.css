@@ -33,6 +33,11 @@
   --color-stripe-blue: var(--color-player-2);
   --color-stripe-magenta: var(--color-player-4);
 
+  /* Vinylskivan under uppspelningen: svart skiva, grå spår och en röd etikett som knyter an till kassettens ränder. */
+  --color-vinyl: var(--color-ink);
+  --color-vinyl-groove: #5a5658;
+  --color-vinyl-label: var(--color-stripe-red);
+
   --font-sans: 'Archivo Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-marker: 'Permanent Marker', cursive;
   --tracking-label: 0.12em;
@@ -45,6 +50,8 @@
   --shadow-hard-pressed: 2px 2px 0 var(--color-ink);
 
   --animate-reel: spin 3.2s linear infinite;
+  /* 33⅓ varv per minut, som en LP. */
+  --animate-vinyl: spin 1.8s linear infinite;
 
   @keyframes marquee {
     from {

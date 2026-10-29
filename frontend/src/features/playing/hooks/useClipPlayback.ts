@@ -15,11 +15,13 @@ const secondsPlayed = () => {
 
 // Storskärmen spelar klippet som servern säger. Ett nytt klipp, en hävd paus och en återanslutning hämtar länken och börjar där servern är.
 // Servern äger klockan, så ett klipp som inte går att spela visas ändå, och TV:n följer klockan till nästa klipp.
+// playing är sant bara när ljudet faktiskt spelas, inte medan länken hämtas, under paus eller utan anslutning.
 export const useClipPlayback = () => {
   const session = useHostStore((state) => state.session);
   const game = useRoomGame(session?.roomCode);
   const isConnected = useIsConnected();
   const [failedIndex, setFailedIndex] = useState<number | null>(null);
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
 
   const index = game?.nowPlaying?.index ?? null;
   const canPlay = session !== null && index !== null && !game?.isPaused && isConnected;
@@ -38,6 +40,7 @@ export const useClipPlayback = () => {
         if (!response?.value) throw new Error(response?.error?.message ?? 'Kunde inte nå servern.');
         await playClip(response.value.previewUrl, secondsPlayed());
         setFailedIndex(null);
+        if (!cancelled) setPlayingIndex(index);
       } catch (error) {
         if (cancelled) return;
         console.error(`Klipp ${index} gick inte att spela.`, error);
@@ -49,8 +52,12 @@ export const useClipPlayback = () => {
     return () => {
       cancelled = true;
       stopClip();
+      setPlayingIndex(null);
     };
   }, [canPlay, session, index]);
 
-  return { failed: failedIndex !== null && failedIndex === index };
+  return {
+    failed: failedIndex !== null && failedIndex === index,
+    playing: canPlay && playingIndex !== null && playingIndex === index,
+  };
 };
