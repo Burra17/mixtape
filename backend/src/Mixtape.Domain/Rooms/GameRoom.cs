@@ -82,8 +82,14 @@ public sealed class GameRoom
 
     public bool IsHostConnected { get; private set; } = true;
 
-    // Utan storskärmen står spelet still, och fasens klocka fryses.
-    public bool IsPaused => !IsHostConnected;
+    // Värden har pausat med flit. Pausen ligger kvar även om storskärmen laddas om, tills värden fortsätter.
+    public bool IsPausedByHost { get; private set; }
+
+    // Utan storskärmen, eller när värden pausat, står spelet still och fasens klocka fryses.
+    public bool IsPaused => !IsHostConnected || IsPausedByHost;
+
+    // När båda gäller vinner HostAway, eftersom storskärmen då inte kan fortsätta förrän den är tillbaka.
+    public PauseReason? PauseReason => !IsHostConnected ? Rooms.PauseReason.HostAway : IsPausedByHost ? Rooms.PauseReason.PausedByHost : null;
 
     // När den sista anslutningen försvann, eller null så länge någon är ansluten. En lobby där alla väntar framför TV:n räknas alltså aldrig som inaktiv.
     public DateTimeOffset? EmptySince { get; private set; }
@@ -414,7 +420,60 @@ public sealed class GameRoom
         }
 
         SetHostConnected(true);
-        _clock.Resume(now);
+        if (!IsPausedByHost)
+        {
+            _clock.Resume(now);
+        }
+
+        return Result.Success();
+    }
+
+    // Bara faser med nedräkning går att pausa. En paus som redan gäller är ingen ändring.
+    public Result Pause(string? hostToken, DateTimeOffset now)
+    {
+        if (!IsHost(hostToken))
+        {
+            return RoomErrors.NotFound;
+        }
+
+        if (!HasDeadline)
+        {
+            return RoomErrors.WrongPhase;
+        }
+
+        if (!IsPausedByHost)
+        {
+            IsPausedByHost = true;
+            _clock.Pause(now);
+            Revision++;
+        }
+
+        return Result.Success();
+    }
+
+    public Result Continue(string? hostToken, DateTimeOffset now)
+    {
+        if (!IsHost(hostToken))
+        {
+            return RoomErrors.NotFound;
+        }
+
+        if (!HasDeadline)
+        {
+            return RoomErrors.WrongPhase;
+        }
+
+        if (IsPausedByHost)
+        {
+            IsPausedByHost = false;
+            if (IsHostConnected)
+            {
+                _clock.Resume(now);
+            }
+
+            Revision++;
+        }
+
         return Result.Success();
     }
 
@@ -424,6 +483,8 @@ public sealed class GameRoom
         _clock.Pause(now);
         UpdateEmptySince(now);
     }
+
+    private bool HasDeadline => Phase is GamePhase.Submitting or GamePhase.Playing or GamePhase.Voting or GamePhase.Revealing;
 
     // Under paus står spelet still även när alla är klara. När storskärmen är tillbaka går fasen vidare vid nästa tick.
     private bool CanCompleteEarly => !IsPaused && IsEveryoneDone;
