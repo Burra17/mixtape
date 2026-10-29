@@ -150,6 +150,9 @@ export const pauseGame = (host: HostSession) => connection.invoke<HubResponse<Ga
 
 export const continueGame = (host: HostSession) => connection.invoke<HubResponse<GameState>>(serverMethods.continueGame, host);
 
+// Värden avslutar i förtid. Slutställningen kommer med GameStateUpdated till hela rummet.
+export const endGame = (host: HostSession) => connection.invoke<HubResponse<GameState>>(serverMethods.endGame, host);
+
 // Bara en spelare i ett rum får söka, och bara under inskicket.
 export const search = (query: string) => connection.invoke<HubResponse<Track[]>>(serverMethods.search, query);
 

@@ -19,6 +19,7 @@ export const serverMethods = {
   playAgain: 'PlayAgain',
   pauseGame: 'PauseGame',
   continueGame: 'ContinueGame',
+  endGame: 'EndGame',
 } as const;
 
 export const clientEvents = {
