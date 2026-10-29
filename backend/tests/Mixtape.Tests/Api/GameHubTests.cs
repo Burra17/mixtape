@@ -305,6 +305,55 @@ public sealed class GameHubTests
         Assert.That(start.Error?.Code, Is.EqualTo("room.not_enough_players"));
     }
 
+    [Test]
+    public async Task PauseGame_ThenContinueGame_TellsThePlayersWhy()
+    {
+        await using var host = CreateConnection();
+        await using var anna = CreateConnection();
+        var paused = new TaskCompletionSource<GameState>();
+        var continued = new TaskCompletionSource<GameState>();
+        anna.On<GameState>(nameof(IGameClient.GameStateUpdated), state =>
+        {
+            if (state.PauseReason == PauseReason.PausedByHost)
+            {
+                paused.TrySetResult(state);
+            }
+            else if (paused.Task.IsCompleted && !state.IsPaused)
+            {
+                continued.TrySetResult(state);
+            }
+        });
+        await Task.WhenAll(host.StartAsync(), anna.StartAsync());
+
+        var created = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
+        await anna.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Anna");
+        await host.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Bertil");
+        await host.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Cecilia");
+        await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.StartGame), created);
+
+        var pause = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.PauseGame), created);
+        var pausedState = await paused.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var resume = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.ContinueGame), created);
+        var continuedState = await continued.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.That(pause.Error, Is.Null);
+        Assert.That(pausedState.IsPaused, Is.True);
+        Assert.That(resume.Error, Is.Null);
+        Assert.That(continuedState.PauseReason, Is.Null);
+    }
+
+    [Test]
+    public async Task PauseGame_InTheLobby_ReturnsTheErrorCode()
+    {
+        await using var host = CreateConnection();
+        await host.StartAsync();
+
+        var created = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
+        var pause = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.PauseGame), created);
+
+        Assert.That(pause.Error?.Code, Is.EqualTo("room.wrong_phase"));
+    }
+
     // Testservern har ingen riktig port, så klienten går via dess HTTP-hanterare med long polling.
     // Klienten läser enums som text, som servern skickar dem.
     private HubConnection CreateConnection()

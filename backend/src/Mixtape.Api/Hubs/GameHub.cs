@@ -24,6 +24,8 @@ public sealed class GameHub(
     VoteHandler vote,
     GetBallotHandler getBallot,
     PlayAgainHandler playAgain,
+    PauseGameHandler pauseGame,
+    ContinueGameHandler continueGame,
     IConnectionRegistry connections,
     IJoinAddressProvider joinAddresses) : Hub<IGameClient>
 {
@@ -177,6 +179,17 @@ public sealed class GameHub(
     public async Task<HubResponse<GameState>> PlayAgain(HostSession host)
     {
         return await SendToRoomAsync(await playAgain.HandleAsync(host));
+    }
+
+    // Pausen gäller hela rummet, så bilden går till alla och mobilerna kan visa att spelet är pausat.
+    public async Task<HubResponse<GameState>> PauseGame(HostSession host)
+    {
+        return await SendToRoomAsync(await pauseGame.HandleAsync(host));
+    }
+
+    public async Task<HubResponse<GameState>> ContinueGame(HostSession host)
+    {
+        return await SendToRoomAsync(await continueGame.HandleAsync(host));
     }
 
     // Spelaren eller storskärmen markeras som borta men behåller sin plats. En borttagen spelare eller ett rum som inte finns längre ger fel, och då finns inget att berätta.
