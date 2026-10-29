@@ -15,6 +15,7 @@ public static class DependencyInjection
         services.AddTransient<ResumeRoomHandler>();
         services.AddTransient<PauseGameHandler>();
         services.AddTransient<ContinueGameHandler>();
+        services.AddTransient<EndGameHandler>();
         services.AddTransient<JoinRoomHandler>();
         services.AddTransient<RejoinRoomHandler>();
         services.AddTransient<LeaveRoomHandler>();

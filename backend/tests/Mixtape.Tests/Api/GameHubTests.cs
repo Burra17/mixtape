@@ -343,6 +343,34 @@ public sealed class GameHubTests
     }
 
     [Test]
+    public async Task EndGame_SendsTheStandingsToThePlayers()
+    {
+        await using var host = CreateConnection();
+        await using var anna = CreateConnection();
+        var ended = new TaskCompletionSource<GameState>();
+        anna.On<GameState>(nameof(IGameClient.GameStateUpdated), state =>
+        {
+            if (state.Phase == GamePhase.GameOver)
+            {
+                ended.TrySetResult(state);
+            }
+        });
+        await Task.WhenAll(host.StartAsync(), anna.StartAsync());
+
+        var created = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
+        await anna.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Anna");
+        await host.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Bertil");
+        await host.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Cecilia");
+        await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.StartGame), created);
+
+        var end = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.EndGame), created);
+        var state = await ended.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.That(end.Error, Is.Null);
+        Assert.That(state.Standings, Has.Count.EqualTo(3));
+    }
+
+    [Test]
     public async Task PauseGame_InTheLobby_ReturnsTheErrorCode()
     {
         await using var host = CreateConnection();
