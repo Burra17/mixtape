@@ -81,3 +81,8 @@
 body {
   @apply bg-paper font-sans text-ink antialiased;
 }
+
+/* Värdens paus fryser all rörelse i fasen. !important behövs, eftersom vinylen sätter sin play-state inline. */
+[data-paused] * {
+  animation-play-state: paused !important;
+}

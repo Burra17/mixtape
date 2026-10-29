@@ -145,6 +145,11 @@ export const startGame = (host: HostSession) => connection.invoke<HubResponse<Ga
 // Tillbaka till lobbyn med samma spelare. Bilden av lobbyn kommer med GameStateUpdated till hela rummet.
 export const playAgain = (host: HostSession) => connection.invoke<HubResponse<GameState>>(serverMethods.playAgain, host);
 
+// Värdens paus i en fas med nedräkning. Bilden kommer med GameStateUpdated till hela rummet.
+export const pauseGame = (host: HostSession) => connection.invoke<HubResponse<GameState>>(serverMethods.pauseGame, host);
+
+export const continueGame = (host: HostSession) => connection.invoke<HubResponse<GameState>>(serverMethods.continueGame, host);
+
 // Bara en spelare i ett rum får söka, och bara under inskicket.
 export const search = (query: string) => connection.invoke<HubResponse<Track[]>>(serverMethods.search, query);
 
