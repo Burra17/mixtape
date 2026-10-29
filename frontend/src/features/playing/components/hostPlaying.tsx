@@ -8,7 +8,7 @@ import { useClipPlayback } from '../hooks/useClipPlayback.ts';
 import { Vinyl } from './vinyl.tsx';
 
 // Storskärmen under uppspelningen: omslaget, låten och sekunderna kvar av klippet. Aldrig vem som valde låten.
-// Från lg sticker en vinylskiva ut en tredjedel ur omslaget, som ur ett fodral, och snurrar medan klippet spelas.
+// Från lg sticker halva vinylskivan ut ur omslaget, som ur ett fodral, och snurrar medan klippet spelas.
 export const HostPlaying = () => {
   const session = useHostStore((state) => state.session);
   const game = useRoomGame(session?.roomCode);
@@ -24,7 +24,7 @@ export const HostPlaying = () => {
       <Marquee text={`Lyssna • ${round}`} />
       <main className='flex flex-1 flex-col justify-center gap-12 px-6 py-12 lg:px-[6vw]'>
         <div className='flex flex-col gap-10 lg:flex-row lg:items-center'>
-          <div className='relative shrink-0 lg:pr-[calc(min(38vw,60vh)/3)]'>
+          <div className='relative shrink-0 lg:pr-[calc(min(38vw,60vh)/2)]'>
             {/* key startar om skivan från början när ett nytt klipp börjar. */}
             <Vinyl key={clip.index} spinning={playing} className='absolute top-0 right-0 hidden w-[min(38vw,60vh)] lg:block' />
             <img src={clip.coverUrl} alt='' className='relative aspect-square w-[min(38vw,60vh)] border-2 border-ink bg-card shadow-hard' />
