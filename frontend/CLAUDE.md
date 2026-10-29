@@ -62,7 +62,7 @@ Riktningen är vald i #31, med We Are Rewind som förebild: varmt off-white, sva
 - **Fält:** `bg-card`, `border-2 border-ink`, `min-h-12` och samma radie som knapparna. Fokus visas med samma ram som knapparnas (`outline-ink`).
 - **Storlekar på storskärmen:** text i `/host` som ska läsas på avstånd skalar med skärmen via `clamp()` och viewport-enheter. Startsidan och mobilens vyer använder fasta storlekar.
 - **Kassetten:** `<Cassette>` står på startsidan och på storskärmens första vy. Etikettens ränder (`stripe-red`, `stripe-orange`, `stripe-blue` och `stripe-magenta`) och skalets färger är tema-variabler.
-- **Vinylen:** `<Vinyl>` sticker ut ur omslaget på storskärmen under uppspelningen och snurrar bara medan ljudet spelas. Den syns från `lg`, och dess färger (`vinyl`, `vinyl-groove` och `vinyl-label`) är tema-variabler.
+- **Vinylen:** `<Vinyl>` sticker ut ur omslaget på storskärmen under uppspelningen med omslaget som rund etikett, och snurrar bara medan ljudet spelas. Den syns från `lg`, och dess färger (`vinyl`, `vinyl-groove` och `vinyl-label`) är tema-variabler.
 - **Rörelse:** storskärmen rör sig hela tiden, med `<Marquee>`, kassettens spolar och vinylen. Mobilen ligger still. Animationer skrivs som `lg:motion-safe:animate-…`, så att de bara körs från `lg` och bara när "minska rörelse" är avstängt. `motion-reduce:animate-none` bredvid `lg:animate-…` fungerar inte, eftersom brytpunkten kommer senare i CSS:en och vinner. Stora ögonblick som avslöjandet hör till #24.
 - **Layout:** vänsterställt som standard, som hos förebilden. Centrera bara det som är ensamt i fokus, som rumskoden.
 

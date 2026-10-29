@@ -33,7 +33,7 @@
   --color-stripe-blue: var(--color-player-2);
   --color-stripe-magenta: var(--color-player-4);
 
-  /* Vinylskivan under uppspelningen: svart skiva, grå spår och en röd etikett som knyter an till kassettens ränder. */
+  /* Vinylskivan under uppspelningen: svart skiva och grå spår. Etiketten är röd tills omslaget har laddats. */
   --color-vinyl: var(--color-ink);
   --color-vinyl-groove: #5a5658;
   --color-vinyl-label: var(--color-stripe-red);

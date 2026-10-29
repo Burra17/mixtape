@@ -26,7 +26,12 @@ export const HostPlaying = () => {
         <div className='flex flex-col gap-10 lg:flex-row lg:items-center'>
           <div className='relative shrink-0 lg:pr-[calc(min(38vw,60vh)/2)]'>
             {/* key startar om skivan från början när ett nytt klipp börjar. */}
-            <Vinyl key={clip.index} spinning={playing} className='absolute top-0 right-0 hidden w-[min(38vw,60vh)] lg:block' />
+            <Vinyl
+              key={clip.index}
+              coverUrl={clip.coverUrl}
+              spinning={playing}
+              className='absolute top-0 right-0 hidden w-[min(38vw,60vh)] lg:block'
+            />
             <img src={clip.coverUrl} alt='' className='relative aspect-square w-[min(38vw,60vh)] border-2 border-ink bg-card shadow-hard' />
           </div>
           <div className='flex min-w-0 flex-col gap-4'>
