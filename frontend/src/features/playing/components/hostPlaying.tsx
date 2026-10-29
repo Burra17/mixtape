@@ -5,14 +5,16 @@ import { useRoundText } from '../../../shared/hooks/useRoundText.ts';
 import { useRoomGame } from '../../../store/gameStore.ts';
 import { useHostStore } from '../../../store/hostStore.ts';
 import { useClipPlayback } from '../hooks/useClipPlayback.ts';
+import { Vinyl } from './vinyl.tsx';
 
 // Storskärmen under uppspelningen: omslaget, låten och sekunderna kvar av klippet. Aldrig vem som valde låten.
+// Från lg sticker halva vinylskivan ut ur omslaget, som ur ett fodral, och snurrar medan klippet spelas.
 export const HostPlaying = () => {
   const session = useHostStore((state) => state.session);
   const game = useRoomGame(session?.roomCode);
   const round = useRoundText();
   const seconds = useCountdown();
-  const { failed } = useClipPlayback();
+  const { failed, playing } = useClipPlayback();
 
   const clip = game?.nowPlaying;
   if (!clip) return null;
@@ -22,7 +24,12 @@ export const HostPlaying = () => {
       <Marquee text={`Lyssna • ${round}`} />
       <main className='flex flex-1 flex-col justify-center gap-12 px-6 py-12 lg:px-[6vw]'>
         <div className='flex flex-col gap-10 lg:flex-row lg:items-center'>
-          <img src={clip.coverUrl} alt='' className='aspect-square w-[min(38vw,60vh)] shrink-0 border-2 border-ink bg-card shadow-hard' />
+          {/* --cover är omslagets storlek. Skivan är lika stor, och halva den sticker ut till höger. */}
+          <div className='relative shrink-0 [--cover:min(38vw,60vh)] lg:pr-[calc(var(--cover)/2)]'>
+            {/* key startar om skivan från början när ett nytt klipp börjar. */}
+            <Vinyl key={clip.index} coverUrl={clip.coverUrl} spinning={playing} className='absolute top-0 right-0 hidden w-(--cover) lg:block' />
+            <img src={clip.coverUrl} alt='' className='relative aspect-square w-(--cover) border-2 border-ink bg-card shadow-hard' />
+          </div>
           <div className='flex min-w-0 flex-col gap-4'>
             <Label>
               Låt {clip.index} av {clip.count}
