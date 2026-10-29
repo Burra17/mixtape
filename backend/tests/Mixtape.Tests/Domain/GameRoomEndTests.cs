@@ -91,6 +91,24 @@ public sealed class GameRoomEndTests
     }
 
     [Test]
+    public void End_WithTheHostAway_KeepsTheClockFrozenUntilTheHostIsBack()
+    {
+        _room.DisconnectHost(_now);
+
+        _room.End(_room.HostToken, _now);
+        _room.PlayAgain(_room.HostToken);
+        Start();
+
+        Assert.That(_room.PauseReason, Is.EqualTo(PauseReason.HostAway));
+        Assert.That(_room.Tick(_now.AddHours(1)), Is.False);
+
+        var back = _now.AddHours(1);
+        _room.ResumeHost(_room.HostToken, back);
+
+        Assert.That(_room.Tick(back + _room.Settings.SubmittingDuration), Is.True);
+    }
+
+    [Test]
     public void End_InTheLobby_ReturnsWrongPhase()
     {
         _room.End(_room.HostToken, _now);

@@ -1,5 +1,5 @@
 import { useEffect, useEffectEvent } from 'react';
-import { continueGame, pauseGame } from '../../services/hub/connection.ts';
+import { continueGame, endGame, pauseGame } from '../../services/hub/connection.ts';
 import { useRoomGame } from '../../store/gameStore.ts';
 import { useHostStore } from '../../store/hostStore.ts';
 import { useHubCall } from './useHubCall.ts';
@@ -13,6 +13,12 @@ export const useHostPause = () => {
   const toggle = async () => {
     if (!session || busy) return;
     await run(() => (isPausedByHost ? continueGame(session) : pauseGame(session)));
+  };
+
+  // "Ja, avsluta" på pauskortet. Det delar anropet med pausen, så att kortet alltid visar felet från det senaste klicket.
+  const end = async () => {
+    if (!session || busy) return;
+    await run(() => endGame(session));
   };
 
   // useEffectEvent läser alltid den senaste toggle, så lyssnaren kopplas bara en gång.
@@ -29,5 +35,5 @@ export const useHostPause = () => {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  return { isPausedByHost, toggle, busy, error };
+  return { isPausedByHost, toggle, end, busy, error };
 };

@@ -210,8 +210,7 @@ public sealed class GameRoom
         Round = 0;
         _previousRoundSkipped = false;
         _prompts.Clear();
-        _entries.Clear();
-        _votes.Clear();
+        ClearRound();
         Phase = GamePhase.Lobby;
         _clock.Stop();
         Revision++;
@@ -500,8 +499,7 @@ public sealed class GameRoom
 
         if (Phase != GamePhase.Revealing)
         {
-            _entries.Clear();
-            _votes.Clear();
+            ClearRound();
         }
 
         IsPausedByHost = false;
@@ -605,9 +603,15 @@ public sealed class GameRoom
     {
         Round = round;
         _previousRoundSkipped = skippedPrevious;
+        ClearRound();
+        Enter(GamePhase.Submitting, Settings.SubmittingDuration, now);
+    }
+
+    // Rundans bidrag och röster, som nollställs när en ny runda börjar, när spelet börjar om och när en avbruten runda tas bort.
+    private void ClearRound()
+    {
         _entries.Clear();
         _votes.Clear();
-        Enter(GamePhase.Submitting, Settings.SubmittingDuration, now);
     }
 
     private void EndGame()
