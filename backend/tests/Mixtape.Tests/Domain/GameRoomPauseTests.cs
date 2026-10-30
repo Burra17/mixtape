@@ -1,4 +1,5 @@
 using Mixtape.Application.Rooms;
+using Mixtape.Domain.Games.AuxCord;
 using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Tests.Domain;
@@ -7,7 +8,7 @@ public sealed class GameRoomPauseTests
 {
     private static readonly DateTimeOffset Now = new(2026, 10, 29, 20, 0, 0, TimeSpan.Zero);
 
-    private static readonly TimeSpan Submitting = GameSettings.Default.SubmittingDuration;
+    private static readonly TimeSpan Submitting = AuxCordSettings.Default.SubmittingDuration;
 
     private GameRoom _room = null!;
 
@@ -163,5 +164,5 @@ public sealed class GameRoomPauseTests
     }
 
     private void Start() =>
-        _room.StartGame(_room.HostToken, Enumerable.Range(1, _room.Settings.Rounds).Select(round => $"Prompt {round}").ToList(), Now);
+        _room.StartGame(_room.HostToken, Enumerable.Range(1, _room.AuxSettings.Rounds).Select(round => $"Prompt {round}").ToList(), Now);
 }

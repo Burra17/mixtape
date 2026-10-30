@@ -2,13 +2,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
 using Mixtape.Domain.Common;
+using Mixtape.Domain.Games;
 
 namespace Mixtape.Domain.Rooms;
 
 // Det som är gemensamt för alla spellägen: spelarna, värden, lobbyn, klockan, pausen och ställningen. Själva spelet är ett IGame.
 public sealed class GameRoom
 {
-    public const int MinPlayers = 3;
     public const int MaxPlayers = 8;
 
     // Så länge får ett rum stå helt tomt innan det städas bort.
@@ -20,6 +20,9 @@ public sealed class GameRoom
 
     // Det som spelen dragit under kvällen, per spelläge, så att nästa spel kan dra annat.
     private readonly Dictionary<Type, HashSet<string>> _usedContent = [];
+
+    // Inställningarna för lägen som valts förut under kvällen. Det valda lägets står i Settings.
+    private readonly Dictionary<GameMode, IGameSettings> _settingsByMode = [];
 
     private GameRoom(RoomCode code, string hostToken)
     {
@@ -33,7 +36,8 @@ public sealed class GameRoom
 
     public RoomStage Stage { get; private set; } = RoomStage.Lobby;
 
-    public GameSettings Settings { get; private set; } = GameSettings.Default;
+    // Det valda lägets inställningar. Läget självt är Settings.Mode.
+    public IGameSettings Settings { get; private set; } = GameModes.DefaultSettings(GameModes.Default);
 
     public IReadOnlyList<Player> Players => _players;
 
@@ -43,7 +47,7 @@ public sealed class GameRoom
     // Räknas upp vid varje ändring. Ögonblicksbilderna skickas utanför rummets lås och kan komma fram i fel ordning, så klienten behåller den med högst nummer.
     public int Revision { get; private set; }
 
-    public bool CanStart => _players.Count >= MinPlayers;
+    public bool CanStart => _players.Count >= Settings.MinPlayers;
 
     public bool IsHostConnected { get; private set; } = true;
 
@@ -82,8 +86,8 @@ public sealed class GameRoom
     // Tiden som är kvar av fasen, eller null i faser utan deadline.
     public TimeSpan? RemainingTime(DateTimeOffset now) => _clock.Remaining(now);
 
-    // Bara inställningen som ändras skickas, och null behåller de andra. Två snabba klick skriver då inte över varandra med ett gammalt värde.
-    public Result UpdateSettings(string? hostToken, int? rounds, int? clipSeconds, int? submittingSeconds)
+    // Ett läge som valts förut under kvällen får tillbaka sina inställningar.
+    public Result ChooseMode(string? hostToken, GameMode mode)
     {
         if (!IsHost(hostToken))
         {
@@ -95,15 +99,49 @@ public sealed class GameRoom
             return RoomErrors.AlreadyStarted;
         }
 
-        var parsed = GameSettings.Create(rounds ?? Settings.Rounds, clipSeconds ?? Settings.ClipSeconds, submittingSeconds ?? Settings.SubmittingSeconds);
-        if (!parsed.IsSuccess)
+        if (!Enum.IsDefined(mode))
         {
-            return parsed.Error!;
+            return RoomErrors.InvalidSettings;
         }
 
-        if (parsed.Value != Settings)
+        if (mode != Settings.Mode)
         {
-            Settings = parsed.Value;
+            _settingsByMode[Settings.Mode] = Settings;
+            Settings = _settingsByMode.TryGetValue(mode, out var remembered) ? remembered : GameModes.DefaultSettings(mode);
+            Revision++;
+        }
+
+        return Result.Success();
+    }
+
+    // change får det valda lägets inställningar och ger de nya. Inställningar för ett annat läge än det valda nekas.
+    public Result UpdateSettings<TSettings>(string? hostToken, Func<TSettings, Result<TSettings>> change)
+        where TSettings : IGameSettings
+    {
+        if (!IsHost(hostToken))
+        {
+            return RoomErrors.NotFound;
+        }
+
+        if (Stage != RoomStage.Lobby)
+        {
+            return RoomErrors.AlreadyStarted;
+        }
+
+        if (Settings is not TSettings current)
+        {
+            return RoomErrors.InvalidSettings;
+        }
+
+        var changed = change(current);
+        if (!changed.IsSuccess)
+        {
+            return changed.Error!;
+        }
+
+        if (!changed.Value.Equals(current))
+        {
+            Settings = changed.Value;
             Revision++;
         }
 
@@ -111,7 +149,8 @@ public sealed class GameRoom
     }
 
     // Handlern skapar spelet med det som läget behöver, så att rummet inte känner till något spelläge.
-    public Result StartGame(string? hostToken, IGame game, DateTimeOffset now)
+    // createGame anropas först när värden, lobbyn och antalet spelare är kontrollerade, med det valda lägets inställningar.
+    public Result StartGame(string? hostToken, Func<IGameSettings, Result<IGame>> createGame, DateTimeOffset now)
     {
         if (!IsHost(hostToken))
         {
@@ -128,6 +167,13 @@ public sealed class GameRoom
             return RoomErrors.NotEnoughPlayers;
         }
 
+        var created = createGame(Settings);
+        if (!created.IsSuccess)
+        {
+            return created.Error!;
+        }
+
+        var game = created.Value;
         if (!_usedContent.TryGetValue(game.GetType(), out var used))
         {
             used = [];

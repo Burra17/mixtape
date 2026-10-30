@@ -28,7 +28,7 @@ public sealed class GameRoomPhaseTests
         Assert.That(result.IsSuccess, Is.True);
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Submitting));
         Assert.That(_room.Round, Is.EqualTo(1));
-        Assert.That(_room.RemainingTime(_now), Is.EqualTo(GameSettings.Default.SubmittingDuration));
+        Assert.That(_room.RemainingTime(_now), Is.EqualTo(AuxCordSettings.Default.SubmittingDuration));
     }
 
     [Test]
@@ -74,7 +74,7 @@ public sealed class GameRoomPhaseTests
     {
         StartWithPlayers(3);
 
-        Assert.That(_room.Tick(_now + GameSettings.Default.SubmittingDuration - TimeSpan.FromMilliseconds(1)), Is.False);
+        Assert.That(_room.Tick(_now + AuxCordSettings.Default.SubmittingDuration - TimeSpan.FromMilliseconds(1)), Is.False);
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Submitting));
     }
 
@@ -92,9 +92,9 @@ public sealed class GameRoomPhaseTests
     {
         StartWithPlayers(3);
         SubmitTwoEntries();
-        var clip = GameSettings.Default.ClipLength;
+        var clip = AuxCordSettings.Default.ClipLength;
 
-        AdvanceToNextPhase(GameSettings.Default.SubmittingDuration);
+        AdvanceToNextPhase(AuxCordSettings.Default.SubmittingDuration);
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Playing));
         Assert.That(_room.RemainingTime(_now), Is.EqualTo(clip));
 
@@ -153,7 +153,7 @@ public sealed class GameRoomPhaseTests
         _room.Tick(_now.AddSeconds(1));
         Assert.That(_room.Revision, Is.EqualTo(started));
 
-        _room.Tick(_now + GameSettings.Default.SubmittingDuration);
+        _room.Tick(_now + AuxCordSettings.Default.SubmittingDuration);
         Assert.That(_room.Revision, Is.EqualTo(started + 1));
     }
 
@@ -165,13 +165,13 @@ public sealed class GameRoomPhaseTests
         _room.DisconnectHost(_now.AddSeconds(33));
 
         Assert.That(_room.Tick(_now.AddMinutes(10)), Is.False);
-        Assert.That(_room.RemainingTime(_now.AddMinutes(10)), Is.EqualTo(GameSettings.Default.SubmittingDuration - TimeSpan.FromSeconds(33)));
+        Assert.That(_room.RemainingTime(_now.AddMinutes(10)), Is.EqualTo(AuxCordSettings.Default.SubmittingDuration - TimeSpan.FromSeconds(33)));
 
         var back = _now.AddMinutes(10);
         _room.ResumeHost(_room.HostToken, back);
 
-        Assert.That(_room.Tick(back + GameSettings.Default.SubmittingDuration - TimeSpan.FromSeconds(34)), Is.False);
-        Assert.That(_room.Tick(back + GameSettings.Default.SubmittingDuration - TimeSpan.FromSeconds(33)), Is.True);
+        Assert.That(_room.Tick(back + AuxCordSettings.Default.SubmittingDuration - TimeSpan.FromSeconds(34)), Is.False);
+        Assert.That(_room.Tick(back + AuxCordSettings.Default.SubmittingDuration - TimeSpan.FromSeconds(33)), Is.True);
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Playing));
     }
 
@@ -186,7 +186,7 @@ public sealed class GameRoomPhaseTests
         Assert.That(_room.RemainingTime(back), Is.Null);
 
         _room.StartGame(_room.HostToken, Prompts(), back);
-        Assert.That(_room.RemainingTime(back), Is.EqualTo(GameSettings.Default.SubmittingDuration));
+        Assert.That(_room.RemainingTime(back), Is.EqualTo(AuxCordSettings.Default.SubmittingDuration));
     }
 
     [Test]
@@ -195,9 +195,9 @@ public sealed class GameRoomPhaseTests
         var result = _room.UpdateSettings(_room.HostToken, 8, 20, 120);
 
         Assert.That(result.IsSuccess, Is.True);
-        Assert.That(_room.Settings.Rounds, Is.EqualTo(8));
-        Assert.That(_room.Settings.ClipSeconds, Is.EqualTo(20));
-        Assert.That(_room.Settings.SubmittingSeconds, Is.EqualTo(120));
+        Assert.That(_room.AuxSettings.Rounds, Is.EqualTo(8));
+        Assert.That(_room.AuxSettings.ClipSeconds, Is.EqualTo(20));
+        Assert.That(_room.AuxSettings.SubmittingSeconds, Is.EqualTo(120));
     }
 
     [TestCase(60)]
@@ -221,23 +221,23 @@ public sealed class GameRoomPhaseTests
         _room.UpdateSettings(_room.HostToken, null, 10, null);
         _room.UpdateSettings(_room.HostToken, null, null, 60);
 
-        Assert.That(_room.Settings.Rounds, Is.EqualTo(3));
-        Assert.That(_room.Settings.ClipSeconds, Is.EqualTo(10));
-        Assert.That(_room.Settings.SubmittingSeconds, Is.EqualTo(60));
+        Assert.That(_room.AuxSettings.Rounds, Is.EqualTo(3));
+        Assert.That(_room.AuxSettings.ClipSeconds, Is.EqualTo(10));
+        Assert.That(_room.AuxSettings.SubmittingSeconds, Is.EqualTo(60));
     }
 
     [Test]
     public void UpdateSettings_WithWrongHostToken_ReturnsRoomNotFound()
     {
         Assert.That(_room.UpdateSettings("fel", 8, 20, null).Error, Is.EqualTo(RoomErrors.NotFound));
-        Assert.That(_room.Settings, Is.EqualTo(GameSettings.Default));
+        Assert.That(_room.Settings, Is.EqualTo(AuxCordSettings.Default));
     }
 
     [Test]
     public void UpdateSettings_WithValueThatIsNotAnOption_ReturnsInvalidSettings()
     {
         Assert.That(_room.UpdateSettings(_room.HostToken, 4, 15, null).Error, Is.EqualTo(RoomErrors.InvalidSettings));
-        Assert.That(_room.Settings, Is.EqualTo(GameSettings.Default));
+        Assert.That(_room.Settings, Is.EqualTo(AuxCordSettings.Default));
     }
 
     [Test]
@@ -246,7 +246,7 @@ public sealed class GameRoomPhaseTests
         StartWithPlayers(3);
 
         Assert.That(_room.UpdateSettings(_room.HostToken, 8, 20, null).Error, Is.EqualTo(RoomErrors.AlreadyStarted));
-        Assert.That(_room.Settings, Is.EqualTo(GameSettings.Default));
+        Assert.That(_room.Settings, Is.EqualTo(AuxCordSettings.Default));
     }
 
     [Test]
@@ -298,7 +298,7 @@ public sealed class GameRoomPhaseTests
     }
 
     // En prompt per runda, så som servern drar dem.
-    private List<string> Prompts() => Enumerable.Range(1, _room.Settings.Rounds).Select(round => $"Prompt {round}").ToList();
+    private List<string> Prompts() => Enumerable.Range(1, _room.AuxSettings.Rounds).Select(round => $"Prompt {round}").ToList();
 
     private void JoinPlayers(int count)
     {

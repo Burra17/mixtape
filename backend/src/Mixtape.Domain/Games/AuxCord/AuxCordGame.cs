@@ -12,7 +12,7 @@ public sealed class AuxCordGame : IGame
     // Storskärmen visar bidragen först och ställningen de sista 8 sekunderna. Delningen står i frontendens revealing-feature.
     public static readonly TimeSpan RevealingDuration = TimeSpan.FromSeconds(20);
 
-    private readonly GameSettings _settings;
+    private readonly AuxCordSettings _settings;
 
     private readonly IReadOnlyList<string> _prompts;
 
@@ -32,7 +32,7 @@ public sealed class AuxCordGame : IGame
 
     // prompts är en per runda, dragna av servern. Fel antal är en bugg i den som drog dem, inte ett regelfel.
     // random slumpar uppspelningens ordning, och testerna seedar den.
-    public AuxCordGame(IReadOnlyList<string> prompts, GameSettings settings, Random random)
+    public AuxCordGame(IReadOnlyList<string> prompts, AuxCordSettings settings, Random random)
     {
         if (prompts.Count != settings.Rounds || prompts.Distinct().Count() != prompts.Count)
         {

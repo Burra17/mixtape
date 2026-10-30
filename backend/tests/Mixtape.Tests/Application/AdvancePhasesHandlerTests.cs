@@ -1,6 +1,6 @@
 using Mixtape.Application.Connections;
 using Mixtape.Application.Rooms;
-using Mixtape.Domain.Rooms;
+using Mixtape.Domain.Games.AuxCord;
 using Mixtape.Infrastructure.Connections;
 using Mixtape.Infrastructure.Rooms;
 using Mixtape.Tests.Domain;
@@ -32,7 +32,7 @@ public sealed class AdvancePhasesHandlerTests
         var host = game.Host;
         await SubmitTwoAsync(game);
 
-        _time.Advance(GameSettings.Default.SubmittingDuration);
+        _time.Advance(AuxCordSettings.Default.SubmittingDuration);
         await _advance.HandleAsync();
         await _advance.HandleAsync();
 
@@ -47,7 +47,7 @@ public sealed class AdvancePhasesHandlerTests
     {
         await GameStarter.StartAsync(_rooms, _connections, _time);
 
-        _time.Advance(GameSettings.Default.SubmittingDuration - TimeSpan.FromSeconds(1));
+        _time.Advance(AuxCordSettings.Default.SubmittingDuration - TimeSpan.FromSeconds(1));
         await _advance.HandleAsync();
 
         Assert.That(_notifier.Sent, Is.Empty);

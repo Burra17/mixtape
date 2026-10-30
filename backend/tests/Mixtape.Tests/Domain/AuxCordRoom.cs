@@ -28,6 +28,8 @@ public static class AuxCordRoom
 
         public AuxCordGame? Aux => room.Game as AuxCordGame;
 
+        public AuxCordSettings AuxSettings => (AuxCordSettings)room.Settings;
+
         public int Round => room.Aux?.Round ?? 0;
 
         public string? Prompt => room.Stage == RoomStage.InGame ? room.Aux!.Prompt : null;
@@ -42,8 +44,14 @@ public static class AuxCordRoom
 
         public bool SkippedRound => room.Stage == RoomStage.InGame && room.Aux!.SkippedRound;
 
+        public Result UpdateSettings(string? hostToken, int? rounds, int? clipSeconds, int? submittingSeconds) =>
+            room.UpdateSettings<AuxCordSettings>(hostToken, settings => settings.With(rounds, clipSeconds, submittingSeconds));
+
         public Result StartGame(string? hostToken, IReadOnlyList<string> prompts, DateTimeOffset now) =>
-            room.StartGame(hostToken, new AuxCordGame(prompts, room.Settings, Randoms.TryGetValue(room, out var random) ? random : Random.Shared), now);
+            room.StartGame(
+                hostToken,
+                settings => Result<IGame>.Success(new AuxCordGame(prompts, (AuxCordSettings)settings, Randoms.TryGetValue(room, out var random) ? random : Random.Shared)),
+                now);
 
         public Result CanChooseTrack() => room.WithGame<AuxCordGame>(game => game.CanChooseTrack());
 
