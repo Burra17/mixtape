@@ -78,20 +78,16 @@ public sealed class SubmitTrackHandlerTests
     private async Task<IReadOnlyList<Entry>> EntriesAsync(StartedGame game) =>
         (await _rooms.WithRoomAsync<IReadOnlyList<Entry>>(game.Host.RoomCode, room => room.Entries.ToList())).Value;
 
-    private sealed class FakeCatalog : IMusicCatalog
+    private sealed class FakeCatalog : MusicCatalogStub
     {
-        // Testerna här handlar inte om spellistor.
-        public Task<Result<IReadOnlyList<PlayableTrack>>> GetPlaylistTracksAsync(long playlistId, CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException();
-
         public bool Unavailable { get; set; }
 
         public int Lookups { get; private set; }
 
-        public Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default) =>
+        public override Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException("Inskicket söker inte.");
 
-        public Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default)
+        public override Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default)
         {
             Lookups++;
             return Task.FromResult(Unavailable

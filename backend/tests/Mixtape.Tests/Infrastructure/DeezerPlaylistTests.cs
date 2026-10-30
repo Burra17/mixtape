@@ -25,8 +25,24 @@ public sealed class DeezerPlaylistTests
         Assert.That(handler.Requests.Select(uri => uri.PathAndQuery), Is.EqualTo(new[]
         {
             "/playlist/1470022445/tracks?limit=100&index=0",
-            "/playlist/1470022445/tracks?limit=100&index=100",
+            "/playlist/1470022445/tracks?limit=100&index=3",
         }));
+    }
+
+    [Test]
+    public async Task GetPlaylistTracks_LeavesOutAPlayableTrackWithoutPreview()
+    {
+        var json = """
+            {"data":[
+              {"id":1,"readable":true,"title":"Med klipp","preview":"https://cdnt-preview.dzcdn.net/a.mp3","explicit_lyrics":false,"artist":{"name":"A"},"album":{"title":"X","cover_xl":"xl1"}},
+              {"id":2,"readable":true,"title":"Utan klipp","preview":"","explicit_lyrics":false,"artist":{"name":"B"},"album":{"title":"Y","cover_xl":"xl2"}}
+            ],"total":2}
+            """;
+        var catalog = new DeezerMusicCatalog(new HttpClient(FakeHttpHandler.Json(json)) { BaseAddress = new Uri("https://api.deezer.com/") }, NullLogger<DeezerMusicCatalog>.Instance);
+
+        var tracks = (await catalog.GetPlaylistTracksAsync(1)).Value;
+
+        Assert.That(tracks, Is.EqualTo(new[] { new PlayableTrack(1, "Med klipp", "A", "X", "xl1", "https://cdnt-preview.dzcdn.net/a.mp3") }));
     }
 
     [Test]

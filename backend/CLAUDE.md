@@ -13,8 +13,8 @@ Beroenden pekar inåt mot Domain, som inte beror på någonting:
 | Projekt | Innehåll |
 |---|---|
 | `Mixtape.Domain` | `GameRoom`, `Player`, ett spel per spelläge under `Games/` och spelreglerna. Ingen I/O, inga ramverk. |
-| `Mixtape.Application` | En handler per kommando, interfacen som Infrastructure implementerar (`IGameRoomRepository`, `IMusicCatalog`, `IPromptProvider`), och DTO:erna. |
-| `Mixtape.Infrastructure` | Rum i minnet, Deezer-klienten, promptbanken och bakgrundstjänster. |
+| `Mixtape.Application` | En handler per kommando, interfacen som Infrastructure implementerar (`IGameRoomRepository`, `IMusicCatalog`, `IPromptProvider`, `ICategoryCatalog`), och DTO:erna. |
+| `Mixtape.Infrastructure` | Rum i minnet, Deezer-klienten, promptbanken, kategorierna och bakgrundstjänster. |
 | `Mixtape.Api` | `Program.cs`, `GameHub`, de få HTTP-endpoints som finns, och kopplingen av DI. |
 | `Mixtape.Tests` | NUnit. |
 

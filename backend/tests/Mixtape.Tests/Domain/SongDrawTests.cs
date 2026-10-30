@@ -50,6 +50,21 @@ public sealed class SongDrawTests
     }
 
     [Test]
+    public void Draw_ASongPlayedUnderAnotherId_CountsAsPlayed()
+    {
+        IReadOnlyList<SubmittedTrack> pool =
+        [
+            TestTrack.Of(1, "Back In Black", "AC/DC"),
+            TestTrack.Of(2, "Back In Black", "AC/DC"),
+            TestTrack.Of(3, "Take on Me", "a-ha"),
+        ];
+
+        var drawn = SongDraw.Draw(pool, 1, ["2"], new Random(1)).Value;
+
+        Assert.That(drawn.Single().Title, Is.EqualTo("Take on Me"));
+    }
+
+    [Test]
     public void Draw_WithFewerSongsThanTheCount_ReturnsTooFewSongs()
     {
         Assert.That(SongDraw.Draw(FiveSongs, 6, [], new Random(1)).Error, Is.EqualTo(DropTheNeedleErrors.TooFewSongs));

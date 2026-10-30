@@ -11,31 +11,40 @@ public static class SongDraw
     // Låtar som aldrig spelats kommer först i slumpad ordning, och när de inte räcker de som spelades längst tillbaka.
     public static Result<IReadOnlyList<SubmittedTrack>> Draw(IReadOnlyList<SubmittedTrack> pool, int count, IReadOnlyList<string> history, Random random)
     {
-        var songs = Distinct(pool);
+        var songs = Group(pool);
         if (songs.Count < count)
         {
             return DropTheNeedleErrors.TooFewSongs;
         }
 
         var playedAt = history.Select((id, index) => (id, index)).ToDictionary(played => played.id, played => played.index);
-        var unplayed = songs.Where(song => !playedAt.ContainsKey(Key(song))).ToArray();
+
+        // En låt som finns i flera spellistor kan ha spelats under vilket av sina id som helst, och den senaste gången räknas.
+        int? LastPlayed(List<SubmittedTrack> copies) =>
+            copies.Select(copy => playedAt.TryGetValue(Key(copy), out var index) ? index : (int?)null).Max();
+
+        var unplayed = songs.Where(copies => LastPlayed(copies) is null).ToArray();
         random.Shuffle(unplayed);
-        var oldestFirst = songs.Where(song => playedAt.ContainsKey(Key(song))).OrderBy(song => playedAt[Key(song)]);
-        return unplayed.Concat(oldestFirst).Take(count).ToList();
+        var oldestFirst = songs.Where(copies => LastPlayed(copies) is not null).OrderBy(LastPlayed);
+        return unplayed.Concat(oldestFirst).Take(count).Select(copies => copies[0]).ToList();
     }
 
     // Låtens nyckel i rummets historik.
     public static string Key(SubmittedTrack song) => song.Id.ToString(CultureInfo.InvariantCulture);
 
-    // Samma låt kan finnas i flera av kategorins spellistor, ibland med olika id.
-    private static List<SubmittedTrack> Distinct(IReadOnlyList<SubmittedTrack> pool)
+    // Samma låt kan finnas i flera av kategorins spellistor, ibland med olika id. Varje låt blir en grupp med alla sina kopior.
+    private static List<List<SubmittedTrack>> Group(IReadOnlyList<SubmittedTrack> pool)
     {
-        var songs = new List<SubmittedTrack>();
-        foreach (var song in pool)
+        var songs = new List<List<SubmittedTrack>>();
+        foreach (var track in pool)
         {
-            if (!songs.Any(song.IsSameSongAs))
+            if (songs.FirstOrDefault(copies => copies[0].IsSameSongAs(track)) is { } copies)
             {
-                songs.Add(song);
+                copies.Add(track);
+            }
+            else
+            {
+                songs.Add([track]);
             }
         }
 

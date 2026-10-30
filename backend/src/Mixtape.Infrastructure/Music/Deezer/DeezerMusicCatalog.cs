@@ -66,17 +66,21 @@ public sealed class DeezerMusicCatalog(HttpClient http, ILogger<DeezerMusicCatal
         logger.LogInformation("Hämtar spellista från Deezer: {PlaylistId}", playlistId);
 
         var tracks = new List<PlayableTrack>();
+        var index = 0;
         for (var page = 0; page < MaxPages; page++)
         {
             var response = await GetAsync<DeezerPlaylistTracksResponse>(
-                $"playlist/{playlistId}/tracks?limit={PageSize}&index={page * PageSize}", MusicErrors.Unavailable, cancellationToken);
+                $"playlist/{playlistId}/tracks?limit={PageSize}&index={index}", MusicErrors.Unavailable, cancellationToken);
             if (!response.IsSuccess)
             {
                 return response.Error!;
             }
 
-            tracks.AddRange((response.Value.Data ?? []).Select(ToPlayableTrack).OfType<PlayableTrack>());
-            if (response.Value.Next is null)
+            // Nästa sida börjar där den här slutade, även om Deezer gav färre låtar än PageSize.
+            var data = response.Value.Data ?? [];
+            tracks.AddRange(data.Select(ToPlayableTrack).OfType<PlayableTrack>());
+            index += data.Count;
+            if (response.Value.Next is null || data.Count == 0)
             {
                 return tracks;
             }

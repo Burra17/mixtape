@@ -37,15 +37,11 @@ public sealed class CategorySongsTests
     }
 
     // Varje spellista har en låt vars id är spellistans id gånger tio.
-    private sealed class PlaylistCatalog : IMusicCatalog
+    private sealed class PlaylistCatalog : MusicCatalogStub
     {
         public long? Failing { get; init; }
 
-        public Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-
-        public Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-
-        public Task<Result<IReadOnlyList<PlayableTrack>>> GetPlaylistTracksAsync(long playlistId, CancellationToken cancellationToken = default)
+        public override Task<Result<IReadOnlyList<PlayableTrack>>> GetPlaylistTracksAsync(long playlistId, CancellationToken cancellationToken = default)
         {
             IReadOnlyList<PlayableTrack> tracks = [new PlayableTrack(playlistId * 10, $"Låt {playlistId}", "Artist", "Album", "omslag", "klipp")];
             return Task.FromResult(playlistId == Failing ? Result<IReadOnlyList<PlayableTrack>>.Failure(MusicErrors.Unavailable) : Result<IReadOnlyList<PlayableTrack>>.Success(tracks));
