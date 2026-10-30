@@ -43,7 +43,6 @@ export const Vinyl = ({ coverUrl, spinning, className = '' }: { coverUrl?: strin
           </text>
         )}
         <circle cx={100} cy={100} r={LABEL_R} className='fill-none stroke-ink' strokeWidth={2} />
-        <circle cx={100} cy={100} r={4} className='fill-paper' />
       </g>
     </svg>
   );
