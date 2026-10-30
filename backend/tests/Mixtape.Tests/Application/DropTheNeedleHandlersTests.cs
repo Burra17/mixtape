@@ -97,6 +97,27 @@ public sealed class DropTheNeedleHandlersTests
     }
 
     [Test]
+    public async Task TheReveal_HasTheAnswerAndEveryonesGuessAndKeepsTheClip()
+    {
+        await StartAsync();
+        await new GuessHandler(_rooms, _catalog, _connections, _time).HandleAsync("Anna", 500);
+        _time.Advance(TimeSpan.FromSeconds(DropTheNeedleSettings.Default.ClipSeconds));
+
+        var state = (await _rooms.WithRoomAsync(_host.RoomCode, room =>
+        {
+            room.Tick(_time.GetUtcNow());
+            return Result<GameState>.Success(GameState.From(room, _time.GetUtcNow()));
+        })).Value;
+
+        Assert.That(state.Phase, Is.EqualTo(GamePhase.SongReveal));
+        Assert.That(state.Song, Is.EqualTo(new SongState(1, 10, "00s", 1)));
+        Assert.That(state.Answer!.Song.Title, Does.StartWith("Hemlig"));
+        Assert.That(state.Answer.Results[0].Guess, Is.EqualTo(new RevealedSong("Låt 500", "Artist", "Album", "omslag")));
+        Assert.That(state.Answer.Results[1].Guess, Is.Null);
+        Assert.That(state.Standings, Has.Count.EqualTo(2));
+    }
+
+    [Test]
     public async Task Guess_InTheLobby_ReturnsWrongPhaseWithoutAskingDeezer()
     {
         var result = await new GuessHandler(_rooms, _catalog, _connections, _time).HandleAsync("Anna", 500);

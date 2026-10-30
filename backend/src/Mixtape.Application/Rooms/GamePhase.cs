@@ -9,5 +9,6 @@ public enum GamePhase
     Voting,
     Revealing,
     Guessing,
+    SongReveal,
     GameOver,
 }
