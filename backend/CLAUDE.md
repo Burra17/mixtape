@@ -29,6 +29,7 @@ Varje lager registrerar sina tjänster i en egen `Add<Lager>()`-metod, och `Prog
 - När en fas är slut svarar spelet med ett `Step`: nästa fas med sin tid, eller att spelet är slut. Rummet startar klockan.
 - En spelares kommando går genom `room.Act<TGame>(...)`. Rummet kontrollerar att ett spel av rätt typ pågår och att spelaren finns, räknar upp `Revision` och går vidare direkt när alla är klara.
 - Det som inte ändrar bilden, som en fråga om fasen eller en ny klipplänk, går genom `room.WithGame<TGame>(...)`.
+- Det som flera spel kan, som att spela klipp på storskärmen eller låta spelarna söka, är ett eget gränssnitt under `Games/`: `IPlaysClips` och `ISearchesTracks`. Handlers som `GetClipHandler` och `SearchTracksHandler` går genom gränssnittet och fungerar då för alla lägen som implementerar det.
 
 Domänobjekten har inga publika setters, och reglerna nås via metoder som `SubmitTrack` och `Vote` på spelet. Varje metod börjar med att kontrollera fasen. Värdens metoder, som `StartGame` och `RemovePlayer`, kontrollerar värd-token före fasen, så att den som inte är värd bara får veta att rummet inte finns.
 
@@ -39,6 +40,10 @@ En regel som säger nej ger ett fel i `Result` (eller `Result<T>` när det lycka
 Varje kommando har en handler: `JoinRoomHandler` med `HandleAsync(...)`. Hubben får handlern injicerad och anropar den direkt. Strukturen är CQRS utan MediatR: samma uppdelning, inget extra lager, och F12 leder rakt in i koden.
 
 Handlern hämtar rummet, anropar domänen och skickar ut resultatet. Den innehåller ingen spelregel.
+
+Ett anrop till Deezer görs alltid utanför rummets lås, så att ingen väntar på Deezer med rummet låst. Handlern läser först det den behöver med låset, anropar Deezer och tar sedan låset igen för ändringen. Rummet kan ha ändrats emellan, och domänen nekar då, som när `StartGame` får `SettingsChanged` eller en gissning gäller ett klipp som redan bytts.
+
+När servern själv ändrar rummet, utan att någon anropat hubben för det, skickar handlern bilden via `IGameNotifier`. Det gäller klockan i `AdvancePhasesHandler` och en låt som hoppas över i `GetClipHandler`.
 
 Hubben är ännu tunnare. Den tar emot anropet, slår upp spelaren via token, anropar handlern och gör om `Result` till `HubResponse<T>`. `Result<T>` kan inte skickas som det är, eftersom `Value` kastar ett undantag när utfallet misslyckats. `HubResponse<T>` har i stället `Value` och `Error` som vanliga fält, och samma form speglas i `hubContract.ts`.
 

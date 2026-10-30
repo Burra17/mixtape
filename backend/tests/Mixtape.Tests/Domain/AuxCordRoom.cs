@@ -53,7 +53,7 @@ public static class AuxCordRoom
                 settings => Result<IGame>.Success(new AuxCordGame(prompts, (AuxCordSettings)settings, Randoms.TryGetValue(room, out var random) ? random : Random.Shared)),
                 now);
 
-        public Result CanChooseTrack() => room.WithGame<AuxCordGame>(game => game.CanChooseTrack());
+        public Result CanChooseTrack() => room.WithGame<AuxCordGame>(game => game.CanSearch());
 
         public Result SubmitTrack(string playerId, SubmittedTrack track, DateTimeOffset now) =>
             room.Act<AuxCordGame>(playerId, now, game => game.SubmitTrack(playerId, track, now));
@@ -63,7 +63,7 @@ public static class AuxCordRoom
         public Result Vote(string playerId, int entry, DateTimeOffset now) => room.Act<AuxCordGame>(playerId, now, game => game.Vote(playerId, entry));
 
         public Result<Entry> CurrentClipFor(string? hostToken) =>
-            room.WithGameForHost<AuxCordGame, Entry>(hostToken, game => game.GetCurrentClip());
+            room.WithGameForHost<AuxCordGame, Entry>(hostToken, game => game.CurrentClip is { } entry ? entry : RoomErrors.WrongPhase);
 
         public Result RenewLink(long trackId, string previewUrl, DateTimeOffset now) =>
             room.WithGame<AuxCordGame>(game => game.RenewLink(trackId, previewUrl, now));

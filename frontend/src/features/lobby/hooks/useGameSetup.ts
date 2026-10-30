@@ -8,6 +8,8 @@ import { useHostStore } from '../../../store/hostStore.ts';
 // busy används inte, så att inställningarna går att klicka på medan ett tidigare val skickas, som förut.
 export const useGameSetup = () => {
   const { error, run } = useHubCall();
+  // Starten har en egen väntan, eftersom Drop the Needle hämtar låtarna från Deezer innan spelet börjar.
+  const starting = useHubCall();
 
   const send = (call: (session: HostSession) => Promise<HubResponse<GameState>>) => {
     const { session } = useHostStore.getState();
@@ -25,8 +27,9 @@ export const useGameSetup = () => {
   // Ljudet låses upp först, medan webbläsaren fortfarande räknar anropet som en del av klicket.
   const start = () => {
     unlockAudio();
-    send(startGame);
+    const { session } = useHostStore.getState();
+    if (session) void starting.run(() => startGame(session));
   };
 
-  return { selectMode, setAuxCordSettings, setDropTheNeedleSettings, start, error };
+  return { selectMode, setAuxCordSettings, setDropTheNeedleSettings, start, starting: starting.busy, error: starting.error ?? error };
 };

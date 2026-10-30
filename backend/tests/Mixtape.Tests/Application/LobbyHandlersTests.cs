@@ -33,7 +33,7 @@ public sealed class LobbyHandlersTests
         var result = (await _join.HandleAsync(_host.RoomCode.ToLowerInvariant(), "Anna", "anna")).Value;
 
         Assert.That(result.Session.RoomCode, Is.EqualTo(_host.RoomCode));
-        Assert.That(result.State.Players, Is.EqualTo(new[] { new GamePlayer(result.Session.PlayerId, "Anna", 1, true, false, false) }));
+        Assert.That(result.State.Players, Is.EqualTo(new[] { new GamePlayer(result.Session.PlayerId, "Anna", 1, true, false, false, false) }));
         Assert.That(result.State.MaxPlayers, Is.EqualTo(GameRoom.MaxPlayers));
         Assert.That(result.State.CanStart, Is.False);
     }

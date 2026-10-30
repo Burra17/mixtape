@@ -33,6 +33,7 @@ public static class DependencyInjection
         services.AddTransient<SubmitTrackHandler>();
         services.AddTransient<GetClipHandler>();
         services.AddTransient<VoteHandler>();
+        services.AddTransient<GuessHandler>();
         services.AddTransient<GetBallotHandler>();
         services.AddTransient<PlayAgainHandler>();
         return services;

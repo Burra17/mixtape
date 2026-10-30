@@ -5,7 +5,7 @@ using Mixtape.Domain.Rooms;
 namespace Mixtape.Domain.Games.AuxCord;
 
 // Aux Cord Battles: alla skickar in en låt till rundans prompt, låtarna spelas anonymt och alla röstar. Varje röst ger 1 poäng.
-public sealed class AuxCordGame : IGame
+public sealed class AuxCordGame : IPlaysClips, ISearchesTracks
 {
     public static readonly TimeSpan VotingDuration = TimeSpan.FromSeconds(30);
 
@@ -89,7 +89,7 @@ public sealed class AuxCordGame : IGame
     }
 
     // Spelaren kan bara söka och skicka in medan rundan tar emot bidrag.
-    public Result CanChooseTrack() => Phase == AuxCordPhase.Submitting ? Result.Success() : RoomErrors.WrongPhase;
+    public Result CanSearch() => Phase == AuxCordPhase.Submitting ? Result.Success() : RoomErrors.WrongPhase;
 
     // Bidraget är låst när det väl skickats in.
     public Result SubmitTrack(string playerId, SubmittedTrack track, DateTimeOffset now)
@@ -143,10 +143,10 @@ public sealed class AuxCordGame : IGame
         return Result.Success();
     }
 
-    // Storskärmen hämtar klippets länk själv, så att länken aldrig finns i bilden som alla får.
-    public Result<Entry> GetCurrentClip() => CurrentClip is { } clip ? clip : RoomErrors.WrongPhase;
+    public Result<CurrentClip> GetCurrentClip() =>
+        CurrentClip is { } entry ? new CurrentClip(ClipNumber, entry.Track, entry.LinkFetchedAt) : RoomErrors.WrongPhase;
 
-    // En ny länk för en låt efter en lång paus. Låten letas upp på id, eftersom klippet kan ha bytts medan länken hämtades.
+    // En ny länk för en låt efter en lång paus.
     public Result RenewLink(long trackId, string previewUrl, DateTimeOffset now)
     {
         if (Phase != AuxCordPhase.Playing)
@@ -162,6 +162,9 @@ public sealed class AuxCordGame : IGame
 
         return Result.Success();
     }
+
+    // Storskärmen visar att klippet inte gick att spela, och klockan går ut som vanligt, eftersom alla ändå ser låten.
+    public Step? SkipUnplayable(long trackId) => null;
 
     // Med färre än 2 bidrag väntar inskicket till deadline, så att den som är borta hinner tillbaka innan rundan hoppas över.
     public bool IsEveryoneDone(IReadOnlyList<Player> connected) =>

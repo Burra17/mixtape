@@ -259,6 +259,27 @@ public sealed class GameRoom
         where TGame : IGame =>
         IsHost(hostToken) ? WithGame(use) : RoomErrors.NotFound;
 
+    // Storskärmen kunde inte spela klippet. Ett spel som hoppar över låten går vidare direkt, annars går klockan ut som vanligt.
+    public Result SkipUnplayableClip(string? hostToken, long trackId, DateTimeOffset now)
+    {
+        if (!IsHost(hostToken))
+        {
+            return RoomErrors.NotFound;
+        }
+
+        if (!TryGetGame<IPlaysClips>(out var game))
+        {
+            return RoomErrors.WrongPhase;
+        }
+
+        if (game.SkipUnplayable(trackId) is { } step)
+        {
+            Apply(step, now);
+        }
+
+        return Result.Success();
+    }
+
     // Anropas av klockan på servern. Ger true när fasen bytts, så att bilden bara skickas vid en ändring.
     // Fasen tar också slut här när alla är klara, eftersom den sista som inte var klar kan ha tappat anslutningen.
     public bool Tick(DateTimeOffset now)

@@ -17,7 +17,7 @@ public sealed class SubmitTrackHandler(IGameRoomRepository rooms, IMusicCatalog 
         }
 
         // Fasen kontrolleras före Deezer, så att ett sent inskick får fasfelet och inte ett fel från musikkällan.
-        var allowed = await rooms.WithRoomAsync(owner.RoomCode, room => room.WithGame<AuxCordGame>(game => game.CanChooseTrack()));
+        var allowed = await rooms.WithRoomAsync(owner.RoomCode, room => room.WithGame<AuxCordGame>(game => game.CanSearch()));
         if (!allowed.IsSuccess)
         {
             return allowed.Error!;

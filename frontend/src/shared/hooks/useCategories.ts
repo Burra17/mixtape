@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { getCategories } from '../../../services/hub/connection.ts';
-import type { CategoryOption } from '../../../services/hub/hubContract.ts';
-import { useIsConnected } from '../../../store/connectionStore.ts';
+import { getCategories } from '../../services/hub/connection.ts';
+import type { CategoryOption } from '../../services/hub/hubContract.ts';
+import { useIsConnected } from '../../store/connectionStore.ts';
 
 // Drop the Needles kategorier, som inte ändras medan servern kör. Hämtas när anslutningen finns, och en tom lista betyder att de inte kommit än.
 export const useCategories = () => {

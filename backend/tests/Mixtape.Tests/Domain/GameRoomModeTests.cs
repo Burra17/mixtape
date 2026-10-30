@@ -104,9 +104,9 @@ public sealed class GameRoomModeTests
         JoinPlayers(2);
         _room.ChooseMode(_room.HostToken, GameMode.DropTheNeedle);
 
-        var result = _room.StartGame(_room.HostToken, _ => GameModeErrors.NotReady, Now);
+        var result = _room.StartGame(_room.HostToken, _ => GameModeErrors.SettingsChanged, Now);
 
-        Assert.That(result.Error, Is.EqualTo(GameModeErrors.NotReady));
+        Assert.That(result.Error, Is.EqualTo(GameModeErrors.SettingsChanged));
         Assert.That(_room.Stage, Is.EqualTo(RoomStage.Lobby));
     }
 
@@ -116,7 +116,7 @@ public sealed class GameRoomModeTests
         JoinPlayers(3);
         var created = false;
 
-        _room.StartGame("fel", _ => { created = true; return GameModeErrors.NotReady; }, Now);
+        _room.StartGame("fel", _ => { created = true; return GameModeErrors.SettingsChanged; }, Now);
 
         Assert.That(created, Is.False);
     }

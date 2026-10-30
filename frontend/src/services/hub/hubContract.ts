@@ -18,6 +18,7 @@ export const serverMethods = {
   submitTrack: 'SubmitTrack',
   getClip: 'GetClip',
   vote: 'Vote',
+  guess: 'Guess',
   getBallot: 'GetBallot',
   playAgain: 'PlayAgain',
   pauseGame: 'PauseGame',
@@ -58,7 +59,7 @@ export type PlayerSession = {
 };
 
 // GamePhase i Domain/Rooms. Servern skickar enums som text i camelCase.
-export const PHASES = ['lobby', 'submitting', 'playing', 'voting', 'revealing', 'gameOver'] as const;
+export const PHASES = ['lobby', 'submitting', 'playing', 'voting', 'revealing', 'guessing', 'gameOver'] as const;
 export type Phase = (typeof PHASES)[number];
 
 // GamePlayer i Application/Rooms. colorIndex är 1–8, en plats i paletten player-1 till player-8.
@@ -72,6 +73,8 @@ export type GamePlayer = {
   hasSubmitted: boolean;
   // Att spelaren röstat, men aldrig på vilket bidrag.
   hasVoted: boolean;
+  // Att spelaren gissat i Drop the Needle, men aldrig vad.
+  hasGuessed: boolean;
 };
 
 // CategoryOption i Application/Music: en kategori i Drop the Needle. Hämtas med GetCategories, eftersom den inte ändras.
@@ -113,6 +116,8 @@ export type GameState = {
   skippedRound: boolean;
   // Klippet som spelas, eller null utanför uppspelningen.
   nowPlaying: NowPlaying | null;
+  // Låten som ska gissas i Drop the Needle, eller null utanför gissningen. Aldrig titel, artist eller omslag.
+  song: SongState | null;
   // Bidragen att rösta på, i uppspelningens ordning, eller null utanför röstningen.
   ballot: BallotEntry[] | null;
   // Bidragen med vem som valde dem och antal röster, i uppspelningens ordning, eller null utanför avslöjandet.
@@ -129,6 +134,15 @@ export type GameState = {
   minPlayers: number;
   maxPlayers: number;
   canStart: boolean;
+};
+
+// SongState i Application/Rooms. index är låtens nummer som visas, 1 för den första.
+export type SongState = {
+  index: number;
+  count: number;
+  categoryId: string;
+  // Byts vid varje nytt klipp, också när en låt hoppas över, och är det som GetClip svarar med.
+  clip: number;
 };
 
 // NowPlaying i Application/Rooms. Ingen länk och ingenting om vem som valde låten. index är 1 för det första klippet.

@@ -5,16 +5,17 @@ import { PausedNotice } from '../../../shared/components/pausedNotice.tsx';
 import { useRoundText } from '../../../shared/hooks/useRoundText.ts';
 import { useRoomGame } from '../../../store/gameStore.ts';
 import { usePlayerStore } from '../../../store/playerStore.ts';
-import { useTrackPicker } from '../hooks/useTrackPicker.ts';
-import { TrackRow } from './trackRow.tsx';
-import { TrackSearch } from './trackSearch.tsx';
+import { submitTrack } from '../../../services/hub/connection.ts';
+import { TrackRow } from '../../../shared/components/trackRow.tsx';
+import { TrackSearch } from '../../../shared/components/trackSearch.tsx';
+import { useTrackPicker } from '../../../shared/hooks/useTrackPicker.ts';
 
 // Mobilen under inskicket: prompten, nedräkningen och sökningen. Efter inskicket väntar spelaren på de andra.
 export const PlayerSubmitting = () => {
   const session = usePlayerStore((state) => state.session);
   const game = useRoomGame(session?.roomCode);
   const round = useRoundText();
-  const picker = useTrackPicker();
+  const picker = useTrackPicker(submitTrack);
 
   if (!game?.prompt) return null;
 
@@ -40,7 +41,7 @@ export const PlayerSubmitting = () => {
           </p>
         </section>
       ) : (
-        <TrackSearch picker={picker} />
+        <TrackSearch picker={picker} submitLabel='Skicka in' />
       )}
     </main>
   );

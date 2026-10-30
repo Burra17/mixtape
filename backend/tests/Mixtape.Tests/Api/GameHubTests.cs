@@ -92,7 +92,7 @@ public sealed class GameHubTests
 
         Assert.That(joined.Value!.PlayerToken, Has.Length.EqualTo(32));
         Assert.That(lobbies[0].Players, Is.Empty);
-        Assert.That(lobbies[^1].Players.Single(), Is.EqualTo(new GamePlayer(joined.Value.PlayerId, "Anna", 1, true, false, false)));
+        Assert.That(lobbies[^1].Players.Single(), Is.EqualTo(new GamePlayer(joined.Value.PlayerId, "Anna", 1, true, false, false, false)));
     }
 
     [Test]
@@ -358,21 +358,6 @@ public sealed class GameHubTests
 
         Assert.That(rock.Value!.Settings, Is.EqualTo(new DropTheNeedleSettingsState(10, 30, "rock")));
         Assert.That(disco.Error?.Code, Is.EqualTo("room.invalid_settings"));
-    }
-
-    [Test]
-    public async Task StartGame_WithDropTheNeedle_ReturnsNotReady()
-    {
-        await using var host = CreateConnection();
-        await host.StartAsync();
-
-        var created = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
-        await host.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Anna");
-        await host.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Bertil");
-        await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.ChooseMode), created, "dropTheNeedle");
-        var start = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.StartGame), created);
-
-        Assert.That(start.Error?.Code, Is.EqualTo("mode.not_ready"));
     }
 
     [Test]
