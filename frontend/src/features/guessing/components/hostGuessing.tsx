@@ -4,6 +4,7 @@ import { Marquee } from '../../../shared/components/marquee.tsx';
 import { PlayerChecklist } from '../../../shared/components/playerChecklist.tsx';
 import { Vinyl } from '../../../shared/components/vinyl.tsx';
 import { categoryName, useCategories } from '../../../shared/hooks/useCategories.ts';
+import { useClipEnded } from '../../../shared/hooks/useClipEnded.ts';
 import { useClipPlayback } from '../../../shared/hooks/useClipPlayback.ts';
 import { useRoundText } from '../../../shared/hooks/useRoundText.ts';
 import { useRoomGame } from '../../../store/gameStore.ts';
@@ -17,6 +18,7 @@ export const HostGuessing = () => {
   const round = useRoundText();
   const categories = useCategories();
   const { failed, playing } = useClipPlayback();
+  const clipEnded = useClipEnded();
 
   const song = game?.song;
   if (!song) return null;
@@ -34,6 +36,11 @@ export const HostGuessing = () => {
             {failed && (
               <p role='status' className='text-[clamp(1rem,1.5vw,1.5rem)] font-bold'>
                 Klippet gick inte att spela.
+              </p>
+            )}
+            {clipEnded && (
+              <p role='status' className='text-[clamp(1.25rem,2vw,2rem)] font-extrabold'>
+                Klippet är slut – sista chansen att gissa
               </p>
             )}
             <Countdown screen='host' />

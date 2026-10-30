@@ -147,8 +147,13 @@ export const chooseMode = (host: HostSession, mode: GameMode) => connection.invo
 export const updateAuxCordSettings = (host: HostSession, rounds: number | null, clipSeconds: number | null, submittingSeconds: number | null) =>
   connection.invoke<HubResponse<GameState>>(serverMethods.updateAuxCordSettings, host, rounds, clipSeconds, submittingSeconds);
 
-export const updateDropTheNeedleSettings = (host: HostSession, songs: number | null, clipSeconds: number | null, categoryId: string | null) =>
-  connection.invoke<HubResponse<GameState>>(serverMethods.updateDropTheNeedleSettings, host, songs, clipSeconds, categoryId);
+export const updateDropTheNeedleSettings = (
+  host: HostSession,
+  songs: number | null,
+  clipSeconds: number | null,
+  thinkingSeconds: number | null,
+  categoryId: string | null,
+) => connection.invoke<HubResponse<GameState>>(serverMethods.updateDropTheNeedleSettings, host, songs, clipSeconds, thinkingSeconds, categoryId);
 
 export const startGame = (host: HostSession) => connection.invoke<HubResponse<GameState>>(serverMethods.startGame, host);
 

@@ -21,8 +21,8 @@ export const useGameSetup = () => {
   const setAuxCordSettings = (rounds: number | null, clipSeconds: number | null, submittingSeconds: number | null) =>
     send((session) => updateAuxCordSettings(session, rounds, clipSeconds, submittingSeconds));
 
-  const setDropTheNeedleSettings = (songs: number | null, clipSeconds: number | null, categoryId: string | null) =>
-    send((session) => updateDropTheNeedleSettings(session, songs, clipSeconds, categoryId));
+  const setDropTheNeedleSettings = (songs: number | null, clipSeconds: number | null, thinkingSeconds: number | null, categoryId: string | null) =>
+    send((session) => updateDropTheNeedleSettings(session, songs, clipSeconds, thinkingSeconds, categoryId));
 
   // Ljudet låses upp först, medan webbläsaren fortfarande räknar anropet som en del av klicket.
   const start = () => {
