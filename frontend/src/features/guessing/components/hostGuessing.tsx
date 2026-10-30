@@ -27,7 +27,7 @@ export const HostGuessing = () => {
       <main className='flex flex-1 flex-col justify-center gap-12 px-6 py-12 lg:px-[6vw]'>
         <div className='flex flex-col gap-10 lg:flex-row lg:items-center'>
           {/* key startar om skivan från början när en ny låt börjar. */}
-          <Vinyl key={song.index} spinning={playing} className='w-[min(38vw,60vh)] shrink-0' />
+          <Vinyl key={song.clip} spinning={playing} className='w-[min(38vw,60vh)] shrink-0' />
           <div className='flex min-w-0 flex-col gap-4'>
             <Label>{round}</Label>
             <h1 className='text-[clamp(2.5rem,5vw,5.5rem)] text-display leading-[1.08]'>{categoryName(categories, song.categoryId)}</h1>

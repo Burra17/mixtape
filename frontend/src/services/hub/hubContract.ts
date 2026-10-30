@@ -136,11 +136,13 @@ export type GameState = {
   canStart: boolean;
 };
 
-// SongState i Application/Rooms. index är 1 för den första låten.
+// SongState i Application/Rooms. index är låtens nummer som visas, 1 för den första.
 export type SongState = {
   index: number;
   count: number;
   categoryId: string;
+  // Byts vid varje nytt klipp, också när en låt hoppas över, och är det som GetClip svarar med.
+  clip: number;
 };
 
 // NowPlaying i Application/Rooms. Ingen länk och ingenting om vem som valde låten. index är 1 för det första klippet.

@@ -33,6 +33,6 @@ export const PlayerView = () => {
   if (phase === 'voting') return <PlayerVoting key={game?.round} />;
   if (phase === 'revealing') return <PlayerRevealing />;
   // key tömmer sökningen när nästa låt börjar.
-  if (phase === 'guessing') return <PlayerGuessing key={game?.song?.index} />;
+  if (phase === 'guessing') return <PlayerGuessing key={game?.song?.clip} />;
   return <PlayerGameOver />;
 };

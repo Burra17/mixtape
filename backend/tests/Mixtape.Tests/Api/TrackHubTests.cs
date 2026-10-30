@@ -385,7 +385,7 @@ public sealed class TrackHubTests
         var guess = await anna.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.Guess), 44112901L);
 
         Assert.That(start.Error, Is.Null);
-        Assert.That(raw, Does.Contain("\"song\":{\"index\":1,\"count\":10,\"categoryId\":\"00s\"}"));
+        Assert.That(raw, Does.Contain("\"song\":{\"index\":1,\"count\":10,\"categoryId\":\"00s\",\"clip\":1}"));
         Assert.That(raw, Does.Not.Contain("Hemlig"));
         Assert.That(search.Value, Is.EqualTo(FixedCatalog.Tracks));
         Assert.That(guess.Value!.Players.Single(player => player.Name == "Anna").HasGuessed, Is.True);

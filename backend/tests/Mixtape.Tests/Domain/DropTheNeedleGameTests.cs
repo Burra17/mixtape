@@ -152,9 +152,21 @@ public sealed class DropTheNeedleGameTests
 
         Assert.That(Game.SongNumber, Is.EqualTo(2));
         Assert.That(Game.SongCount, Is.EqualTo(2));
+        Assert.That(Game.ClipNumber, Is.EqualTo(3));
         Assert.That(Game.GetCurrentClip().Value.Track.Id, Is.EqualTo(13));
+        Assert.That(Game.GetCurrentClip().Value.Number, Is.EqualTo(3));
         Assert.That(_room.RemainingTime(Now + Clip + TimeSpan.FromSeconds(2)), Is.EqualTo(Clip));
         Assert.That(_room.Revision, Is.GreaterThan(revision));
+    }
+
+    [Test]
+    public void Guess_ForTheClipBeforeASkip_IsRejected()
+    {
+        var clip = Game.CanGuess(_anna.Id).Value;
+        _room.SkipUnplayableClip(_room.HostToken, 11, Now);
+
+        Assert.That(GuessAs(_anna, clip, TestTrack.Of(11, "Yellow")).Error, Is.EqualTo(RoomErrors.WrongPhase));
+        Assert.That(Game.HasGuessed(_anna.Id), Is.False);
     }
 
     [Test]

@@ -43,7 +43,7 @@ public sealed class DropTheNeedleHandlersTests
         var state = (await StartAsync()).Value;
 
         Assert.That(state.Phase, Is.EqualTo(GamePhase.Guessing));
-        Assert.That(state.Song, Is.EqualTo(new SongState(1, 10, "00s")));
+        Assert.That(state.Song, Is.EqualTo(new SongState(1, 10, "00s", 1)));
         Assert.That(state.NowPlaying, Is.Null);
         Assert.That(JsonSerializer.Serialize(state), Does.Not.Contain("Hemlig"));
     }
@@ -126,7 +126,7 @@ public sealed class DropTheNeedleHandlersTests
         var result = await new GetClipHandler(_rooms, _catalog, _notifier, _time).HandleAsync(_host);
 
         Assert.That(result.Error, Is.EqualTo(MusicErrors.TrackUnavailable));
-        Assert.That(_notifier.Sent.Single().Song, Is.EqualTo(new SongState(1, 9, "00s")));
+        Assert.That(_notifier.Sent.Single().Song, Is.EqualTo(new SongState(1, 9, "00s", 2)));
     }
 
     private Task<Result<GameState>> StartAsync() =>

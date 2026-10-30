@@ -24,7 +24,7 @@ export const useClipPlayback = () => {
   const isPlaying = useSyncExternalStore(subscribeToPlaying, getIsPlaying);
 
   // Aux Cord Battles klipp står i nowPlaying och Drop the Needles låt i song.
-  const index = game?.nowPlaying?.index ?? game?.song?.index ?? null;
+  const index = game?.nowPlaying?.index ?? game?.song?.clip ?? null;
   const canPlay = session !== null && index !== null && !game?.isPaused && isConnected;
 
   useEffect(() => {

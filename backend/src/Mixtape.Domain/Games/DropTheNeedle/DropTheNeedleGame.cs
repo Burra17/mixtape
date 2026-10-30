@@ -10,8 +10,11 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
 {
     private readonly DropTheNeedleSettings _settings;
 
-    // Låtarna i spelordning. Den som inte går att spela tas bort, så att antalet låtar stämmer med det som spelades.
+    // Låtarna i spelordning. Number är klippets plats i listan och ändras aldrig, även när en låt hoppas över.
     private readonly List<CurrentClip> _songs;
+
+    // Platserna för låtar som inte gick att spela. De räknas inte i låtens nummer eller i antalet låtar.
+    private readonly HashSet<int> _skipped = [];
 
     // Den här låtens gissningar, per spelare.
     private readonly Dictionary<string, Guess> _guesses = [];
@@ -37,10 +40,14 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
 
     public string CategoryId => _settings.CategoryId;
 
-    // 1 för den första låten.
-    public int SongNumber => _index + 1;
+    // Klippet som spelas, 1 för det första. Byts vid varje nytt klipp, också när en låt hoppas över,
+    // så att storskärmen hämtar det nya klippet och en gissning aldrig hamnar på en annan låt än den som spelades.
+    public int ClipNumber => _index + 1;
 
-    public int SongCount => _songs.Count;
+    // Låtens nummer som spelarna ser, 1 för den första. En låt som hoppats över räknas inte.
+    public int SongNumber => ClipNumber - _skipped.Count(skipped => skipped < _index);
+
+    public int SongCount => _songs.Count - _skipped.Count;
 
     public bool HasGuessed(string playerId) => _guesses.ContainsKey(playerId);
 
@@ -51,7 +58,7 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
 
     public Result CanSearch() => Phase == DropTheNeedlePhase.Guessing ? Result.Success() : RoomErrors.WrongPhase;
 
-    // Spelaren kan bara gissa en gång per låt, och det kontrolleras innan låten hämtas från Deezer. Ger låtens nummer, som gissningen sedan gäller.
+    // Spelaren kan bara gissa en gång per låt, och det kontrolleras innan låten hämtas från Deezer. Ger klippets nummer, som gissningen sedan gäller.
     public Result<int> CanGuess(string playerId)
     {
         if (Phase != DropTheNeedlePhase.Guessing)
@@ -59,13 +66,13 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
             return RoomErrors.WrongPhase;
         }
 
-        return HasGuessed(playerId) ? DropTheNeedleErrors.AlreadyGuessed : SongNumber;
+        return HasGuessed(playerId) ? DropTheNeedleErrors.AlreadyGuessed : ClipNumber;
     }
 
-    // songNumber är låten som spelades när gissningen kom fram. Har den hunnit bytas medan låten hämtades från Deezer nekas gissningen.
-    public Result Guess(string playerId, int songNumber, SubmittedTrack track, DateTimeOffset receivedAt)
+    // clipNumber är klippet som spelades när gissningen kom fram. Har det hunnit bytas medan låten hämtades från Deezer nekas gissningen.
+    public Result Guess(string playerId, int clipNumber, SubmittedTrack track, DateTimeOffset receivedAt)
     {
-        if (Phase != DropTheNeedlePhase.Guessing || songNumber != SongNumber)
+        if (Phase != DropTheNeedlePhase.Guessing || clipNumber != ClipNumber)
         {
             return RoomErrors.WrongPhase;
         }
@@ -97,7 +104,7 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
         return Result.Success();
     }
 
-    // I ett quiz är ett tyst klipp värre än i Aux Cord Battles, så låten tas bort och nästa börjar direkt.
+    // I ett quiz är ett tyst klipp värre än i Aux Cord Battles, så låten räknas bort och nästa börjar direkt.
     public Step? SkipUnplayable(long trackId)
     {
         if (Phase != DropTheNeedlePhase.Guessing || _songs[_index].Track.Id != trackId)
@@ -105,10 +112,8 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
             return null;
         }
 
-        _songs.RemoveAt(_index);
-        _guesses.Clear();
-        Renumber();
-        return _index < _songs.Count ? Step.Next(ClipLength) : Step.Finished;
+        _skipped.Add(_index);
+        return CompletePhase();
     }
 
     public bool IsEveryoneDone(IReadOnlyList<Player> connected) =>
@@ -130,12 +135,4 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
     public void AbortRound() => _guesses.Clear();
 
     private TimeSpan ClipLength => TimeSpan.FromSeconds(_settings.ClipSeconds);
-
-    private void Renumber()
-    {
-        for (var i = 0; i < _songs.Count; i++)
-        {
-            _songs[i] = _songs[i] with { Number = i + 1 };
-        }
-    }
 }

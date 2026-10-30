@@ -45,7 +45,7 @@ public sealed record GameState(
             room.Stage == RoomStage.InGame && aux is { SkippedRound: true },
             phase == GamePhase.Playing && aux!.CurrentClip is { Track: var track } ? new NowPlaying(aux.ClipNumber, aux.Entries.Count, track.Title, track.Artist, track.Album, track.CoverUrl) : null,
             // Under gissningen bara låtens nummer, aldrig titel, artist eller omslag, eftersom bilden går att läsa i nätverksfliken.
-            phase == GamePhase.Guessing ? new SongState(needle!.SongNumber, needle.SongCount, needle.CategoryId) : null,
+            phase == GamePhase.Guessing ? new SongState(needle!.SongNumber, needle.SongCount, needle.CategoryId, needle.ClipNumber) : null,
             phase == GamePhase.Voting
                 ? aux!.Entries.Select((entry, index) => new BallotEntry(index + 1, entry.Track.Title, entry.Track.Artist, entry.Track.CoverUrl)).ToList()
                 : null,
