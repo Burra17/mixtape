@@ -9,7 +9,8 @@ namespace Mixtape.Tests.Domain;
 public sealed class DropTheNeedleScoringTests
 {
     private static readonly DateTimeOffset Now = new(2026, 10, 30, 20, 0, 0, TimeSpan.Zero);
-    private static readonly TimeSpan Clip = TimeSpan.FromSeconds(DropTheNeedleSettings.Default.ClipSeconds);
+    // Hela gissningstiden, klippet och betänketiden.
+    private static readonly TimeSpan Clip = DropTheNeedleSettings.Default.GuessLength;
     private static readonly TimeSpan Reveal = DropTheNeedleGame.RevealingDuration;
     private static readonly IReadOnlyList<SubmittedTrack> TwoSongs = [TestTrack.Of(11, "Yellow", "Coldplay"), TestTrack.Of(12, "In the End", "Linkin Park")];
 

@@ -14,6 +14,6 @@ public abstract record ModeOptions(int MinPlayers)
     public static readonly IReadOnlyList<ModeOptions> All =
     [
         new AuxCordModeOptions(AuxCordSettings.Default.MinPlayers, AuxCordSettings.RoundOptions, AuxCordSettings.ClipSecondsOptions, AuxCordSettings.SubmittingSecondsOptions),
-        new DropTheNeedleModeOptions(DropTheNeedleSettings.Default.MinPlayers, DropTheNeedleSettings.SongOptions, DropTheNeedleSettings.ClipSecondsOptions),
+        new DropTheNeedleModeOptions(DropTheNeedleSettings.Default.MinPlayers, DropTheNeedleSettings.SongOptions, DropTheNeedleSettings.ClipSecondsOptions, DropTheNeedleSettings.ThinkingSecondsOptions),
     ];
 }

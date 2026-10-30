@@ -9,7 +9,8 @@ namespace Mixtape.Tests.Domain;
 public sealed class DropTheNeedleGameTests
 {
     private static readonly DateTimeOffset Now = new(2026, 10, 30, 20, 0, 0, TimeSpan.Zero);
-    private static readonly TimeSpan Clip = TimeSpan.FromSeconds(DropTheNeedleSettings.Default.ClipSeconds);
+    // Hela gissningstiden, klippet och betänketiden.
+    private static readonly TimeSpan Clip = DropTheNeedleSettings.Default.GuessLength;
     private static readonly TimeSpan Reveal = DropTheNeedleGame.RevealingDuration;
     private static readonly IReadOnlyList<SubmittedTrack> ThreeSongs = [TestTrack.Of(11, "Yellow"), TestTrack.Of(12, "In the End"), TestTrack.Of(13, "Hey Ya!")];
 
@@ -30,7 +31,7 @@ public sealed class DropTheNeedleGameTests
     private DropTheNeedleGame Game => (DropTheNeedleGame)_room.Game!;
 
     [Test]
-    public void Start_BeginsGuessingTheFirstSongForTheClipLength()
+    public void Start_BeginsGuessingTheFirstSongForTheClipAndTheTimeToThink()
     {
         Assert.That(Game.Phase, Is.EqualTo(DropTheNeedlePhase.Guessing));
         Assert.That(Game.SongNumber, Is.EqualTo(1));

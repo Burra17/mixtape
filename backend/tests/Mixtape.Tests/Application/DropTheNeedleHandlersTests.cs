@@ -73,7 +73,7 @@ public sealed class DropTheNeedleHandlersTests
     [Test]
     public async Task Start_WhenTheCategoryChangesWhileLoading_ReturnsSettingsChanged()
     {
-        _catalog.WhileLoading = () => new UpdateDropTheNeedleSettingsHandler(_rooms, Categories, _time).HandleAsync(_host, null, null, "rock").Wait();
+        _catalog.WhileLoading = () => new UpdateDropTheNeedleSettingsHandler(_rooms, Categories, _time).HandleAsync(_host, null, null, null, "rock").Wait();
 
         var result = await StartAsync();
 
@@ -101,7 +101,7 @@ public sealed class DropTheNeedleHandlersTests
     {
         await StartAsync();
         await new GuessHandler(_rooms, _catalog, _connections, _time).HandleAsync("Anna", 500);
-        _time.Advance(TimeSpan.FromSeconds(DropTheNeedleSettings.Default.ClipSeconds));
+        _time.Advance(DropTheNeedleSettings.Default.GuessLength);
 
         var state = (await _rooms.WithRoomAsync(_host.RoomCode, room =>
         {
