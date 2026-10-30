@@ -64,12 +64,21 @@ public sealed class DropTheNeedleGameTests
     }
 
     [Test]
-    public void Guess_ForASongThatHasEnded_IsRejected()
+    public void Guess_DuringTheReveal_IsRejected()
     {
         _room.Tick(Now + Clip);
 
         Assert.That(GuessAs(_anna, 1, TestTrack.Of(11, "Yellow")).Error, Is.EqualTo(RoomErrors.WrongPhase));
         Assert.That(Game.HasGuessed(_anna.Id), Is.False);
+    }
+
+    [Test]
+    public void GetCurrentClip_DuringTheReveal_ReturnsWrongPhase()
+    {
+        _room.Tick(Now + Clip);
+
+        Assert.That(Game.GetCurrentClip().Error, Is.EqualTo(RoomErrors.WrongPhase));
+        Assert.That(Game.CanGuess(_anna.Id).Error, Is.EqualTo(RoomErrors.WrongPhase));
     }
 
     [Test]

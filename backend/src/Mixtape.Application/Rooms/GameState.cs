@@ -49,9 +49,7 @@ public sealed record GameState(
             // Numret står kvar i avslöjandet, så att storskärmen låter klippet spela vidare.
             phase is GamePhase.Guessing or GamePhase.SongReveal ? new SongState(needle!.SongNumber, needle.SongCount, needle.CategoryId, needle.ClipNumber) : null,
             phase == GamePhase.SongReveal
-                ? new SongAnswer(
-                    RevealedSong.From(needle!.LastSong!),
-                    needle.LastResults.Select(result => new SongResultState(result.PlayerId, result.Score, result.Fastest, result.Points, result.Guess is { } guess ? RevealedSong.From(guess) : null)).ToList())
+                ? new SongAnswer(RevealedSong.From(needle!.LastSong!), needle.LastResults.Select(SongResultState.From).ToList())
                 : null,
             phase == GamePhase.Voting
                 ? aux!.Entries.Select((entry, index) => new BallotEntry(index + 1, entry.Track.Title, entry.Track.Artist, entry.Track.CoverUrl)).ToList()
