@@ -65,8 +65,8 @@ public static class AuxCordRoom
         public Result<Entry> CurrentClipFor(string? hostToken) =>
             room.WithGameForHost<AuxCordGame, Entry>(hostToken, game => game.CurrentClip is { } entry ? entry : RoomErrors.WrongPhase);
 
-        public Result RenewLink(long trackId, string previewUrl, DateTimeOffset now) =>
-            room.WithGame<AuxCordGame>(game => game.RenewLink(trackId, previewUrl, now));
+        public Result RefreshTrack(long trackId, string previewUrl, DateTimeOffset now) =>
+            room.WithGame<AuxCordGame>(game => game.RefreshTrack(trackId, previewUrl, null, now));
 
         public bool HasSubmitted(string playerId) => room.Aux?.HasSubmitted(playerId) ?? false;
 

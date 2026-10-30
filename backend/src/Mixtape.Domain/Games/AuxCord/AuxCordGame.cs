@@ -147,7 +147,7 @@ public sealed class AuxCordGame : IPlaysClips, ISearchesTracks
         CurrentClip is { } entry ? new CurrentClip(ClipNumber, entry.Track, entry.LinkFetchedAt) : RoomErrors.WrongPhase;
 
     // En ny länk för en låt efter en lång paus.
-    public Result RenewLink(long trackId, string previewUrl, DateTimeOffset now)
+    public Result RefreshTrack(long trackId, string previewUrl, IReadOnlyList<string>? contributors, DateTimeOffset now)
     {
         if (Phase != AuxCordPhase.Playing)
         {
@@ -157,7 +157,7 @@ public sealed class AuxCordGame : IPlaysClips, ISearchesTracks
         var index = _entries.FindIndex(entry => entry.Track.Id == trackId);
         if (index >= 0)
         {
-            _entries[index] = _entries[index] with { Track = _entries[index].Track with { PreviewUrl = previewUrl }, LinkFetchedAt = now };
+            _entries[index] = _entries[index] with { Track = _entries[index].Track with { PreviewUrl = previewUrl, Contributors = contributors ?? _entries[index].Track.Contributors }, LinkFetchedAt = now };
         }
 
         return Result.Success();

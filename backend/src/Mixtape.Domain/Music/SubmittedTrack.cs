@@ -1,9 +1,11 @@
 namespace Mixtape.Domain.Music;
 
 // En inskickad låt med det som storskärmen visar och spelar. Klipplänken gäller i 15 minuter och förnyas efter en lång paus.
-public sealed record SubmittedTrack(long Id, string Title, string Artist, string Album, string CoverUrl, string PreviewUrl)
+// Contributors är alla medverkande artister, som Deezer bara ger när en enskild låt hämtas. Null när de inte är hämtade.
+public sealed record SubmittedTrack(long Id, string Title, string Artist, string Album, string CoverUrl, string PreviewUrl, IReadOnlyList<string>? Contributors = null)
 {
-    // Samma låt på singeln och på albumet har olika id men samma titel och artist. Olika versioner, som "Live", har olika titlar och räknas som olika låtar.
+    // Dubbletter när låtar skickas in eller lottas: samma låt på singeln och på albumet har olika id men samma titel och artist.
+    // Olika versioner, som "Live", räknas här som olika låtar. Drop the Needles gissningar bedöms i stället av SongMatcher.
     public bool IsSameSongAs(SubmittedTrack other) =>
         Id == other.Id || (Normalize(Title) == Normalize(other.Title) && Normalize(Artist) == Normalize(other.Artist));
 

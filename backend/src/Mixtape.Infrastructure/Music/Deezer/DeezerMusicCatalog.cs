@@ -56,7 +56,7 @@ public sealed class DeezerMusicCatalog(HttpClient http, ILogger<DeezerMusicCatal
             Artist.Name: { } artist,
             Album: { Title: { } album, CoverXl: { } cover },
         }
-            ? new PlayableTrack(track.Id, title, artist, album, cover, preview)
+            ? new PlayableTrack(track.Id, title, artist, album, cover, preview, track.Contributors?.Select(contributor => contributor.Name).OfType<string>().ToList())
             : MusicErrors.TrackUnavailable;
     }
 

@@ -24,6 +24,20 @@ public sealed class DeezerPlayableTrackTests
     }
 
     [Test]
+    public async Task GetPlayableTrack_WithContributors_GivesAllOfThem()
+    {
+        var json = await File.ReadAllTextAsync(Path.Combine(TestContext.CurrentContext.TestDirectory, "Fixtures", "deezer-track-4091932171.json"));
+        var (catalog, _) = CreateCatalog(FakeHttpHandler.Json(json));
+
+        var track = (await catalog.GetPlayableTrackAsync(4091932171)).Value;
+
+        Assert.That(track.Title, Is.EqualTo("Under Pressure (feat. David Bowie)"));
+        Assert.That(track.Artist, Is.EqualTo("Queen"));
+        Assert.That(track.Contributors, Is.EqualTo(new[] { "Queen", "David Bowie" }));
+        Assert.That(track.ToSubmittedTrack().Contributors, Is.EqualTo(new[] { "Queen", "David Bowie" }));
+    }
+
+    [Test]
     public async Task GetPlayableTrack_TrackThatDoesNotExist_ReturnsTrackUnavailable()
     {
         var (catalog, _) = CreateCatalog(FakeHttpHandler.Json("""{"error":{"type":"DataException","message":"no data","code":800}}"""));

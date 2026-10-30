@@ -33,7 +33,7 @@ public sealed class GetClipHandler(IGameRoomRepository rooms, IMusicCatalog cata
             return playable.Error!;
         }
 
-        var renewed = await rooms.WithRoomAsync(host.RoomCode, room => room.WithGame<IPlaysClips>(game => game.RenewLink(clip.Track.Id, playable.Value.PreviewUrl, time.GetUtcNow())));
+        var renewed = await rooms.WithRoomAsync(host.RoomCode, room => room.WithGame<IPlaysClips>(game => game.RefreshTrack(clip.Track.Id, playable.Value.PreviewUrl, playable.Value.Contributors, time.GetUtcNow())));
         return renewed.IsSuccess ? new Clip(clip.Number, playable.Value.PreviewUrl) : renewed.Error!;
     }
 
