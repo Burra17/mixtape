@@ -74,6 +74,10 @@ public sealed class SearchTracksHandlerTests
 
     private sealed class RecordingCatalog : IMusicCatalog
     {
+        // Testerna här handlar inte om spellistor.
+        public Task<Result<IReadOnlyList<PlayableTrack>>> GetPlaylistTracksAsync(long playlistId, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
         public List<string> Queries { get; } = [];
 
         public Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default)

@@ -385,6 +385,10 @@ public sealed class TrackHubTests
 
     private sealed class FixedCatalog : IMusicCatalog
     {
+        // Testerna här handlar inte om spellistor.
+        public Task<Result<IReadOnlyList<PlayableTrack>>> GetPlaylistTracksAsync(long playlistId, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
         public static readonly IReadOnlyList<Track> Tracks = [new Track(44112901, "Jag kommer", "Veronica Maggio", "Satan i gatan", "c", false)];
 
         public Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default) =>

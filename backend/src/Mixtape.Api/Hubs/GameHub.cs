@@ -22,6 +22,7 @@ public sealed class GameHub(
     StartGameHandler startGame,
     DisconnectHandler disconnect,
     SearchTracksHandler searchTracks,
+    GetCategoriesHandler getCategories,
     SubmitTrackHandler submitTrack,
     GetClipHandler getClip,
     VoteHandler vote,
@@ -179,9 +180,15 @@ public sealed class GameHub(
         return await SendToRoomAsync(await updateAuxCordSettings.HandleAsync(host, rounds, clipSeconds, submittingSeconds));
     }
 
-    public async Task<HubResponse<GameState>> UpdateDropTheNeedleSettings(HostSession host, int? songs, int? clipSeconds)
+    public async Task<HubResponse<GameState>> UpdateDropTheNeedleSettings(HostSession host, int? songs, int? clipSeconds, string? categoryId)
     {
-        return await SendToRoomAsync(await updateDropTheNeedleSettings.HandleAsync(host, songs, clipSeconds));
+        return await SendToRoomAsync(await updateDropTheNeedleSettings.HandleAsync(host, songs, clipSeconds, categoryId));
+    }
+
+    // Storskärmen och mobilerna hämtar kategorierna själva, eftersom de inte ändras och därför inte behöver finnas i varje bild.
+    public IReadOnlyList<CategoryOption> GetCategories()
+    {
+        return getCategories.Handle();
     }
 
     public async Task<HubResponse<GameState>> StartGame(HostSession host)

@@ -117,6 +117,10 @@ public sealed class GetClipHandlerTests
 
     private sealed class CountingCatalog : IMusicCatalog
     {
+        // Testerna här handlar inte om spellistor.
+        public Task<Result<IReadOnlyList<PlayableTrack>>> GetPlaylistTracksAsync(long playlistId, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
         public int Lookups { get; private set; }
 
         // Sätts av testet som låter Deezer svara med ett fel.

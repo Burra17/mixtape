@@ -18,8 +18,8 @@ public sealed class GameRoom
 
     private readonly PhaseClock _clock = new();
 
-    // Det som spelen dragit under kvällen, per spelläge, så att nästa spel kan dra annat.
-    private readonly Dictionary<Type, HashSet<string>> _usedContent = [];
+    // Det som spelen dragit under kvällen, per spelläge, med det som användes längst tillbaka först, så att nästa spel kan dra annat.
+    private readonly Dictionary<Type, List<string>> _usedContent = [];
 
     // Inställningarna för lägen som valts förut under kvällen. Det valda lägets står i Settings.
     private readonly Dictionary<GameMode, IGameSettings> _settingsByMode = [];
@@ -74,8 +74,8 @@ public sealed class GameRoom
 
     public bool IsAbandoned(DateTimeOffset now) => EmptySince is { } since && now - since >= AbandonedAfter;
 
-    // Det som spel av den typen dragit i rummet under kvällen.
-    public IReadOnlyCollection<string> UsedContent<TGame>()
+    // Det som spel av den typen dragit i rummet under kvällen, med det som användes längst tillbaka först.
+    public IReadOnlyList<string> UsedContent<TGame>()
         where TGame : IGame =>
         _usedContent.TryGetValue(typeof(TGame), out var used) ? used : [];
 
@@ -180,7 +180,9 @@ public sealed class GameRoom
             _usedContent[game.GetType()] = used;
         }
 
-        used.UnionWith(game.UsedContent);
+        // Det som används igen flyttas sist, så att ordningen alltid är den senaste användningen.
+        used.RemoveAll(game.UsedContent.Contains);
+        used.AddRange(game.UsedContent);
         Game = game;
         Stage = RoomStage.InGame;
         Apply(game.Start(_players), now);

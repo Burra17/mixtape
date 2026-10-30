@@ -5,6 +5,7 @@ using Mixtape.Application.Connections;
 using Mixtape.Application.Music;
 using Mixtape.Application.Network;
 using Mixtape.Application.Rooms;
+using Mixtape.Infrastructure.Categories;
 using Mixtape.Infrastructure.Connections;
 using Mixtape.Infrastructure.Music;
 using Mixtape.Infrastructure.Music.Deezer;
@@ -25,6 +26,7 @@ public static class DependencyInjection
         services.AddSingleton(TimeProvider.System);
         // Laddas här och inte vid första spelet, så att en trasig bank stoppar starten.
         services.AddSingleton<IPromptProvider>(PromptBank.LoadEmbedded(Random.Shared));
+        services.AddSingleton<ICategoryCatalog>(CategoryCatalog.LoadEmbedded());
         services.AddHostedService<RoomCleanupService>();
         services.AddHostedService<GameClockService>();
         services.AddMusicCatalog(configuration);

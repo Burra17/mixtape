@@ -28,6 +28,8 @@ public static class DependencyInjection
         services.AddTransient<DisconnectHandler>();
         services.AddTransient<CleanUpRoomsHandler>();
         services.AddTransient<SearchTracksHandler>();
+        services.AddTransient<GetCategoriesHandler>();
+        services.AddTransient<CategorySongs>();
         services.AddTransient<SubmitTrackHandler>();
         services.AddTransient<GetClipHandler>();
         services.AddTransient<VoteHandler>();

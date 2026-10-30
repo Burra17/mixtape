@@ -12,6 +12,10 @@ public sealed class DeezerMusicCatalog(HttpClient http, ILogger<DeezerMusicCatal
     // Fler än som visas, så att träffar utan klipp kan filtreras bort utan ett andra anrop.
     private const int FetchLimit = 25;
 
+    private const int PageSize = 100;
+
+    private const int MaxPages = 10;
+
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
 
     public async Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default)
@@ -55,6 +59,36 @@ public sealed class DeezerMusicCatalog(HttpClient http, ILogger<DeezerMusicCatal
             ? new PlayableTrack(track.Id, title, artist, album, cover, preview)
             : MusicErrors.TrackUnavailable;
     }
+
+    // Deezer ger högst PageSize låtar per anrop, så listan hämtas sida för sida. MaxPages skyddar mot en lista som aldrig tar slut.
+    public async Task<Result<IReadOnlyList<PlayableTrack>>> GetPlaylistTracksAsync(long playlistId, CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Hämtar spellista från Deezer: {PlaylistId}", playlistId);
+
+        var tracks = new List<PlayableTrack>();
+        for (var page = 0; page < MaxPages; page++)
+        {
+            var response = await GetAsync<DeezerPlaylistTracksResponse>(
+                $"playlist/{playlistId}/tracks?limit={PageSize}&index={page * PageSize}", MusicErrors.Unavailable, cancellationToken);
+            if (!response.IsSuccess)
+            {
+                return response.Error!;
+            }
+
+            tracks.AddRange((response.Value.Data ?? []).Select(ToPlayableTrack).OfType<PlayableTrack>());
+            if (response.Value.Next is null)
+            {
+                return tracks;
+            }
+        }
+
+        return tracks;
+    }
+
+    private static PlayableTrack? ToPlayableTrack(DeezerTrack track) =>
+        track is { Readable: true, Preview: { Length: > 0 } preview, Artist.Name: { } artist, Album: { Title: { } album, CoverXl: { } cover } }
+            ? new PlayableTrack(track.Id, track.Title, artist, album, cover, preview)
+            : null;
 
     private static Track? ToTrack(DeezerTrack track) =>
         track is { Artist.Name: { } artist, Album: { Title: { } album, CoverMedium: { } cover } }

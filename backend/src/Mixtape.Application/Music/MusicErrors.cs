@@ -13,4 +13,9 @@ public static class MusicErrors
 
     // Låten har försvunnit eller saknar klipp. Storskärmen kan hoppa över den i stället för att stanna.
     public static readonly Error TrackUnavailable = new("music.track_unavailable", "Låten går inte att spela längre.");
+
+    // En av kategorins spellistor gick inte att hämta, för att Deezer inte svarar eller för att listan försvunnit.
+    public static readonly Error SongsUnavailable = new("music.songs_unavailable", "Kunde inte hämta låtarna. Försök igen.");
+
+    public static readonly Error CategoryNotFound = new("music.category_not_found", "Kategorin finns inte.");
 }

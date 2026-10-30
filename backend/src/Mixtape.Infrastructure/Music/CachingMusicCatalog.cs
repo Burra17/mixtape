@@ -4,10 +4,12 @@ using Mixtape.Domain.Common;
 
 namespace Mixtape.Infrastructure.Music;
 
-// En cache framför musikkällan. Sökordet är redan normaliserat i SearchQuery och träffarna saknar klipplänk, så inget som slutar gälla cachas.
+// En cache framför musikkällan. Sökordet är redan normaliserat i SearchQuery och träffarna saknar klipplänk.
 public sealed class CachingMusicCatalog(IMusicCatalog inner, IMemoryCache cache) : IMusicCatalog
 {
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(10);
+
+    private static readonly TimeSpan PlaylistCacheDuration = TimeSpan.FromHours(1);
 
     public async Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default)
     {
@@ -23,6 +25,25 @@ public sealed class CachingMusicCatalog(IMusicCatalog inner, IMemoryCache cache)
         if (result.IsSuccess)
         {
             cache.Set(key, result.Value, CacheDuration);
+        }
+
+        return result;
+    }
+
+    // Spellistorna ändras sällan, och en timme gör att "Spela igen" inte behöver vänta på Deezer.
+    // Klipplänkarna i svaret kan alltså vara äldre än 15 minuter, och den som spelar dem förnyar dem.
+    public async Task<Result<IReadOnlyList<PlayableTrack>>> GetPlaylistTracksAsync(long playlistId, CancellationToken cancellationToken = default)
+    {
+        var key = $"playlist:{playlistId}";
+        if (cache.TryGetValue(key, out IReadOnlyList<PlayableTrack>? cached) && cached is not null)
+        {
+            return Result<IReadOnlyList<PlayableTrack>>.Success(cached);
+        }
+
+        var result = await inner.GetPlaylistTracksAsync(playlistId, cancellationToken);
+        if (result.IsSuccess)
+        {
+            cache.Set(key, result.Value, PlaylistCacheDuration);
         }
 
         return result;

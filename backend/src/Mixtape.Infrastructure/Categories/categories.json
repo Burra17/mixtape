@@ -1,0 +1,10 @@
+[
+  { "id": "70s", "name": "70-tal", "playlists": [1470022445] },
+  { "id": "80s", "name": "80-tal", "playlists": [1913763402, 8873745702] },
+  { "id": "90s", "name": "90-tal", "playlists": [878989033] },
+  { "id": "00s", "name": "00-tal", "playlists": [248297032] },
+  { "id": "10s", "name": "10-tal", "playlists": [14917741483] },
+  { "id": "swedish", "name": "Svenska klassiker", "playlists": [11164402204] },
+  { "id": "rock", "name": "Rock", "playlists": [1306931615] },
+  { "id": "today", "name": "Dagens hits", "playlists": [1313620305] }
+]

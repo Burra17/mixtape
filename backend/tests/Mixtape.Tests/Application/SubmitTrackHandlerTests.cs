@@ -80,6 +80,10 @@ public sealed class SubmitTrackHandlerTests
 
     private sealed class FakeCatalog : IMusicCatalog
     {
+        // Testerna här handlar inte om spellistor.
+        public Task<Result<IReadOnlyList<PlayableTrack>>> GetPlaylistTracksAsync(long playlistId, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
         public bool Unavailable { get; set; }
 
         public int Lookups { get; private set; }
