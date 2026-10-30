@@ -1,3 +1,4 @@
+using Mixtape.Application.Rooms;
 using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Tests.Domain;
@@ -12,7 +13,7 @@ public sealed class GameRoomEndTests
     [SetUp]
     public void SetUp()
     {
-        _room = GameRoom.Create(RoomCode.Parse("BCDF")!, new Random(17));
+        _room = AuxCordRoom.Create(RoomCode.Parse("BCDF")!, new Random(17));
         _now = Now;
         for (var i = 1; i <= 3; i++)
         {

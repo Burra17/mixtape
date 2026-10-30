@@ -1,3 +1,4 @@
+using Mixtape.Application.Rooms;
 using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Tests.Domain;
@@ -15,7 +16,7 @@ public sealed class GameRoomGameOverTests
     [SetUp]
     public void SetUp()
     {
-        _room = GameRoom.Create(RoomCode.Parse("BCDF")!, new Random(17));
+        _room = AuxCordRoom.Create(RoomCode.Parse("BCDF")!, new Random(17));
         _now = Now;
         _anna = _room.Join("Anna").Value;
         _bertil = _room.Join("Bertil").Value;

@@ -1,3 +1,5 @@
+using Mixtape.Application.Rooms;
+using Mixtape.Domain.Games.AuxCord;
 using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Tests.Domain;
@@ -12,7 +14,7 @@ public sealed class GameRoomPhaseTests
     [SetUp]
     public void SetUp()
     {
-        _room = GameRoom.Create(RoomCode.Parse("BCDF")!, Random.Shared);
+        _room = AuxCordRoom.Create(RoomCode.Parse("BCDF")!, Random.Shared);
         _now = Now;
     }
 
@@ -102,13 +104,13 @@ public sealed class GameRoomPhaseTests
 
         AdvanceToNextPhase(clip);
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Voting));
-        Assert.That(_room.RemainingTime(_now), Is.EqualTo(GameRoom.VotingDuration));
+        Assert.That(_room.RemainingTime(_now), Is.EqualTo(AuxCordGame.VotingDuration));
 
-        AdvanceToNextPhase(GameRoom.VotingDuration);
+        AdvanceToNextPhase(AuxCordGame.VotingDuration);
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Revealing));
-        Assert.That(_room.RemainingTime(_now), Is.EqualTo(GameRoom.RevealingDuration));
+        Assert.That(_room.RemainingTime(_now), Is.EqualTo(AuxCordGame.RevealingDuration));
 
-        AdvanceToNextPhase(GameRoom.RevealingDuration);
+        AdvanceToNextPhase(AuxCordGame.RevealingDuration);
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Submitting));
         Assert.That(_room.Round, Is.EqualTo(2));
     }

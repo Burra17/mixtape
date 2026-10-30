@@ -1,5 +1,6 @@
 using Mixtape.Application.Connections;
 using Mixtape.Domain.Common;
+using Mixtape.Domain.Games.AuxCord;
 using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Application.Rooms;
@@ -17,7 +18,7 @@ public sealed class VoteHandler(IGameRoomRepository rooms, IConnectionRegistry c
         return await rooms.WithRoomAsync<GameState>(owner.RoomCode, room =>
         {
             var now = time.GetUtcNow();
-            var voted = room.Vote(owner.PlayerId!, entry, now);
+            var voted = room.Act<AuxCordGame>(owner.PlayerId!, now, game => game.Vote(owner.PlayerId!, entry));
             return voted.IsSuccess ? GameState.From(room, now) : voted.Error!;
         });
     }

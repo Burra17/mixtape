@@ -1,3 +1,5 @@
+using Mixtape.Application.Rooms;
+using Mixtape.Domain.Games.AuxCord;
 using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Tests.Domain;
@@ -15,7 +17,7 @@ public sealed class GameRoomVotingTests
     [SetUp]
     public void SetUp()
     {
-        _room = GameRoom.Create(RoomCode.Parse("BCDF")!, new Random(17));
+        _room = AuxCordRoom.Create(RoomCode.Parse("BCDF")!, new Random(17));
         _now = Now;
         _anna = _room.Join("Anna").Value;
         _bertil = _room.Join("Bertil").Value;
@@ -164,7 +166,7 @@ public sealed class GameRoomVotingTests
         StartVoting();
         VoteForAll(_anna, _bertil, _cecilia);
 
-        _now += GameRoom.RevealingDuration;
+        _now += AuxCordGame.RevealingDuration;
         _room.Tick(_now);
 
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Submitting));

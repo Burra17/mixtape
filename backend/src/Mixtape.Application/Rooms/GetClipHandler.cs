@@ -1,6 +1,6 @@
 using Mixtape.Application.Music;
 using Mixtape.Domain.Common;
-using Mixtape.Domain.Rooms;
+using Mixtape.Domain.Games.AuxCord;
 
 namespace Mixtape.Application.Rooms;
 
@@ -10,10 +10,11 @@ public sealed class GetClipHandler(IGameRoomRepository rooms, IMusicCatalog cata
     public async Task<Result<Clip>> HandleAsync(HostSession host)
     {
         var current = await rooms.WithRoomAsync<(int Index, Entry Entry)>(host.RoomCode, room =>
-        {
-            var clip = room.CurrentClipFor(host.HostToken);
-            return clip.IsSuccess ? (room.ClipNumber, clip.Value) : clip.Error!;
-        });
+            room.WithGameForHost<AuxCordGame, (int, Entry)>(host.HostToken, game =>
+            {
+                var clip = game.GetCurrentClip();
+                return clip.IsSuccess ? (game.ClipNumber, clip.Value) : clip.Error!;
+            }));
         if (!current.IsSuccess)
         {
             return current.Error!;
@@ -31,7 +32,7 @@ public sealed class GetClipHandler(IGameRoomRepository rooms, IMusicCatalog cata
             return playable.Error!;
         }
 
-        var renewed = await rooms.WithRoomAsync(host.RoomCode, room => room.RenewLink(entry.Track.Id, playable.Value.PreviewUrl, time.GetUtcNow()));
+        var renewed = await rooms.WithRoomAsync(host.RoomCode, room => room.WithGame<AuxCordGame>(game => game.RenewLink(entry.Track.Id, playable.Value.PreviewUrl, time.GetUtcNow())));
         return renewed.IsSuccess ? new Clip(index, playable.Value.PreviewUrl) : renewed.Error!;
     }
 }

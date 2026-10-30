@@ -1,3 +1,6 @@
+using Mixtape.Application.Rooms;
+using Mixtape.Domain.Games.AuxCord;
+using Mixtape.Domain.Music;
 using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Tests.Domain;
@@ -14,7 +17,7 @@ public sealed class GameRoomPlayingTests
     [SetUp]
     public void SetUp()
     {
-        _room = GameRoom.Create(RoomCode.Parse("BCDF")!, new Random(Seed));
+        _room = AuxCordRoom.Create(RoomCode.Parse("BCDF")!, new Random(Seed));
         _now = Now;
         foreach (var name in new[] { "Anna", "Bertil", "Cecilia" })
         {
@@ -63,7 +66,7 @@ public sealed class GameRoomPlayingTests
     [Test]
     public void Tick_FollowsTheClipLengthFromTheSettings()
     {
-        var room = GameRoom.Create(RoomCode.Parse("BCDF")!, Random.Shared);
+        var room = AuxCordRoom.Create(RoomCode.Parse("BCDF")!, Random.Shared);
         foreach (var name in new[] { "Anna", "Bertil", "Cecilia" })
         {
             room.Join(name);

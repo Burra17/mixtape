@@ -1,3 +1,5 @@
+using Mixtape.Application.Rooms;
+using Mixtape.Domain.Games.AuxCord;
 using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Tests.Domain;
@@ -15,7 +17,7 @@ public sealed class GameRoomRevealingTests
     [SetUp]
     public void SetUp()
     {
-        _room = GameRoom.Create(RoomCode.Parse("BCDF")!, new Random(17));
+        _room = AuxCordRoom.Create(RoomCode.Parse("BCDF")!, new Random(17));
         _now = Now;
         _anna = _room.Join("Anna").Value;
         _bertil = _room.Join("Bertil").Value;
@@ -62,7 +64,7 @@ public sealed class GameRoomRevealingTests
         StartVoting(_anna, _bertil, _cecilia);
         VoteFor(_anna, _bertil);
 
-        _now += GameRoom.VotingDuration;
+        _now += AuxCordGame.VotingDuration;
         _room.Tick(_now);
 
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Revealing));
@@ -88,7 +90,7 @@ public sealed class GameRoomRevealingTests
         VoteFor(_anna, _cecilia);
         VoteFor(_bertil, _cecilia);
         VoteFor(_cecilia, _anna);
-        _now += GameRoom.RevealingDuration;
+        _now += AuxCordGame.RevealingDuration;
         _room.Tick(_now);
 
         StartVoting(_anna, _bertil, _cecilia);
@@ -110,7 +112,7 @@ public sealed class GameRoomRevealingTests
         StartVoting(_anna, _bertil, _cecilia);
         VoteFor(_anna, _bertil);
         VoteFor(_bertil, _anna);
-        _now += GameRoom.VotingDuration;
+        _now += AuxCordGame.VotingDuration;
         _room.Tick(_now);
 
         Assert.That(_room.Standings.Select(standing => (standing.Player, standing.Place)), Is.EqualTo(new[] { (_anna, 1), (_bertil, 1), (_cecilia, 3) }));

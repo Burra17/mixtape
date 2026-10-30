@@ -1,6 +1,7 @@
 using Mixtape.Application.Connections;
 using Mixtape.Application.Music;
 using Mixtape.Domain.Common;
+using Mixtape.Domain.Games.AuxCord;
 using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Application.Rooms;
@@ -16,7 +17,7 @@ public sealed class SubmitTrackHandler(IGameRoomRepository rooms, IMusicCatalog 
         }
 
         // Fasen kontrolleras före Deezer, så att ett sent inskick får fasfelet och inte ett fel från musikkällan.
-        var allowed = await rooms.WithRoomAsync(owner.RoomCode, room => room.CanChooseTrack());
+        var allowed = await rooms.WithRoomAsync(owner.RoomCode, room => room.WithGame<AuxCordGame>(game => game.CanChooseTrack()));
         if (!allowed.IsSuccess)
         {
             return allowed.Error!;
@@ -32,7 +33,7 @@ public sealed class SubmitTrackHandler(IGameRoomRepository rooms, IMusicCatalog 
         return await rooms.WithRoomAsync<GameState>(owner.RoomCode, room =>
         {
             var now = time.GetUtcNow();
-            var submitted = room.SubmitTrack(owner.PlayerId!, track, now);
+            var submitted = room.Act<AuxCordGame>(owner.PlayerId!, now, game => game.SubmitTrack(owner.PlayerId!, track, now));
             return submitted.IsSuccess ? GameState.From(room, now) : submitted.Error!;
         });
     }

@@ -1,4 +1,4 @@
-using Mixtape.Domain.Rooms;
+using Mixtape.Domain.Music;
 
 namespace Mixtape.Tests;
 
