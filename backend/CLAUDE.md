@@ -12,7 +12,7 @@ Beroenden pekar inåt mot Domain, som inte beror på någonting:
 
 | Projekt | Innehåll |
 |---|---|
-| `Mixtape.Domain` | `GameRoom`, `Player` och spelreglerna. Ingen I/O, inga ramverk. |
+| `Mixtape.Domain` | `GameRoom`, `Player`, ett spel per spelläge under `Games/` och spelreglerna. Ingen I/O, inga ramverk. |
 | `Mixtape.Application` | En handler per kommando, interfacen som Infrastructure implementerar (`IGameRoomRepository`, `IMusicCatalog`, `IPromptProvider`), och DTO:erna. |
 | `Mixtape.Infrastructure` | Rum i minnet, Deezer-klienten, promptbanken och bakgrundstjänster. |
 | `Mixtape.Api` | `Program.cs`, `GameHub`, de få HTTP-endpoints som finns, och kopplingen av DI. |
@@ -22,7 +22,14 @@ Varje lager registrerar sina tjänster i en egen `Add<Lager>()`-metod, och `Prog
 
 ## Spelreglerna bor i Domain
 
-`GameRoom` äger sitt state. Domänobjekten har inga publika setters, och reglerna nås via metoder som `SubmitTrack` och `Vote`. Varje metod börjar med att kontrollera fasen. Värdens metoder, som `StartGame` och `RemovePlayer`, kontrollerar värd-token före fasen, så att den som inte är värd bara får veta att rummet inte finns.
+`GameRoom` äger det som är gemensamt för alla spellägen: spelarna, värden, lobbyn, klockan, pausen och ställningen. Rummet har tre lägen (`RoomStage`): lobbyn, spelet och slutställningen. Själva spelet är ett `IGame`, till exempel `AuxCordGame`, med egna faser och regler. Rummet känner inte till något spelläge:
+
+- Handlern skapar spelet och lämnar det till `room.StartGame`.
+- När en fas är slut svarar spelet med ett `Step`: nästa fas med sin tid, eller att spelet är slut. Rummet startar klockan.
+- En spelares kommando går genom `room.Act<TGame>(...)`. Rummet kontrollerar att ett spel av rätt typ pågår och att spelaren finns, räknar upp `Revision` och går vidare direkt när alla är klara.
+- Det som inte ändrar bilden, som en fråga om fasen eller en ny klipplänk, går genom `room.WithGame<TGame>(...)`.
+
+Domänobjekten har inga publika setters, och reglerna nås via metoder som `SubmitTrack` och `Vote` på spelet. Varje metod börjar med att kontrollera fasen. Värdens metoder, som `StartGame` och `RemovePlayer`, kontrollerar värd-token före fasen, så att den som inte är värd bara får veta att rummet inte finns.
 
 En regel som säger nej ger ett fel i `Result` (eller `Result<T>` när det lyckade utfallet har ett värde), till exempel "inte i den här fasen", "namnet är upptaget" eller "du kan inte rösta på dig själv". Undantag används för det som inte borde hända, alltså buggar. Ett `Result`-fel blir ett meddelande till spelaren. Ett undantag blir ett fel i loggen.
 

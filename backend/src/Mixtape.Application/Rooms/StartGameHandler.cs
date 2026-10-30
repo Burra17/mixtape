@@ -1,4 +1,5 @@
 using Mixtape.Domain.Common;
+using Mixtape.Domain.Games.AuxCord;
 
 namespace Mixtape.Application.Rooms;
 
@@ -9,7 +10,8 @@ public sealed class StartGameHandler(IGameRoomRepository rooms, IPromptProvider 
         rooms.WithRoomAsync<GameState>(host.RoomCode, room =>
         {
             var now = time.GetUtcNow();
-            var started = room.StartGame(host.HostToken, prompts.Draw(room.Settings.Rounds, room.UsedPrompts), now);
+            var game = new AuxCordGame(prompts.Draw(room.Settings.Rounds, room.UsedContent<AuxCordGame>()), room.Settings, Random.Shared);
+            var started = room.StartGame(host.HostToken, game, now);
             return started.IsSuccess ? GameState.From(room, now) : started.Error!;
         });
 }

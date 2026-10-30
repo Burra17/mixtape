@@ -4,6 +4,7 @@ using Mixtape.Domain.Common;
 
 namespace Mixtape.Domain.Rooms;
 
+// Det som är gemensamt för alla spellägen: spelarna, värden, lobbyn, klockan, pausen och ställningen. Själva spelet är ett IGame.
 public sealed class GameRoom
 {
     public const int MinPlayers = 3;
@@ -12,68 +13,31 @@ public sealed class GameRoom
     // Så länge får ett rum stå helt tomt innan det städas bort.
     public static readonly TimeSpan AbandonedAfter = TimeSpan.FromMinutes(30);
 
-    public static readonly TimeSpan VotingDuration = TimeSpan.FromSeconds(30);
-
-    // Storskärmen visar bidragen först och ställningen de sista 8 sekunderna. Delningen står i frontendens revealing-feature.
-    public static readonly TimeSpan RevealingDuration = TimeSpan.FromSeconds(20);
-
     private readonly List<Player> _players = [];
 
     private readonly PhaseClock _clock = new();
 
-    private readonly List<string> _prompts = [];
+    // Det som spelen dragit under kvällen, per spelläge, så att nästa spel kan dra annat.
+    private readonly Dictionary<Type, HashSet<string>> _usedContent = [];
 
-    private readonly HashSet<string> _usedPrompts = [];
-
-    private readonly List<Entry> _entries = [];
-
-    private readonly Random _random;
-
-    // Rundans röster: spelarens id och numret på bidraget som fick rösten. Nollställs när nästa runda börjar.
-    private readonly Dictionary<string, int> _votes = [];
-
-    private bool _previousRoundSkipped;
-
-    // Klippet som spelas, som plats i bidragen. Bidragen står i uppspelningens ordning när uppspelningen börjat.
-    private int _clipIndex;
-
-    private GameRoom(RoomCode code, string hostToken, Random random)
+    private GameRoom(RoomCode code, string hostToken)
     {
         Code = code;
         HostToken = hostToken;
-        _random = random;
     }
 
     public RoomCode Code { get; }
 
     public string HostToken { get; }
 
-    public GamePhase Phase { get; private set; } = GamePhase.Lobby;
+    public RoomStage Stage { get; private set; } = RoomStage.Lobby;
 
     public GameSettings Settings { get; private set; } = GameSettings.Default;
 
-    // 1 i första rundan och 0 i lobbyn.
-    public int Round { get; private set; }
-
-    // Rundans prompt, från inskicket till avslöjandet.
-    public string? Prompt => Phase is GamePhase.Lobby or GamePhase.GameOver ? null : _prompts[Round - 1];
-
-    // Alla promptar som rummet har använt under kvällen, så att nästa spel kan dra andra.
-    public IReadOnlyCollection<string> UsedPrompts => _usedPrompts;
-
     public IReadOnlyList<Player> Players => _players;
 
-    // Rundans bidrag, i uppspelningens slumpade ordning från och med uppspelningen. Nollställs när nästa runda börjar.
-    public IReadOnlyList<Entry> Entries => _entries;
-
-    // Bidraget som spelas, eller null utanför uppspelningen.
-    public Entry? CurrentClip => Phase == GamePhase.Playing ? _entries[_clipIndex] : null;
-
-    // 1 för det första klippet.
-    public int ClipNumber => _clipIndex + 1;
-
-    // Sant under inskicket i rundan efter en runda som hoppades över, så att storskärmen kan förklara varför prompten byttes.
-    public bool SkippedRound => Phase == GamePhase.Submitting && _previousRoundSkipped;
+    // Spelet som pågår, eller det som just tog slut, så att slutställningen kan visa den sista rundan. Null i lobbyn.
+    public IGame? Game { get; private set; }
 
     // Räknas upp vid varje ändring. Ögonblicksbilderna skickas utanför rummets lås och kan komma fram i fel ordning, så klienten behåller den med högst nummer.
     public int Revision { get; private set; }
@@ -96,9 +60,8 @@ public sealed class GameRoom
 
     private bool IsAnyoneConnected => IsHostConnected || _players.Any(player => player.IsConnected);
 
-    // Ett nytt rum börjar i lobbyn med en egen hemlig värd-token. random slumpar uppspelningens ordning, och testerna seedar den.
-    // Avsteg från #20, som ville ha random som argument när uppspelningen börjar: den börjar både i Tick och i det sista inskicket, och båda vägarna skulle då behöva den.
-    public static GameRoom Create(RoomCode code, Random random) => new(code, SecretToken.Create(), random);
+    // Ett nytt rum börjar i lobbyn med en egen hemlig värd-token.
+    public static GameRoom Create(RoomCode code) => new(code, SecretToken.Create());
 
     // Jämför i konstant tid, så att svarstiden inte avslöjar hur stor del av en gissad token som stämde.
     public bool IsHost(string? hostToken) =>
@@ -106,22 +69,10 @@ public sealed class GameRoom
 
     public bool IsAbandoned(DateTimeOffset now) => EmptySince is { } since && now - since >= AbandonedAfter;
 
-    public bool HasSubmitted(string playerId) => _entries.Any(entry => entry.PlayerId == playerId);
-
-    public bool HasVoted(string playerId) => _votes.ContainsKey(playerId);
-
-    // Numret på spelarens eget bidrag, 1 för det första i uppspelningen, eller null om spelaren inte skickade in.
-    public int? EntryNumberOf(string playerId) => _entries.FindIndex(entry => entry.PlayerId == playerId) is >= 0 and var index ? index + 1 : null;
-
-    // Numret på bidraget som spelaren röstade på, eller null.
-    public int? VoteOf(string playerId) => _votes.TryGetValue(playerId, out var entry) ? entry : null;
-
-    // Antalet röster på bidraget med det numret.
-    public int VotesFor(int entry) => _votes.Values.Count(vote => vote == entry);
-
-    // Rösterna på spelarens eget bidrag i rundan, alltså rundans poäng. 0 för den som inte skickade in.
-    // Avsteg från #22, som ville spara rundans poäng i rummet: de räknas ur rösterna, som ligger kvar tills nästa runda börjar och även efter sista rundan, så en egen kopia kan aldrig skilja sig från dem.
-    public int RoundPointsOf(string playerId) => EntryNumberOf(playerId) is { } entry ? VotesFor(entry) : 0;
+    // Det som spel av den typen dragit i rummet under kvällen.
+    public IReadOnlyCollection<string> UsedContent<TGame>()
+        where TGame : IGame =>
+        _usedContent.TryGetValue(typeof(TGame), out var used) ? used : [];
 
     // Flest poäng först. Vid lika poäng delas placeringen, och spelarna står i den ordning de gick med, eftersom OrderByDescending är stabil och _players står i den ordningen.
     public IReadOnlyList<Standing> Standings =>
@@ -138,7 +89,7 @@ public sealed class GameRoom
             return RoomErrors.NotFound;
         }
 
-        if (Phase != GamePhase.Lobby)
+        if (Stage != RoomStage.Lobby)
         {
             return RoomErrors.AlreadyStarted;
         }
@@ -158,15 +109,15 @@ public sealed class GameRoom
         return Result.Success();
     }
 
-    // prompts är en per runda, dragna av servern. Fel antal är en bugg i den som drog dem, inte ett regelfel.
-    public Result StartGame(string? hostToken, IReadOnlyList<string> prompts, DateTimeOffset now)
+    // Handlern skapar spelet med det som läget behöver, så att rummet inte känner till något spelläge.
+    public Result StartGame(string? hostToken, IGame game, DateTimeOffset now)
     {
         if (!IsHost(hostToken))
         {
             return RoomErrors.NotFound;
         }
 
-        if (Phase != GamePhase.Lobby)
+        if (Stage != RoomStage.Lobby)
         {
             return RoomErrors.AlreadyStarted;
         }
@@ -176,20 +127,21 @@ public sealed class GameRoom
             return RoomErrors.NotEnoughPlayers;
         }
 
-        if (prompts.Count != Settings.Rounds || prompts.Distinct().Count() != prompts.Count)
+        if (!_usedContent.TryGetValue(game.GetType(), out var used))
         {
-            throw new ArgumentException($"En prompt per runda behövs, alla olika: {Settings.Rounds} rundor men {prompts.Count} promptar, varav {prompts.Distinct().Count()} olika.", nameof(prompts));
+            used = [];
+            _usedContent[game.GetType()] = used;
         }
 
-        _prompts.Clear();
-        _prompts.AddRange(prompts);
-        _usedPrompts.UnionWith(prompts);
-        StartRound(1, skippedPrevious: false, now);
+        used.UnionWith(game.UsedContent);
+        Game = game;
+        Stage = RoomStage.InGame;
+        Apply(game.Start(_players, now), now);
         return Result.Success();
     }
 
     // Efter slutställningen: samma spelare, även de som är borta, och samma inställningar, men poängen börjar om i lobbyn.
-    // De använda promptarna står kvar, så att nästa StartGame drar nya.
+    // Det som spelen dragit står kvar, så att nästa StartGame drar annat.
     public Result PlayAgain(string? hostToken)
     {
         if (!IsHost(hostToken))
@@ -197,7 +149,7 @@ public sealed class GameRoom
             return RoomErrors.NotFound;
         }
 
-        if (Phase != GamePhase.GameOver)
+        if (Stage != RoomStage.GameOver)
         {
             return RoomErrors.WrongPhase;
         }
@@ -207,23 +159,19 @@ public sealed class GameRoom
             player.ResetScore();
         }
 
-        Round = 0;
-        _previousRoundSkipped = false;
-        _prompts.Clear();
-        ClearRound();
-        Phase = GamePhase.Lobby;
+        Game = null;
+        Stage = RoomStage.Lobby;
         _clock.Stop();
         Revision++;
         return Result.Success();
     }
 
-    // Spelaren kan bara söka och skicka in medan rundan tar emot bidrag.
-    public Result CanChooseTrack() => Phase == GamePhase.Submitting ? Result.Success() : RoomErrors.WrongPhase;
-
-    // Bidraget är låst när det väl skickats in. Är alla klara går rummet vidare direkt, utan att vänta på nästa tick.
-    public Result SubmitTrack(string playerId, SubmittedTrack track, DateTimeOffset now)
+    // En spelares kommando till spelet. Rummet kontrollerar att ett spel av rätt typ pågår och att spelaren finns.
+    // Är alla klara går rummet vidare direkt, utan att vänta på nästa tick.
+    public Result Act<TGame>(string playerId, DateTimeOffset now, Func<TGame, Result> command)
+        where TGame : IGame
     {
-        if (Phase != GamePhase.Submitting)
+        if (Stage != RoomStage.InGame || Game is not TGame game)
         {
             return RoomErrors.WrongPhase;
         }
@@ -233,94 +181,29 @@ public sealed class GameRoom
             return PlayerErrors.NotFound;
         }
 
-        if (HasSubmitted(playerId))
+        var result = command(game);
+        if (!result.IsSuccess)
         {
-            return EntryErrors.AlreadySubmitted;
+            return result;
         }
 
-        if (_entries.Any(entry => entry.Track.IsSameSongAs(track)))
-        {
-            return EntryErrors.TrackTaken;
-        }
-
-        _entries.Add(new Entry(playerId, track, now));
         Revision++;
         if (CanCompleteEarly)
         {
             CompletePhase(now);
         }
 
-        return Result.Success();
+        return result;
     }
 
-    // Spelaren kan bara se sin egen röstsedel medan rundan röstar.
-    public Result CanVote() => Phase == GamePhase.Voting ? Result.Success() : RoomErrors.WrongPhase;
+    // Läser eller ändrar spelet utan att bilden ändras, till exempel en fråga om fasen eller en ny klipplänk.
+    public Result<T> WithGame<TGame, T>(Func<TGame, Result<T>> use)
+        where TGame : IGame =>
+        Stage == RoomStage.InGame && Game is TGame game ? use(game) : RoomErrors.WrongPhase;
 
-    // entry är bidragets nummer i uppspelningen. Rösten är låst när den väl lagts. Har alla röstat går rummet vidare direkt.
-    public Result Vote(string playerId, int entry, DateTimeOffset now)
-    {
-        if (Phase != GamePhase.Voting)
-        {
-            return RoomErrors.WrongPhase;
-        }
-
-        if (_players.All(player => player.Id != playerId))
-        {
-            return PlayerErrors.NotFound;
-        }
-
-        if (HasVoted(playerId))
-        {
-            return VoteErrors.AlreadyVoted;
-        }
-
-        if (entry < 1 || entry > _entries.Count)
-        {
-            return VoteErrors.NotFound;
-        }
-
-        if (EntryNumberOf(playerId) == entry)
-        {
-            return VoteErrors.OwnEntry;
-        }
-
-        _votes[playerId] = entry;
-        Revision++;
-        if (CanCompleteEarly)
-        {
-            CompletePhase(now);
-        }
-
-        return Result.Success();
-    }
-
-    // Storskärmen hämtar klippets länk själv, så att länken aldrig finns i bilden som alla får.
-    public Result<Entry> CurrentClipFor(string? hostToken)
-    {
-        if (!IsHost(hostToken))
-        {
-            return RoomErrors.NotFound;
-        }
-
-        return CurrentClip is { } clip ? clip : RoomErrors.WrongPhase;
-    }
-
-    // En ny länk för en låt efter en lång paus. Låten letas upp på id, eftersom klippet kan ha bytts medan länken hämtades.
-    public Result RenewLink(long trackId, string previewUrl, DateTimeOffset now)
-    {
-        if (Phase != GamePhase.Playing)
-        {
-            return RoomErrors.WrongPhase;
-        }
-
-        var index = _entries.FindIndex(entry => entry.Track.Id == trackId);
-        if (index >= 0)
-        {
-            _entries[index] = _entries[index] with { Track = _entries[index].Track with { PreviewUrl = previewUrl }, LinkFetchedAt = now };
-        }
-
-        return Result.Success();
-    }
+    public Result WithGame<TGame>(Func<TGame, Result> use)
+        where TGame : IGame =>
+        Stage == RoomStage.InGame && Game is TGame game ? use(game) : RoomErrors.WrongPhase;
 
     // Anropas av klockan på servern. Ger true när fasen bytts, så att bilden bara skickas vid en ändring.
     // Fasen tar också slut här när alla är klara, eftersom den sista som inte var klar kan ha tappat anslutningen.
@@ -338,7 +221,7 @@ public sealed class GameRoom
     // Spelaren får den första lediga färgen, så att en färg som frigjorts när någon lämnat delas ut igen.
     public Result<Player> Join(string? name)
     {
-        if (Phase != GamePhase.Lobby)
+        if (Stage != RoomStage.Lobby)
         {
             return RoomErrors.AlreadyStarted;
         }
@@ -371,7 +254,7 @@ public sealed class GameRoom
     // now behövs eftersom den som lämnar kan vara den sista som var ansluten.
     public Result<Player> Leave(string? playerToken, DateTimeOffset now)
     {
-        if (Phase != GamePhase.Lobby)
+        if (Stage != RoomStage.Lobby)
         {
             return RoomErrors.AlreadyStarted;
         }
@@ -390,7 +273,7 @@ public sealed class GameRoom
             return RoomErrors.NotFound;
         }
 
-        if (Phase != GamePhase.Lobby)
+        if (Stage != RoomStage.Lobby)
         {
             return RoomErrors.AlreadyStarted;
         }
@@ -483,7 +366,7 @@ public sealed class GameRoom
         UpdateEmptySince(now);
     }
 
-    // Värden avslutar i förtid och alla går till slutställningen. Bara färdiga rundor räknas, så en avbruten runda tas bort med sina röster.
+    // Värden avslutar i förtid och alla går till slutställningen. Bara färdiga rundor räknas, så spelet tar bort en avbruten runda.
     // Klockan återupptas innan den stoppas, eftersom en fryst klocka annars skulle frysa första fasen i nästa spel.
     public Result End(string? hostToken, DateTimeOffset now)
     {
@@ -497,11 +380,7 @@ public sealed class GameRoom
             return RoomErrors.WrongPhase;
         }
 
-        if (Phase != GamePhase.Revealing)
-        {
-            ClearRound();
-        }
-
+        Game!.AbortRound();
         IsPausedByHost = false;
         if (IsHostConnected)
         {
@@ -512,66 +391,25 @@ public sealed class GameRoom
         return Result.Success();
     }
 
-    private bool HasDeadline => Phase is GamePhase.Submitting or GamePhase.Playing or GamePhase.Voting or GamePhase.Revealing;
+    // Alla spelets faser har en nedräkning, men inte lobbyn och slutställningen.
+    private bool HasDeadline => Stage == RoomStage.InGame;
 
     // Under paus står spelet still även när alla är klara. När storskärmen är tillbaka går fasen vidare vid nästa tick.
     private bool CanCompleteEarly => !IsPaused && IsEveryoneDone;
 
     // Bara anslutna spelare räknas, så en mobil som är borta hindrar inte de andra. Utan någon ansluten gäller deadline.
-    // Med färre än 2 bidrag väntar inskicket till deadline, så att den som är borta hinner tillbaka innan rundan hoppas över.
-    private bool IsEveryoneDone
-    {
-        get
-        {
-            var connected = _players.Where(player => player.IsConnected).ToList();
-            return Phase switch
-            {
-                GamePhase.Submitting => _entries.Count >= 2 && connected.Count > 0 && connected.All(player => HasSubmitted(player.Id)),
-                GamePhase.Voting => connected.Count > 0 && connected.All(player => HasVoted(player.Id)),
-                _ => false,
-            };
-        }
-    }
+    private bool IsEveryoneDone => Stage == RoomStage.InGame && Game!.IsEveryoneDone(_players.Where(player => player.IsConnected).ToList());
 
-    // Fasen är slut, vid sin deadline eller när alla är klara, och nästa fas börjar med en ny klocka.
-    private void CompletePhase(DateTimeOffset now)
-    {
-        switch (Phase)
-        {
-            case GamePhase.Submitting when _entries.Count < 2:
-                SkipRound(now);
-                break;
-            case GamePhase.Submitting:
-                StartPlaying(now);
-                break;
-            case GamePhase.Playing when _clipIndex < _entries.Count - 1:
-                _clipIndex++;
-                Enter(GamePhase.Playing, Settings.ClipLength, now);
-                break;
-            case GamePhase.Playing:
-                Enter(GamePhase.Voting, VotingDuration, now);
-                break;
-            case GamePhase.Voting:
-                AwardPoints();
-                Enter(GamePhase.Revealing, RevealingDuration, now);
-                break;
-            case GamePhase.Revealing when Round < Settings.Rounds:
-                StartRound(Round + 1, skippedPrevious: false, now);
-                break;
-            case GamePhase.Revealing:
-                EndGame();
-                break;
-            default:
-                throw new InvalidOperationException($"Fasen {Phase} har ingen deadline att nå.");
-        }
-    }
+    // Fasen är slut, vid sin deadline eller när alla är klara, och spelet säger vad som händer sedan.
+    private void CompletePhase(DateTimeOffset now) => Apply(Game!.CompletePhase(now), now);
 
-    // En runda med färre än 2 bidrag har inget att rösta om. Den räknas ändå som spelad, så att spelets längd går att förutse.
-    private void SkipRound(DateTimeOffset now)
+    // Nästa fas börjar med en ny klocka, eller så är spelet slut.
+    private void Apply(Step step, DateTimeOffset now)
     {
-        if (Round < Settings.Rounds)
+        if (step.Duration is { } duration)
         {
-            StartRound(Round + 1, skippedPrevious: true, now);
+            _clock.Start(duration, now);
+            Revision++;
         }
         else
         {
@@ -579,52 +417,10 @@ public sealed class GameRoom
         }
     }
 
-    // Ordningen slumpas här, så att den inte avslöjar i vilken ordning bidragen kom in.
-    private void StartPlaying(DateTimeOffset now)
-    {
-        var shuffled = _entries.ToArray();
-        _random.Shuffle(shuffled);
-        _entries.Clear();
-        _entries.AddRange(shuffled);
-        _clipIndex = 0;
-        Enter(GamePhase.Playing, Settings.ClipLength, now);
-    }
-
-    // Röstningen är slut, vid deadline eller när alla röstat. Varje röst ger 1 poäng till bidragets ägare.
-    private void AwardPoints()
-    {
-        foreach (var entry in _votes.Values)
-        {
-            _players.First(player => player.Id == _entries[entry - 1].PlayerId).AddPoints(1);
-        }
-    }
-
-    private void StartRound(int round, bool skippedPrevious, DateTimeOffset now)
-    {
-        Round = round;
-        _previousRoundSkipped = skippedPrevious;
-        ClearRound();
-        Enter(GamePhase.Submitting, Settings.SubmittingDuration, now);
-    }
-
-    // Rundans bidrag och röster, som nollställs när en ny runda börjar, när spelet börjar om och när en avbruten runda tas bort.
-    private void ClearRound()
-    {
-        _entries.Clear();
-        _votes.Clear();
-    }
-
     private void EndGame()
     {
-        Phase = GamePhase.GameOver;
+        Stage = RoomStage.GameOver;
         _clock.Stop();
-        Revision++;
-    }
-
-    private void Enter(GamePhase phase, TimeSpan duration, DateTimeOffset now)
-    {
-        Phase = phase;
-        _clock.Start(duration, now);
         Revision++;
     }
 

@@ -3,6 +3,7 @@ using Mixtape.Application.Rooms;
 using Mixtape.Domain.Rooms;
 using Mixtape.Infrastructure.Connections;
 using Mixtape.Infrastructure.Rooms;
+using Mixtape.Tests.Domain;
 
 namespace Mixtape.Tests.Application;
 

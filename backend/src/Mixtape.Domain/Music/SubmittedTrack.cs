@@ -1,4 +1,4 @@
-namespace Mixtape.Domain.Rooms;
+namespace Mixtape.Domain.Music;
 
 // En inskickad låt med det som storskärmen visar och spelar. Klipplänken gäller i 15 minuter och förnyas efter en lång paus.
 public sealed record SubmittedTrack(long Id, string Title, string Artist, string Album, string CoverUrl, string PreviewUrl)

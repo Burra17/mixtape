@@ -1,3 +1,4 @@
+using Mixtape.Application.Rooms;
 using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Tests.Domain;
@@ -13,7 +14,7 @@ public sealed class GameRoomPauseTests
     [SetUp]
     public void SetUp()
     {
-        _room = GameRoom.Create(RoomCode.Parse("BCDF")!, Random.Shared);
+        _room = AuxCordRoom.Create(RoomCode.Parse("BCDF")!, Random.Shared);
         for (var i = 1; i <= 3; i++)
         {
             _room.Join($"Spelare {i}");

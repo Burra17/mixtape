@@ -1,6 +1,6 @@
 using Mixtape.Domain.Common;
 
-namespace Mixtape.Domain.Rooms;
+namespace Mixtape.Domain.Games.AuxCord;
 
 public static class EntryErrors
 {

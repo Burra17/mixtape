@@ -11,7 +11,7 @@ public sealed class GameRoomTests
     [SetUp]
     public void SetUp()
     {
-        _room = GameRoom.Create(RoomCode.Parse("BCDF")!, Random.Shared);
+        _room = AuxCordRoom.Create(RoomCode.Parse("BCDF")!, Random.Shared);
     }
 
     [Test]

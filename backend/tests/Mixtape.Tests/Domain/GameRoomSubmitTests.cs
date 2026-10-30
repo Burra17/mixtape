@@ -1,3 +1,6 @@
+using Mixtape.Application.Rooms;
+using Mixtape.Domain.Games.AuxCord;
+using Mixtape.Domain.Music;
 using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Tests.Domain;
@@ -14,7 +17,7 @@ public sealed class GameRoomSubmitTests
     [SetUp]
     public void SetUp()
     {
-        _room = GameRoom.Create(RoomCode.Parse("BCDF")!, Random.Shared);
+        _room = AuxCordRoom.Create(RoomCode.Parse("BCDF")!, Random.Shared);
         _anna = _room.Join("Anna").Value;
         _bertil = _room.Join("Bertil").Value;
         _cecilia = _room.Join("Cecilia").Value;

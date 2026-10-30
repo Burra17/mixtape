@@ -1,5 +1,6 @@
 using Mixtape.Application.Connections;
 using Mixtape.Domain.Common;
+using Mixtape.Domain.Games.AuxCord;
 using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Application.Rooms;
@@ -14,10 +15,10 @@ public sealed class GetBallotHandler(IGameRoomRepository rooms, IConnectionRegis
             return RoomErrors.NotFound;
         }
 
-        return await rooms.WithRoomAsync<Ballot>(owner.RoomCode, room =>
+        return await rooms.WithRoomAsync<Ballot>(owner.RoomCode, room => room.WithGame<AuxCordGame, Ballot>(game =>
         {
-            var allowed = room.CanVote();
-            return allowed.IsSuccess ? new Ballot(room.EntryNumberOf(owner.PlayerId!), room.VoteOf(owner.PlayerId!)) : allowed.Error!;
-        });
+            var allowed = game.CanVote();
+            return allowed.IsSuccess ? new Ballot(game.EntryNumberOf(owner.PlayerId!), game.VoteOf(owner.PlayerId!)) : allowed.Error!;
+        }));
     }
 }
