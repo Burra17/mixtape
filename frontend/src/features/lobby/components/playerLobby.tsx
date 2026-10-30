@@ -5,7 +5,7 @@ import { Label } from '../../../shared/components/label.tsx';
 import { PausedNotice } from '../../../shared/components/pausedNotice.tsx';
 import { playerText } from '../../../shared/components/playerColors.ts';
 import { useIsConnected } from '../../../store/connectionStore.ts';
-import { categoryName, useCategories } from '../hooks/useCategories.ts';
+import { categoryName, useCategories } from '../../../shared/hooks/useCategories.ts';
 import { usePlayerLobby } from '../hooks/usePlayerLobby.ts';
 
 const settingsLine = (settings: SettingsState, categories: CategoryOption[]) =>

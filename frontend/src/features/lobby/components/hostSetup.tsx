@@ -6,7 +6,7 @@ import { Label } from '../../../shared/components/label.tsx';
 import { useIsConnected } from '../../../store/connectionStore.ts';
 import { useRoomGame } from '../../../store/gameStore.ts';
 import { useHostStore } from '../../../store/hostStore.ts';
-import { categoryName, useCategories } from '../hooks/useCategories.ts';
+import { categoryName, useCategories } from '../../../shared/hooks/useCategories.ts';
 import { useGameSetup } from '../hooks/useGameSetup.ts';
 
 // Ett val, inte ett steg, så inte buttonStyles.ts: utan skugga, och det valda är svart med ljus text för att inte likna primärknappen.
@@ -71,13 +71,10 @@ export const HostSetup = () => {
   const session = useHostStore((state) => state.session);
   const game = useRoomGame(session?.roomCode);
   const isConnected = useIsConnected();
-  const { selectMode, setAuxCordSettings, setDropTheNeedleSettings, start, error } = useGameSetup();
+  const { selectMode, setAuxCordSettings, setDropTheNeedleSettings, start, starting, error } = useGameSetup();
   const categories = useCategories();
 
   if (!game) return null;
-
-  // Drop the Needle går att välja och ställa in, men spelet kommer i #70.
-  const isReady = game.settings.mode === 'auxCord';
 
   return (
     <Card>
@@ -110,8 +107,8 @@ export const HostSetup = () => {
         </p>
       )}
       <div>
-        <Button variant='primary' onClick={start} disabled={!game.canStart || !isConnected || !isReady}>
-          {isReady ? 'Starta spel' : 'Kommer snart'}
+        <Button variant='primary' onClick={start} disabled={!game.canStart || !isConnected || starting}>
+          {starting && game.settings.mode === 'dropTheNeedle' ? 'Hämtar låtar…' : 'Starta spel'}
         </Button>
       </div>
     </Card>

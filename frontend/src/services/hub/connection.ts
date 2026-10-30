@@ -175,5 +175,8 @@ export const getClip = (host: HostSession) => connection.invoke<HubResponse<Clip
 // Rösten är låst efteråt. Den nya bilden, där spelaren har röstat, kommer med GameStateUpdated.
 export const vote = (entry: number) => connection.invoke<HubResponse<GameState>>(serverMethods.vote, entry);
 
+// Gissningen är låst när den väl skickats. Bilden kommer med GameStateUpdated, så att storskärmen bockar av spelaren.
+export const guess = (trackId: number) => connection.invoke<HubResponse<GameState>>(serverMethods.guess, trackId);
+
 // Bara spelaren själv får veta vilket bidrag som är dess eget. Det står aldrig i GameState.
 export const getBallot = () => connection.invoke<HubResponse<Ballot>>(serverMethods.getBallot);

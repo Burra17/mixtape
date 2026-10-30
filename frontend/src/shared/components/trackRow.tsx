@@ -1,4 +1,4 @@
-import type { Track } from '../../../services/hub/hubContract.ts';
+import type { Track } from '../../services/hub/hubContract.ts';
 
 // En låt som omslag, titel och artist med albumet, och ett E för explicit text.
 export const TrackRow = ({ track }: { track: Track }) => (

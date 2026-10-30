@@ -15,7 +15,7 @@ Det första spelläget. Spelarna tävlar om att välja den bästa låten till en
 
 Faserna går vidare så fort alla är klara. Kommer färre än två bidrag in hoppas rundan över.
 
-I lobbyn väljer värden först spelläge. Drop the Needle, ett musikquiz för 2–8 spelare, går att välja men byggs i #66. För Aux Cord Battles väljer värden sedan antalet rundor (3, 5 eller 8, standard 5), klipplängden (10, 15 eller 20 s, standard 15) och betänketiden i inskicket (60, 90 eller 120 s, standard 90). Efter sista rundan visas slutställningen, och "Spela igen" startar ett nytt spel med samma spelare i samma rum.
+I lobbyn väljer värden först spelläge. Drop the Needle är ett musikquiz för 2–8 spelare: storskärmen spelar ett klipp ur den valda kategorin, och alla gissar låten genom att söka fram den i mobilen. Poängen och avslöjandet efter varje låt byggs i #66. För Aux Cord Battles väljer värden sedan antalet rundor (3, 5 eller 8, standard 5), klipplängden (10, 15 eller 20 s, standard 15) och betänketiden i inskicket (60, 90 eller 120 s, standard 90). Efter sista rundan visas slutställningen, och "Spela igen" startar ett nytt spel med samma spelare i samma rum.
 
 ## Struktur
 

@@ -4,8 +4,8 @@ import { useCountdown } from '../../../shared/hooks/useCountdown.ts';
 import { useRoundText } from '../../../shared/hooks/useRoundText.ts';
 import { useRoomGame } from '../../../store/gameStore.ts';
 import { useHostStore } from '../../../store/hostStore.ts';
-import { useClipPlayback } from '../hooks/useClipPlayback.ts';
-import { Vinyl } from './vinyl.tsx';
+import { Vinyl } from '../../../shared/components/vinyl.tsx';
+import { useClipPlayback } from '../../../shared/hooks/useClipPlayback.ts';
 
 // Storskärmen under uppspelningen: omslaget, låten och sekunderna kvar av klippet. Aldrig vem som valde låten.
 // Från lg sticker halva vinylskivan ut ur omslaget, som ur ett fodral, och snurrar medan klippet spelas.

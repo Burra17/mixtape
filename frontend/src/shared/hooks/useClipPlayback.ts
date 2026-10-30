@@ -1,9 +1,9 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import { getIsPlaying, playClip, stopClip, subscribeToPlaying } from '../../../services/audio/audioPlayer.ts';
-import { getClip } from '../../../services/hub/connection.ts';
-import { useIsConnected } from '../../../store/connectionStore.ts';
-import { useGameStore, useRoomGame } from '../../../store/gameStore.ts';
-import { useHostStore } from '../../../store/hostStore.ts';
+import { getIsPlaying, playClip, stopClip, subscribeToPlaying } from '../../services/audio/audioPlayer.ts';
+import { getClip } from '../../services/hub/connection.ts';
+import { useIsConnected } from '../../store/connectionStore.ts';
+import { useGameStore, useRoomGame } from '../../store/gameStore.ts';
+import { useHostStore } from '../../store/hostStore.ts';
 
 // Hur långt in i klippet servern är, räknat från när bilden kom fram, så att ljudet slutar samtidigt som serverns klocka.
 const secondsPlayed = () => {
@@ -23,7 +23,8 @@ export const useClipPlayback = () => {
   const [failedIndex, setFailedIndex] = useState<number | null>(null);
   const isPlaying = useSyncExternalStore(subscribeToPlaying, getIsPlaying);
 
-  const index = game?.nowPlaying?.index ?? null;
+  // Aux Cord Battles klipp står i nowPlaying och Drop the Needles låt i song.
+  const index = game?.nowPlaying?.index ?? game?.song?.index ?? null;
   const canPlay = session !== null && index !== null && !game?.isPaused && isConnected;
 
   useEffect(() => {

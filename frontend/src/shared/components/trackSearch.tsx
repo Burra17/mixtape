@@ -1,16 +1,18 @@
 import { useState, type FormEvent } from 'react';
-import { Button } from '../../../shared/components/button.tsx';
-import { ErrorLine } from '../../../shared/components/errorLine.tsx';
-import { useIsConnected } from '../../../store/connectionStore.ts';
+import { Button } from './button.tsx';
+import { ErrorLine } from './errorLine.tsx';
+import { useIsConnected } from '../../store/connectionStore.ts';
 import type { useTrackPicker } from '../hooks/useTrackPicker.ts';
 import { TrackRow } from './trackRow.tsx';
 
 type TrackSearchProps = {
   picker: ReturnType<typeof useTrackPicker>;
+  // Knappen som skickar den markerade låten, som "Skicka in" eller "Gissa".
+  submitLabel: string;
 };
 
-// Sökrutan, träffarna och "Skicka in". Ett tryck markerar en låt och knappen bekräftar, eftersom bidraget är låst efteråt.
-export const TrackSearch = ({ picker }: TrackSearchProps) => {
+// Sökrutan, träffarna och knappen. Ett tryck markerar en låt och knappen bekräftar, eftersom valet är låst efteråt.
+export const TrackSearch = ({ picker, submitLabel }: TrackSearchProps) => {
   const { results, selected, select, error, busy, find, submit } = picker;
   const isConnected = useIsConnected();
   const [query, setQuery] = useState('');
@@ -40,7 +42,7 @@ export const TrackSearch = ({ picker }: TrackSearchProps) => {
         </Button>
       </form>
 
-      {/* Med träffar står felet vid "Skicka in", där spelaren är när "Någon hann före dig!" kommer. */}
+      {/* Med träffar står felet vid knappen, där spelaren är när "Någon hann före dig!" kommer. */}
       {error && !hasResults && <ErrorLine error={error} />}
 
       {results?.length === 0 && <p className='font-medium text-muted'>Inga träffar. Prova att söka på något annat.</p>}
@@ -69,7 +71,7 @@ export const TrackSearch = ({ picker }: TrackSearchProps) => {
           <div className='sticky bottom-0 -mx-6 flex flex-col gap-3 border-t-2 border-ink bg-paper px-6 py-4'>
             {error && <ErrorLine error={error} />}
             <Button variant='primary' onClick={() => void submit()} disabled={busy || !isConnected || !selected}>
-              Skicka in
+              {submitLabel}
             </Button>
           </div>
         </>

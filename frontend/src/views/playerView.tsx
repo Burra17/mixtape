@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router';
 import { PlayerGameOver } from '../features/gameOver/components/playerGameOver.tsx';
+import { PlayerGuessing } from '../features/guessing/components/playerGuessing.tsx';
 import { PlayerLobby } from '../features/lobby/components/playerLobby.tsx';
 import { Rejoining } from '../features/lobby/components/rejoining.tsx';
 import { usePlayerRejoin } from '../features/lobby/hooks/usePlayerRejoin.ts';
@@ -31,5 +32,7 @@ export const PlayerView = () => {
   // Nyckeln är rundan, så att röstsedeln och markeringen börjar om i varje runda.
   if (phase === 'voting') return <PlayerVoting key={game?.round} />;
   if (phase === 'revealing') return <PlayerRevealing />;
+  // key tömmer sökningen när nästa låt börjar.
+  if (phase === 'guessing') return <PlayerGuessing key={game?.song?.index} />;
   return <PlayerGameOver />;
 };
