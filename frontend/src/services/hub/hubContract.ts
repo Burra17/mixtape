@@ -5,6 +5,7 @@ export const serverMethods = {
   checkRoom: 'CheckRoom',
   resumeRoom: 'ResumeRoom',
   getJoinAddresses: 'GetJoinAddresses',
+  getCategories: 'GetCategories',
   joinRoom: 'JoinRoom',
   rejoinRoom: 'RejoinRoom',
   leaveRoom: 'LeaveRoom',
@@ -73,12 +74,19 @@ export type GamePlayer = {
   hasVoted: boolean;
 };
 
+// CategoryOption i Application/Music: en kategori i Drop the Needle. Hämtas med GetCategories, eftersom den inte ändras.
+export type CategoryOption = {
+  id: string;
+  name: string;
+};
+
 // GameMode i Domain/Games.
 export type GameMode = 'auxCord' | 'dropTheNeedle';
 
 // SettingsState i Application/Rooms: det valda lägets inställningar. mode skiljer lägena åt.
 export type SettingsState =
-  { mode: 'auxCord'; rounds: number; clipSeconds: number; submittingSeconds: number } | { mode: 'dropTheNeedle'; songs: number; clipSeconds: number };
+  | { mode: 'auxCord'; rounds: number; clipSeconds: number; submittingSeconds: number }
+  | { mode: 'dropTheNeedle'; songs: number; clipSeconds: number; categoryId: string };
 
 // ModeOptions i Application/Rooms: ett läge som värden kan välja, med gränsen för antal spelare och valen för inställningarna.
 export type ModeOptions =

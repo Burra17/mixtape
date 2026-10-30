@@ -1,4 +1,4 @@
-import type { ModeOptions, SettingsState } from '../../../services/hub/hubContract.ts';
+import type { CategoryOption, ModeOptions, SettingsState } from '../../../services/hub/hubContract.ts';
 import { Button } from '../../../shared/components/button.tsx';
 import { Card } from '../../../shared/components/card.tsx';
 import { GAME_MODES } from '../gameModes.ts';
@@ -6,22 +6,23 @@ import { Label } from '../../../shared/components/label.tsx';
 import { useIsConnected } from '../../../store/connectionStore.ts';
 import { useRoomGame } from '../../../store/gameStore.ts';
 import { useHostStore } from '../../../store/hostStore.ts';
+import { categoryName, useCategories } from '../hooks/useCategories.ts';
 import { useGameSetup } from '../hooks/useGameSetup.ts';
 
 // Ett val, inte ett steg, så inte buttonStyles.ts: utan skugga, och det valda är svart med ljus text för att inte likna primärknappen.
 const choiceStyle = (selected: boolean) =>
   `border-2 border-ink focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-50 ${selected ? 'bg-ink text-paper' : 'bg-card text-ink'}`;
 
-type OptionRowProps = {
+type OptionRowProps<T extends string | number> = {
   label: string;
-  options: number[];
-  selected: number;
-  format: (value: number) => string;
+  options: T[];
+  selected: T;
+  format: (value: T) => string;
   disabled: boolean;
-  onChoose: (value: number) => void;
+  onChoose: (value: T) => void;
 };
 
-const OptionRow = ({ label, options, selected, format, disabled, onChoose }: OptionRowProps) => (
+const OptionRow = <T extends string | number>({ label, options, selected, format, disabled, onChoose }: OptionRowProps<T>) => (
   <div role='group' aria-label={label} className='flex flex-col gap-2'>
     <Label>{label}</Label>
     <div className='flex flex-wrap gap-3'>
@@ -71,6 +72,7 @@ export const HostSetup = () => {
   const game = useRoomGame(session?.roomCode);
   const isConnected = useIsConnected();
   const { selectMode, setAuxCordSettings, setDropTheNeedleSettings, start, error } = useGameSetup();
+  const categories = useCategories();
 
   if (!game) return null;
 
@@ -96,6 +98,7 @@ export const HostSetup = () => {
       <ModeSettings
         settings={game.settings}
         modes={game.modes}
+        categories={categories}
         disabled={!isConnected}
         onAuxCord={setAuxCordSettings}
         onDropTheNeedle={setDropTheNeedleSettings}
@@ -118,13 +121,14 @@ export const HostSetup = () => {
 type ModeSettingsProps = {
   settings: SettingsState;
   modes: ModeOptions[];
+  categories: CategoryOption[];
   disabled: boolean;
   onAuxCord: (rounds: number | null, clipSeconds: number | null, submittingSeconds: number | null) => void;
-  onDropTheNeedle: (songs: number | null, clipSeconds: number | null) => void;
+  onDropTheNeedle: (songs: number | null, clipSeconds: number | null, categoryId: string | null) => void;
 };
 
 // Det valda lägets inställningar, med valen för samma läge.
-const ModeSettings = ({ settings, modes, disabled, onAuxCord, onDropTheNeedle }: ModeSettingsProps) => {
+const ModeSettings = ({ settings, modes, categories, disabled, onAuxCord, onDropTheNeedle }: ModeSettingsProps) => {
   if (settings.mode === 'auxCord') {
     const options = modes.find((mode) => mode.mode === 'auxCord');
     if (!options) return null;
@@ -163,12 +167,20 @@ const ModeSettings = ({ settings, modes, disabled, onAuxCord, onDropTheNeedle }:
   return (
     <>
       <OptionRow
+        label='Kategori'
+        options={categories.map((category) => category.id)}
+        selected={settings.categoryId}
+        format={(id) => categoryName(categories, id)}
+        disabled={disabled}
+        onChoose={(categoryId) => onDropTheNeedle(null, null, categoryId)}
+      />
+      <OptionRow
         label='Låtar'
         options={options.songOptions}
         selected={settings.songs}
         format={String}
         disabled={disabled}
-        onChoose={(songs) => onDropTheNeedle(songs, null)}
+        onChoose={(songs) => onDropTheNeedle(songs, null, null)}
       />
       <OptionRow
         label='Klipplängd'
@@ -176,7 +188,7 @@ const ModeSettings = ({ settings, modes, disabled, onAuxCord, onDropTheNeedle }:
         selected={settings.clipSeconds}
         format={seconds}
         disabled={disabled}
-        onChoose={(clipSeconds) => onDropTheNeedle(null, clipSeconds)}
+        onChoose={(clipSeconds) => onDropTheNeedle(null, clipSeconds, null)}
       />
     </>
   );
