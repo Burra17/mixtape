@@ -5,7 +5,7 @@ using Mixtape.Domain.Rooms;
 namespace Mixtape.Domain.Games.DropTheNeedle;
 
 // Drop the Needle: storskärmen spelar ett klipp och alla gissar låten genom att söka fram den i mobilen.
-// Poängen kommer i #71 och avslöjandet efter varje låt i #72.
+// Avslöjandet efter varje låt kommer i #72.
 public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
 {
     private readonly DropTheNeedleSettings _settings;
@@ -18,6 +18,8 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
 
     // Den här låtens gissningar, per spelare.
     private readonly Dictionary<string, Guess> _guesses = [];
+
+    private IReadOnlyList<Player> _players = [];
 
     private int _index;
 
@@ -54,7 +56,19 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
     // Spelarens gissning på låten som spelas, eller null.
     public Guess? GuessOf(string playerId) => _guesses.GetValueOrDefault(playerId);
 
-    public Step Start(IReadOnlyList<Player> players) => Step.Next(ClipLength);
+    // Den senast färdiga låten och allas resultat för den, som avslöjandet visar. En låt som hoppats över räknas inte.
+    public SubmittedTrack? LastSong { get; private set; }
+
+    public IReadOnlyList<SongResult> LastResults { get; private set; } = [];
+
+    // Poängen för den senast färdiga låten.
+    public int RoundPointsOf(string playerId) => LastResults.FirstOrDefault(result => result.PlayerId == playerId)?.Points ?? 0;
+
+    public Step Start(IReadOnlyList<Player> players)
+    {
+        _players = players;
+        return Step.Next(ClipLength);
+    }
 
     public Result CanSearch() => Phase == DropTheNeedlePhase.Guessing ? Result.Success() : RoomErrors.WrongPhase;
 
@@ -88,7 +102,7 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
 
     public Result<CurrentClip> GetCurrentClip() => Phase == DropTheNeedlePhase.Guessing ? _songs[_index] : RoomErrors.WrongPhase;
 
-    public Result RenewLink(long trackId, string previewUrl, DateTimeOffset now)
+    public Result RefreshTrack(long trackId, string previewUrl, IReadOnlyList<string>? contributors, DateTimeOffset now)
     {
         if (Phase != DropTheNeedlePhase.Guessing)
         {
@@ -98,7 +112,7 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
         var index = _songs.FindIndex(song => song.Track.Id == trackId);
         if (index >= 0)
         {
-            _songs[index] = _songs[index] with { Track = _songs[index].Track with { PreviewUrl = previewUrl }, LinkFetchedAt = now };
+            _songs[index] = _songs[index] with { Track = _songs[index].Track with { PreviewUrl = previewUrl, Contributors = contributors ?? _songs[index].Track.Contributors }, LinkFetchedAt = now };
         }
 
         return Result.Success();
@@ -113,26 +127,54 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
         }
 
         _skipped.Add(_index);
-        return CompletePhase();
+        return NextSong();
     }
 
     public bool IsEveryoneDone(IReadOnlyList<Player> connected) =>
         Phase == DropTheNeedlePhase.Guessing && connected.Count > 0 && connected.All(player => HasGuessed(player.Id));
 
+    // Låten är slut, vid deadline eller när alla gissat, och poängen delas ut.
     public Step CompletePhase()
     {
+        AwardPoints();
+        return NextSong();
+    }
+
+    // Bara färdiga låtar räknas, så en låt som avbryts när värden avslutar ger inga poäng.
+    public void AbortRound() => _guesses.Clear();
+
+    // Rätt låt ger 2 och rätt artist 1. Den eller de som tidigast enligt servern gissade rätt låt får 1 extra.
+    private void AwardPoints()
+    {
+        var song = _songs[_index].Track;
+        var scores = _guesses.Values.ToDictionary(guess => guess.PlayerId, guess => (guess.ReceivedAt, Score: SongMatcher.Score(guess.Track, song)));
+        var rightSongs = scores.Values.Where(score => score.Score == GuessScore.Song).ToList();
+        DateTimeOffset? fastest = rightSongs.Count > 0 ? rightSongs.Min(score => score.ReceivedAt) : null;
+
+        LastSong = song;
+        LastResults = _players
+            .Select(player =>
+            {
+                var (receivedAt, score) = scores.GetValueOrDefault(player.Id, (DateTimeOffset.MaxValue, GuessScore.None));
+                var isFastest = score == GuessScore.Song && receivedAt == fastest;
+                var points = score switch { GuessScore.Song => 2, GuessScore.Artist => 1, _ => 0 } + (isFastest ? 1 : 0);
+                player.AddPoints(points);
+                return new SongResult(player.Id, score, isFastest, points);
+            })
+            .ToList();
+    }
+
+    private Step NextSong()
+    {
+        _guesses.Clear();
         if (_index >= _songs.Count - 1)
         {
             return Step.Finished;
         }
 
         _index++;
-        _guesses.Clear();
         return Step.Next(ClipLength);
     }
-
-    // Poängen för en avbruten låt räknas inte. Än finns inga poäng, så gissningarna tas bara bort.
-    public void AbortRound() => _guesses.Clear();
 
     private TimeSpan ClipLength => TimeSpan.FromSeconds(_settings.ClipSeconds);
 }

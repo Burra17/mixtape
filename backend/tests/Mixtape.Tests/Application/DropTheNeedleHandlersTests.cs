@@ -106,7 +106,7 @@ public sealed class DropTheNeedleHandlersTests
     }
 
     [Test]
-    public async Task GetClip_ForTheFirstSong_RenewsTheLinkFromTheCachedPlaylist()
+    public async Task GetClip_ForTheFirstSong_RenewsTheLinkAndKeepsTheContributors()
     {
         await StartAsync();
 
@@ -115,6 +115,8 @@ public sealed class DropTheNeedleHandlersTests
         Assert.That(clip.Index, Is.EqualTo(1));
         Assert.That(clip.PreviewUrl, Does.StartWith("https://ny/"));
         Assert.That(_catalog.TrackFetches, Is.EqualTo(1));
+        var current = await _rooms.WithRoomAsync(_host.RoomCode, room => ((DropTheNeedleGame)room.Game!).GetCurrentClip());
+        Assert.That(current.Value.Track.Contributors, Is.EqualTo(new[] { "Artist", "Gäst" }));
     }
 
     [Test]
@@ -170,7 +172,7 @@ public sealed class DropTheNeedleHandlersTests
             WhileFetchingTrack?.Invoke();
             return Task.FromResult(Unplayable
                 ? Result<PlayableTrack>.Failure(MusicErrors.TrackUnavailable)
-                : Result<PlayableTrack>.Success(new PlayableTrack(trackId, $"Låt {trackId}", "Artist", "Album", "omslag", $"https://ny/{trackId}")));
+                : Result<PlayableTrack>.Success(new PlayableTrack(trackId, $"Låt {trackId}", "Artist", "Album", "omslag", $"https://ny/{trackId}", ["Artist", "Gäst"])));
         }
     }
 }

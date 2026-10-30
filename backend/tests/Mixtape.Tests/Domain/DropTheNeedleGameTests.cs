@@ -133,13 +133,14 @@ public sealed class DropTheNeedleGameTests
     }
 
     [Test]
-    public void RenewLink_GivesTheClipTheNewLink()
+    public void RefreshTrack_GivesTheClipTheNewLinkAndContributors()
     {
-        Game.RenewLink(11, "https://ny", Now);
+        Game.RefreshTrack(11, "https://ny", ["Coldplay"], Now);
 
         var clip = Game.GetCurrentClip().Value;
         Assert.That(clip.Track.PreviewUrl, Is.EqualTo("https://ny"));
         Assert.That(clip.NeedsNewLink(Now), Is.False);
+        Assert.That(clip.Track.Contributors, Is.EqualTo(new[] { "Coldplay" }));
     }
 
     [Test]
