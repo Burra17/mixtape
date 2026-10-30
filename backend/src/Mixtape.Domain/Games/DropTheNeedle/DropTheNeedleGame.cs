@@ -5,12 +5,15 @@ using Mixtape.Domain.Rooms;
 namespace Mixtape.Domain.Games.DropTheNeedle;
 
 // Drop the Needle: storskärmen spelar ett klipp och alla gissar låten genom att söka fram den i mobilen.
-// Avslöjandet efter varje låt kommer i #72.
+// Efter varje låt kommer ett avslöjande med rätt svar och allas poäng.
 public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
 {
     private const int SongPoints = 2;
     private const int ArtistPoints = 1;
     private const int FastestBonus = 1;
+
+    // Avslöjandet går på en timer och värden kan inte hoppa vidare, så det hålls kort för att spelet ska rulla.
+    public static readonly TimeSpan RevealingDuration = TimeSpan.FromSeconds(10);
 
     private readonly DropTheNeedleSettings _settings;
 
@@ -137,11 +140,17 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
     public bool IsEveryoneDone(IReadOnlyList<Player> connected) =>
         Phase == DropTheNeedlePhase.Guessing && connected.Count > 0 && connected.All(player => HasGuessed(player.Id));
 
-    // Låten är slut, vid deadline eller när alla gissat, och poängen delas ut.
+    // Gissningen är slut, vid deadline eller när alla gissat, och poängen delas ut inför avslöjandet. Efter avslöjandet kommer nästa låt.
     public Step CompletePhase()
     {
+        if (Phase == DropTheNeedlePhase.Revealing)
+        {
+            return NextSong();
+        }
+
         AwardPoints();
-        return NextSong();
+        Phase = DropTheNeedlePhase.Revealing;
+        return Step.Next(RevealingDuration);
     }
 
     // Bara färdiga låtar räknas, så en låt som avbryts när värden avslutar ger inga poäng.
@@ -163,7 +172,7 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
                 var isFastest = score == GuessScore.Song && receivedAt == fastest;
                 var points = score switch { GuessScore.Song => SongPoints, GuessScore.Artist => ArtistPoints, _ => 0 } + (isFastest ? FastestBonus : 0);
                 player.AddPoints(points);
-                return new SongResult(player.Id, score, isFastest, points);
+                return new SongResult(player.Id, score, isFastest, points, GuessOf(player.Id)?.Track);
             })
             .ToList();
     }
@@ -177,6 +186,7 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
         }
 
         _index++;
+        Phase = DropTheNeedlePhase.Guessing;
         return Step.Next(ClipLength);
     }
 

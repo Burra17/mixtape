@@ -19,7 +19,7 @@ Webbläsaren spelar inte upp ljud förrän någon har klickat på sidan. Klicket
 
 ```text
 src/
-  features/<fas>/     lobby, submitting, playing, voting, revealing, guessing, gameOver
+  features/<fas>/     lobby, submitting, playing, voting, revealing, guessing, songReveal, gameOver
     components/       komponenter för både storskärm och mobil i den här fasen
     hooks/            flödet i fasen: anrop via services/hub och vad som skrivs till storen
   router.tsx          en route per vy
@@ -62,7 +62,7 @@ Riktningen är vald i #31, med We Are Rewind som förebild: varmt off-white, sva
 - **Fält:** `bg-card`, `border-2 border-ink`, `min-h-12` och samma radie som knapparna. Fokus visas med samma ram som knapparnas (`outline-ink`).
 - **Storlekar på storskärmen:** text i `/host` som ska läsas på avstånd skalar med skärmen via `clamp()` och viewport-enheter. Startsidan och mobilens vyer använder fasta storlekar.
 - **Kassetten:** `<Cassette>` står på startsidan och på storskärmens första vy. Etikettens ränder (`stripe-red`, `stripe-orange`, `stripe-blue` och `stripe-magenta`) och skalets färger är tema-variabler.
-- **Vinylen:** `<Vinyl>` sticker ut ur omslaget på storskärmen under uppspelningen med omslaget som rund etikett, och snurrar bara medan ljudet spelas. I Drop the Needles gissning står den ensam med ett frågetecken på etiketten, eftersom omslaget avslöjar låten. Den syns från `lg`, och dess färger (`vinyl`, `vinyl-groove` och `vinyl-label`) är tema-variabler.
+- **Vinylen:** `<Vinyl>` sticker ut ur omslaget på storskärmen (`<Sleeve>`) under uppspelningen och i Drop the Needles avslöjande, med omslaget som rund etikett, och snurrar bara medan ljudet spelas. I Drop the Needles gissning står den ensam med ett frågetecken på etiketten, eftersom omslaget avslöjar låten. Den syns från `lg`, och dess färger (`vinyl`, `vinyl-groove` och `vinyl-label`) är tema-variabler.
 - **Ikoner:** pausknappen har spelets enda ikon, ritad för hand som platt SVG i `ink` med `aria-label`. När fler ikoner behövs tas ett ikonpaket in i en egen ticket.
 - **Paus:** `<PauseControls>` ligger i `hostView` för faserna med nedräkning, med ikonknappen i hörnet och pauskortet över fasen. Pauskortet har också "Avsluta spelet", med en bekräftelse i kortet, som går till slutställningen. Mellanslag växlar paus och fortsätt via `useHostPause`. Under värdens paus fryser `data-paused` all rörelse i fasen.
 - **Rörelse:** storskärmen rör sig hela tiden, med `<Marquee>`, kassettens spolar och vinylen, utom när värden pausat. Mobilen ligger still. Animationer skrivs som `lg:motion-safe:animate-…`, så att de bara körs från `lg` och bara när "minska rörelse" är avstängt. `motion-reduce:animate-none` bredvid `lg:animate-…` fungerar inte, eftersom brytpunkten kommer senare i CSS:en och vinner. Stora ögonblick som avslöjandet hör till #24.
@@ -83,7 +83,7 @@ Vites mall slår på inställningar som gör vanliga mönster till byggfel:
 - `erasableSyntaxOnly`: `enum` och `namespace` går inte. Använd en union eller `as const`:
 
   ```ts
-  export const PHASES = ['lobby', 'submitting', 'playing', 'voting', 'revealing', 'guessing', 'gameOver'] as const;
+  export const PHASES = ['lobby', 'submitting', 'playing', 'voting', 'revealing', 'guessing', 'songReveal', 'gameOver'] as const;
   export type Phase = (typeof PHASES)[number];
   ```
 

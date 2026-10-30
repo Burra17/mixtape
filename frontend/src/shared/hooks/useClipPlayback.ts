@@ -1,5 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import { getIsPlaying, playClip, stopClip, subscribeToPlaying } from '../../services/audio/audioPlayer.ts';
+import { getIsPlaying, playClip, resumeClip, stopClip, subscribeToPlaying } from '../../services/audio/audioPlayer.ts';
 import { getClip } from '../../services/hub/connection.ts';
 import { useIsConnected } from '../../store/connectionStore.ts';
 import { useGameStore, useRoomGame } from '../../store/gameStore.ts';
@@ -32,6 +32,12 @@ export const useClipPlayback = () => {
     let cancelled = false;
 
     const start = async () => {
+      // Avslöjandet spelar vidare på klippet från gissningen, som gissningens vy stoppade när den försvann. Servern lämnar bara ut klippet
+      // under gissningen, så efter en omladdning eller "Fortsätt", som laddar upplåsningens tystnad, förblir avslöjandet tyst.
+      if (useGameStore.getState().game?.phase === 'songReveal') {
+        await resumeClip().catch(() => undefined);
+        return;
+      }
       const response = await getClip(session).catch(() => null);
       if (cancelled) return;
       // Ett svar för ett klipp som redan bytts ut kastas. Bilden för det nya klippet startar sin egen hämtning.

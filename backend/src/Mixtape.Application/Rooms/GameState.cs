@@ -16,6 +16,7 @@ public sealed record GameState(
     bool SkippedRound,
     NowPlaying? NowPlaying,
     SongState? Song,
+    SongAnswer? Answer,
     IReadOnlyList<BallotEntry>? Ballot,
     IReadOnlyList<RevealedEntry>? Reveal,
     IReadOnlyList<GameStanding>? Standings,
@@ -45,7 +46,11 @@ public sealed record GameState(
             room.Stage == RoomStage.InGame && aux is { SkippedRound: true },
             phase == GamePhase.Playing && aux!.CurrentClip is { Track: var track } ? new NowPlaying(aux.ClipNumber, aux.Entries.Count, track.Title, track.Artist, track.Album, track.CoverUrl) : null,
             // Under gissningen bara låtens nummer, aldrig titel, artist eller omslag, eftersom bilden går att läsa i nätverksfliken.
-            phase == GamePhase.Guessing ? new SongState(needle!.SongNumber, needle.SongCount, needle.CategoryId, needle.ClipNumber) : null,
+            // Numret står kvar i avslöjandet, så att storskärmen låter klippet spela vidare.
+            phase is GamePhase.Guessing or GamePhase.SongReveal ? new SongState(needle!.SongNumber, needle.SongCount, needle.CategoryId, needle.ClipNumber) : null,
+            phase == GamePhase.SongReveal
+                ? new SongAnswer(RevealedSong.From(needle!.LastSong!), needle.LastResults.Select(SongResultState.From).ToList())
+                : null,
             phase == GamePhase.Voting
                 ? aux!.Entries.Select((entry, index) => new BallotEntry(index + 1, entry.Track.Title, entry.Track.Artist, entry.Track.CoverUrl)).ToList()
                 : null,
@@ -53,7 +58,7 @@ public sealed record GameState(
             phase == GamePhase.Revealing
                 ? aux!.Entries.Select((entry, index) => new RevealedEntry(index + 1, entry.Track.Title, entry.Track.Artist, entry.Track.CoverUrl, entry.PlayerId, aux.VotesFor(index + 1))).ToList()
                 : null,
-            phase is GamePhase.Revealing or GamePhase.GameOver
+            phase is GamePhase.Revealing or GamePhase.SongReveal or GamePhase.GameOver
                 ? room.Standings.Select(standing => new GameStanding(standing.Player.Id, standing.Player.Score, room.Game?.RoundPointsOf(standing.Player.Id) ?? 0, standing.Place)).ToList()
                 : null,
             room.RemainingTime(now) is { } remaining ? (int)Math.Ceiling(remaining.TotalMilliseconds) : null,
@@ -84,7 +89,8 @@ public sealed record GameState(
                 AuxCordGame { Phase: AuxCordPhase.Playing } => GamePhase.Playing,
                 AuxCordGame { Phase: AuxCordPhase.Voting } => GamePhase.Voting,
                 AuxCordGame => GamePhase.Revealing,
-                DropTheNeedleGame => GamePhase.Guessing,
+                DropTheNeedleGame { Phase: DropTheNeedlePhase.Guessing } => GamePhase.Guessing,
+                DropTheNeedleGame => GamePhase.SongReveal,
                 _ => throw new InvalidOperationException($"Spelet {game?.GetType().Name} saknar faser i kontraktet."),
             },
         };

@@ -4,7 +4,7 @@ import { useCountdown } from '../../../shared/hooks/useCountdown.ts';
 import { useRoundText } from '../../../shared/hooks/useRoundText.ts';
 import { useRoomGame } from '../../../store/gameStore.ts';
 import { useHostStore } from '../../../store/hostStore.ts';
-import { Vinyl } from '../../../shared/components/vinyl.tsx';
+import { Sleeve } from '../../../shared/components/sleeve.tsx';
 import { useClipPlayback } from '../../../shared/hooks/useClipPlayback.ts';
 
 // Storskärmen under uppspelningen: omslaget, låten och sekunderna kvar av klippet. Aldrig vem som valde låten.
@@ -24,12 +24,8 @@ export const HostPlaying = () => {
       <Marquee text={`Lyssna • ${round}`} />
       <main className='flex flex-1 flex-col justify-center gap-12 px-6 py-12 lg:px-[6vw]'>
         <div className='flex flex-col gap-10 lg:flex-row lg:items-center'>
-          {/* --cover är omslagets storlek. Skivan är lika stor, och halva den sticker ut till höger. */}
-          <div className='relative shrink-0 [--cover:min(38vw,60vh)] lg:pr-[calc(var(--cover)/2)]'>
-            {/* key startar om skivan från början när ett nytt klipp börjar. */}
-            <Vinyl key={clip.index} coverUrl={clip.coverUrl} spinning={playing} className='absolute top-0 right-0 hidden w-(--cover) lg:block' />
-            <img src={clip.coverUrl} alt='' className='relative aspect-square w-(--cover) border-2 border-ink bg-card shadow-hard' />
-          </div>
+          {/* key startar om skivan från början när ett nytt klipp börjar. */}
+          <Sleeve key={clip.index} coverUrl={clip.coverUrl} spinning={playing} className='[--cover:min(38vw,60vh)]' />
           <div className='flex min-w-0 flex-col gap-4'>
             <Label>
               Låt {clip.index} av {clip.count}

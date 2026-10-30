@@ -6,6 +6,7 @@ import { Rejoining } from '../features/lobby/components/rejoining.tsx';
 import { usePlayerRejoin } from '../features/lobby/hooks/usePlayerRejoin.ts';
 import { PlayerPlaying } from '../features/playing/components/playerPlaying.tsx';
 import { PlayerRevealing } from '../features/revealing/components/playerRevealing.tsx';
+import { PlayerSongReveal } from '../features/songReveal/components/playerSongReveal.tsx';
 import { PlayerSubmitting } from '../features/submitting/components/playerSubmitting.tsx';
 import { PlayerVoting } from '../features/voting/components/playerVoting.tsx';
 import { useRoomGame } from '../store/gameStore.ts';
@@ -34,5 +35,6 @@ export const PlayerView = () => {
   if (phase === 'revealing') return <PlayerRevealing />;
   // key tömmer sökningen när nästa låt börjar.
   if (phase === 'guessing') return <PlayerGuessing key={game?.song?.clip} />;
+  if (phase === 'songReveal') return <PlayerSongReveal />;
   return <PlayerGameOver />;
 };

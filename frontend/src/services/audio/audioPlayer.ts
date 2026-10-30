@@ -19,6 +19,9 @@ export const playClip = (url: string, from: number) => {
 
 export const stopClip = () => audio.pause();
 
+// Spelar vidare där klippet stoppades, när samma klipp fortsätter i en ny vy. Gör inget om inget klipp är laddat, som efter upplåsningen i "Fortsätt".
+export const resumeClip = () => (audio.src && audio.src !== SILENCE && !audio.ended ? audio.play() : Promise.resolve());
+
 // Om ljud faktiskt hörs just nu. Elementets egna händelser, så att ett klipp som buffrar, får ett fel eller tar slut räknas som tyst.
 let isPlaying = false;
 const listeners = new Set<() => void>();
