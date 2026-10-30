@@ -8,7 +8,7 @@ public sealed record DropTheNeedleSettings : IGameSettings
 {
     public static readonly IReadOnlyList<int> SongOptions = [5, 10, 15, 20];
 
-    // Klippet är också gissningstiden. Deezers klipp är 30 s, så längre än så går inte.
+    // Deezers klipp är 30 s, så längre än så går inte. Gissningen fortsätter under betänketiden efter klippet.
     public static readonly IReadOnlyList<int> ClipSecondsOptions = [20, 25, 30];
 
     // Betänketiden läggs till efter klippet, så att man hinner söka fram en låt man känner igen sent i klippet.

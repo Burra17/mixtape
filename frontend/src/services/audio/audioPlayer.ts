@@ -11,7 +11,11 @@ export const unlockAudio = () => {
 };
 
 // Startar from sekunder in i klippet, så att ett klipp som redan pågått slutar samtidigt som serverns klocka. Löftet avvisas om klippet inte går att spela.
+// Sant när klippet har spelat sin tid, så att avslöjandet inte börjar om på resten av Deezers klipp efter betänketidens tystnad.
+let finished = false;
+
 export const playClip = (url: string, from: number) => {
+  finished = false;
   audio.src = url;
   audio.currentTime = from;
   return audio.play();
@@ -19,8 +23,13 @@ export const playClip = (url: string, from: number) => {
 
 export const stopClip = () => audio.pause();
 
-// Spelar vidare där klippet stoppades, när samma klipp fortsätter i en ny vy. Gör inget om inget klipp är laddat, som efter upplåsningen i "Fortsätt".
-export const resumeClip = () => (audio.src && audio.src !== SILENCE && !audio.ended ? audio.play() : Promise.resolve());
+export const finishClip = () => {
+  finished = true;
+  audio.pause();
+};
+
+// Spelar vidare där klippet stoppades, när samma klipp fortsätter i en ny vy. Gör inget om inget klipp är laddat, som efter upplåsningen i "Fortsätt", eller om klippet redan spelat klart.
+export const resumeClip = () => (audio.src && audio.src !== SILENCE && !audio.ended && !finished ? audio.play() : Promise.resolve());
 
 // Om ljud faktiskt hörs just nu. Elementets egna händelser, så att ett klipp som buffrar, får ett fel eller tar slut räknas som tyst.
 let isPlaying = false;

@@ -1,5 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import { getIsPlaying, playClip, resumeClip, stopClip, subscribeToPlaying } from '../../services/audio/audioPlayer.ts';
+import { finishClip, getIsPlaying, playClip, resumeClip, stopClip, subscribeToPlaying } from '../../services/audio/audioPlayer.ts';
 import { getClip } from '../../services/hub/connection.ts';
 import { useIsConnected } from '../../store/connectionStore.ts';
 import { useGameStore, useRoomGame } from '../../store/gameStore.ts';
@@ -31,6 +31,10 @@ export const useClipPlayback = () => {
   // Aux Cord Battles klipp står i nowPlaying och Drop the Needles låt i song.
   const index = game?.nowPlaying?.index ?? game?.song?.clip ?? null;
   const canPlay = session !== null && index !== null && !game?.isPaused && isConnected && !clipEnded;
+
+  useEffect(() => {
+    if (clipEnded) finishClip();
+  }, [clipEnded]);
 
   useEffect(() => {
     if (!canPlay || !session) return;
