@@ -1,4 +1,4 @@
 namespace Mixtape.Domain.Games.DropTheNeedle;
 
-// En spelares resultat för en låt. Points är 2 för rätt låt, 1 för rätt artist och 1 extra till den som snabbast fick rätt låt.
+// En spelares resultat för en låt. Fastest är den som snabbast enligt servern fick rätt låt, och Points är allt spelaren fick för låten.
 public sealed record SongResult(string PlayerId, GuessScore Score, bool Fastest, int Points);

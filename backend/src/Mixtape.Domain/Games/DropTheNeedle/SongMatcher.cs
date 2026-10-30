@@ -21,21 +21,24 @@ public static partial class SongMatcher
 
     // Titeln utan version och medverkande: det inom parentes eller hakparentes, allt efter " - " och allt från "feat.".
     // En titel som bara är en version, som "(Intro)", jämförs hel, så att den inte blir tom och matchar allt.
-    public static string NormalizeTitle(string title)
+    private static string NormalizeTitle(string title)
     {
         var withoutVersion = Bracketed().Replace(title, " ");
         withoutVersion = withoutVersion.Split(" - ")[0];
         withoutVersion = Featuring().Split(withoutVersion)[0];
-        var normalized = Simplify(withoutVersion);
-        return normalized.Length > 0 ? normalized : Simplify(title);
+        var normalized = Key(withoutVersion);
+        return normalized.Length > 0 ? normalized : Key(title);
     }
 
     // "Beyoncé" = "Beyonce", "AC/DC" = "ACDC", "The Beatles" = "Beatles" och "&" = "and".
-    public static string NormalizeArtist(string artist)
+    private static string NormalizeArtist(string artist)
     {
-        var normalized = Simplify(artist.Replace("&", " and "));
-        return normalized.StartsWith("the ", StringComparison.Ordinal) ? normalized[4..] : normalized;
+        var words = Simplify(artist.Replace("&", " and "));
+        return Key(words.StartsWith("the ", StringComparison.Ordinal) ? words[4..] : words);
     }
+
+    // Utan mellanslag, så att "Jay-Z" = "Jay Z" och "Hard-Knock Life" = "Hard Knock Life".
+    private static string Key(string text) => Simplify(text).Replace(" ", string.Empty);
 
     // Alla medverkande artister, eller huvudartisten när Deezer inte gett några.
     private static HashSet<string> Artists(SubmittedTrack track) =>

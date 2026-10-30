@@ -8,6 +8,10 @@ namespace Mixtape.Domain.Games.DropTheNeedle;
 // Avslöjandet efter varje låt kommer i #72.
 public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
 {
+    private const int SongPoints = 2;
+    private const int ArtistPoints = 1;
+    private const int FastestBonus = 1;
+
     private readonly DropTheNeedleSettings _settings;
 
     // Låtarna i spelordning. Number är klippets plats i listan och ändras aldrig, även när en låt hoppas över.
@@ -143,7 +147,7 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
     // Bara färdiga låtar räknas, så en låt som avbryts när värden avslutar ger inga poäng.
     public void AbortRound() => _guesses.Clear();
 
-    // Rätt låt ger 2 och rätt artist 1. Den eller de som tidigast enligt servern gissade rätt låt får 1 extra.
+    // Rätt låt och rätt artist ger poäng, och den eller de som tidigast enligt servern gissade rätt låt får en bonus.
     private void AwardPoints()
     {
         var song = _songs[_index].Track;
@@ -157,7 +161,7 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
             {
                 var (receivedAt, score) = scores.GetValueOrDefault(player.Id, (DateTimeOffset.MaxValue, GuessScore.None));
                 var isFastest = score == GuessScore.Song && receivedAt == fastest;
-                var points = score switch { GuessScore.Song => 2, GuessScore.Artist => 1, _ => 0 } + (isFastest ? 1 : 0);
+                var points = score switch { GuessScore.Song => SongPoints, GuessScore.Artist => ArtistPoints, _ => 0 } + (isFastest ? FastestBonus : 0);
                 player.AddPoints(points);
                 return new SongResult(player.Id, score, isFastest, points);
             })

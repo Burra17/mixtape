@@ -18,4 +18,7 @@ public interface IGame
 
     // Värden avslutar i förtid. Bara färdiga rundor ska räknas i slutställningen.
     void AbortRound();
+
+    // Poängen spelaren fick i den senast färdiga rundan eller låten, som ställningen visar bredvid totalen.
+    int RoundPointsOf(string playerId);
 }

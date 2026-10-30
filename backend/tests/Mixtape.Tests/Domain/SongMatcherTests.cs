@@ -17,6 +17,7 @@ public sealed class SongMatcherTests
     [TestCase("Heroes [2017 Remaster]", "\"Heroes\"")]
     [TestCase("Don't Look Back In Anger", "Dont Look Back in Anger")]
     [TestCase("Déjà Vu", "Deja Vu")]
+    [TestCase("Hard Knock Life", "Hard-Knock Life")]
     public void Score_TheSameTitleAndArtistInAnotherVersion_IsTheSong(string guessTitle, string correctTitle)
     {
         var score = SongMatcher.Score(Track(guessTitle, "ABBA"), Track(correctTitle, "ABBA"));
@@ -30,6 +31,7 @@ public sealed class SongMatcherTests
     [TestCase("beatles", "The Beatles")]
     [TestCase("Simon and Garfunkel", "Simon & Garfunkel")]
     [TestCase("  Daft   Punk ", "Daft Punk")]
+    [TestCase("Jay Z", "JAY-Z")]
     public void Score_TheSameArtistWrittenDifferently_IsTheSong(string guessArtist, string correctArtist)
     {
         var score = SongMatcher.Score(Track("Yellow", guessArtist), Track("Yellow", correctArtist));

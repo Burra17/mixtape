@@ -142,12 +142,12 @@ public sealed class GameRoomPlayingTests
     }
 
     [Test]
-    public void RenewLink_ReplacesTheLinkAndItsTime()
+    public void RefreshTrack_ReplacesTheLinkAndItsTime()
     {
         SubmitForAll();
         var later = _now.AddMinutes(11);
 
-        _room.RenewLink(2, "https://ny", later);
+        _room.RefreshTrack(2, "https://ny", later);
 
         var entry = _room.Entries.Single(entry => entry.Track.Id == 2);
         Assert.That(entry.Track.PreviewUrl, Is.EqualTo("https://ny"));
@@ -155,9 +155,9 @@ public sealed class GameRoomPlayingTests
     }
 
     [Test]
-    public void RenewLink_OutsidePlaying_ReturnsWrongPhase()
+    public void RefreshTrack_OutsidePlaying_ReturnsWrongPhase()
     {
-        Assert.That(_room.RenewLink(1, "https://ny", _now).Error, Is.EqualTo(RoomErrors.WrongPhase));
+        Assert.That(_room.RefreshTrack(1, "https://ny", _now).Error, Is.EqualTo(RoomErrors.WrongPhase));
     }
 
     // Alla tre skickar in, så att rummet går direkt till uppspelningen. Ger låtarna i den ordning de kom in.

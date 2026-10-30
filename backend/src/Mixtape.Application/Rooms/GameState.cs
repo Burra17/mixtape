@@ -54,7 +54,7 @@ public sealed record GameState(
                 ? aux!.Entries.Select((entry, index) => new RevealedEntry(index + 1, entry.Track.Title, entry.Track.Artist, entry.Track.CoverUrl, entry.PlayerId, aux.VotesFor(index + 1))).ToList()
                 : null,
             phase is GamePhase.Revealing or GamePhase.GameOver
-                ? room.Standings.Select(standing => new GameStanding(standing.Player.Id, standing.Player.Score, aux?.RoundPointsOf(standing.Player.Id) ?? needle?.RoundPointsOf(standing.Player.Id) ?? 0, standing.Place)).ToList()
+                ? room.Standings.Select(standing => new GameStanding(standing.Player.Id, standing.Player.Score, room.Game?.RoundPointsOf(standing.Player.Id) ?? 0, standing.Place)).ToList()
                 : null,
             room.RemainingTime(now) is { } remaining ? (int)Math.Ceiling(remaining.TotalMilliseconds) : null,
             SettingsState.From(room.Settings),
