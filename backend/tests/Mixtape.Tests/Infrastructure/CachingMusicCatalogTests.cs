@@ -68,9 +68,32 @@ public sealed class CachingMusicCatalogTests
         Assert.That(_inner.Calls, Is.EqualTo(2));
     }
 
+    [Test]
+    public async Task GetPlaylistTracks_SamePlaylistTwice_GoesToTheSourceOnce()
+    {
+        var first = await _catalog.GetPlaylistTracksAsync(248297032);
+        var second = await _catalog.GetPlaylistTracksAsync(248297032);
+
+        Assert.That(_inner.Calls, Is.EqualTo(1));
+        Assert.That(second.Value, Is.SameAs(first.Value));
+    }
+
+    [Test]
+    public async Task GetPlaylistTracks_AfterAnError_GoesToTheSourceAgain()
+    {
+        _inner.Next = MusicErrors.Unavailable;
+        await _catalog.GetPlaylistTracksAsync(248297032);
+        _inner.Next = null;
+
+        var result = await _catalog.GetPlaylistTracksAsync(248297032);
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(_inner.Calls, Is.EqualTo(2));
+    }
+
     private static SearchQuery Query(string text) => SearchQuery.Create(text).Value;
 
-    private sealed class CountingCatalog : IMusicCatalog
+    private sealed class CountingCatalog : MusicCatalogStub
     {
         public int Calls { get; private set; }
 
@@ -78,16 +101,23 @@ public sealed class CachingMusicCatalogTests
 
         public IReadOnlyList<Track> Tracks { get; set; } = [new Track(1, "Jag kommer", "Veronica Maggio", "Satan i gatan", "c", false)];
 
-        public Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default)
+        public override Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default)
         {
             Calls++;
             return Task.FromResult(Next is { } error ? Result<IReadOnlyList<Track>>.Failure(error) : Result<IReadOnlyList<Track>>.Success(Tracks));
         }
 
-        public Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default)
+        public override Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default)
         {
             Calls++;
             return Task.FromResult(Result<PlayableTrack>.Success(new PlayableTrack(trackId, "Jag kommer", "Veronica Maggio", "Satan i gatan", "xl", "klipp")));
+        }
+
+        public override Task<Result<IReadOnlyList<PlayableTrack>>> GetPlaylistTracksAsync(long playlistId, CancellationToken cancellationToken = default)
+        {
+            Calls++;
+            IReadOnlyList<PlayableTrack> tracks = [new PlayableTrack(1, "Jag kommer", "Veronica Maggio", "Satan i gatan", "xl", "klipp")];
+            return Task.FromResult(Next is { } error ? Result<IReadOnlyList<PlayableTrack>>.Failure(error) : Result<IReadOnlyList<PlayableTrack>>.Success(tracks));
         }
     }
 }

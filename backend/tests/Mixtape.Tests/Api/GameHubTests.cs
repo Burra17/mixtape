@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Mixtape.Api.Hubs;
+using Mixtape.Application.Music;
 using Mixtape.Application.Rooms;
 using Mixtape.Domain.Rooms;
 
@@ -327,8 +328,36 @@ public sealed class GameHubTests
         Assert.That(chosen.Error, Is.Null);
         Assert.That(state.GetProperty("settings").GetProperty("songs").GetInt32(), Is.EqualTo(10));
         Assert.That(state.GetProperty("settings").GetProperty("clipSeconds").GetInt32(), Is.EqualTo(30));
+        Assert.That(state.GetProperty("settings").GetProperty("categoryId").GetString(), Is.EqualTo("00s"));
         Assert.That(state.GetProperty("minPlayers").GetInt32(), Is.EqualTo(2));
         Assert.That(state.GetProperty("modes").EnumerateArray().Select(mode => mode.GetProperty("mode").GetString()), Is.EqualTo(new[] { "auxCord", "dropTheNeedle" }));
+    }
+
+    [Test]
+    public async Task GetCategories_GivesTheCategoriesInTheirOrder()
+    {
+        await using var host = CreateConnection();
+        await host.StartAsync();
+
+        var categories = await host.InvokeAsync<IReadOnlyList<CategoryOption>>(nameof(GameHub.GetCategories));
+
+        Assert.That(categories.Select(category => category.Id), Is.EqualTo(new[] { "70s", "80s", "90s", "00s", "10s", "swedish", "rock", "today" }));
+        Assert.That(categories[0].Name, Is.EqualTo("70-tal"));
+    }
+
+    [Test]
+    public async Task UpdateDropTheNeedleSettings_WithACategory_ChangesItAndRejectsUnknownOnes()
+    {
+        await using var host = CreateConnection();
+        await host.StartAsync();
+
+        var created = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
+        await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.ChooseMode), created, "dropTheNeedle");
+        var rock = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.UpdateDropTheNeedleSettings), created, null, null, "rock");
+        var disco = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.UpdateDropTheNeedleSettings), created, null, null, "disco");
+
+        Assert.That(rock.Value!.Settings, Is.EqualTo(new DropTheNeedleSettingsState(10, 30, "rock")));
+        Assert.That(disco.Error?.Code, Is.EqualTo("room.invalid_settings"));
     }
 
     [Test]

@@ -13,4 +13,7 @@ public interface IMusicCatalog
 
     // En färsk klipplänk och det stora omslaget i ett anrop, eller TrackUnavailable om låten inte går att spela.
     Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default);
+
+    // Alla spelbara låtar i en spellista, i listans ordning. Klipplänkarna kan vara äldre än 15 minuter när svaret cachas, så de förnyas innan klippet spelas.
+    Task<Result<IReadOnlyList<PlayableTrack>>> GetPlaylistTracksAsync(long playlistId, CancellationToken cancellationToken = default);
 }

@@ -72,17 +72,17 @@ public sealed class SearchTracksHandlerTests
         Assert.That(_catalog.Queries, Is.Empty);
     }
 
-    private sealed class RecordingCatalog : IMusicCatalog
+    private sealed class RecordingCatalog : MusicCatalogStub
     {
         public List<string> Queries { get; } = [];
 
-        public Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default)
+        public override Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default)
         {
             Queries.Add(query.Value);
             return Task.FromResult(Result<IReadOnlyList<Track>>.Success([]));
         }
 
-        public Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default) =>
+        public override Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException("Sökningen hämtar inga klipp.");
     }
 }

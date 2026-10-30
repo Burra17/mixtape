@@ -115,17 +115,17 @@ public sealed class GetClipHandlerTests
         await new ResumeRoomHandler(_rooms, _connections, _time).HandleAsync(game.Host, "host");
     }
 
-    private sealed class CountingCatalog : IMusicCatalog
+    private sealed class CountingCatalog : MusicCatalogStub
     {
         public int Lookups { get; private set; }
 
         // Sätts av testet som låter Deezer svara med ett fel.
         public Error? Failure { get; set; }
 
-        public Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default) =>
+        public override Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException("Uppspelningen söker inte.");
 
-        public Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default)
+        public override Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default)
         {
             Lookups++;
             if (Failure is not null)

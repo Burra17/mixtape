@@ -383,14 +383,14 @@ public sealed class TrackHubTests
             .Build();
     }
 
-    private sealed class FixedCatalog : IMusicCatalog
+    private sealed class FixedCatalog : MusicCatalogStub
     {
         public static readonly IReadOnlyList<Track> Tracks = [new Track(44112901, "Jag kommer", "Veronica Maggio", "Satan i gatan", "c", false)];
 
-        public Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default) =>
+        public override Task<Result<IReadOnlyList<Track>>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default) =>
             Task.FromResult(Result<IReadOnlyList<Track>>.Success(Tracks));
 
-        public Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default) =>
+        public override Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default) =>
             Task.FromResult(Result<PlayableTrack>.Success(new PlayableTrack(trackId, $"Låt {trackId}", "Artist", "Album", "omslag", $"https://klipp/{trackId}")));
     }
 }

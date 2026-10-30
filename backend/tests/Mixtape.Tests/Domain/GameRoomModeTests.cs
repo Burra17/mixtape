@@ -45,13 +45,13 @@ public sealed class GameRoomModeTests
     {
         _room.UpdateSettings<AuxCordSettings>(_room.HostToken, settings => settings.With(8, null, 120));
         _room.ChooseMode(_room.HostToken, GameMode.DropTheNeedle);
-        _room.UpdateSettings<DropTheNeedleSettings>(_room.HostToken, settings => settings.With(5, 20));
+        _room.UpdateSettings<DropTheNeedleSettings>(_room.HostToken, settings => settings.With(5, 20, "rock"));
 
         _room.ChooseMode(_room.HostToken, GameMode.AuxCord);
         Assert.That(_room.Settings, Is.EqualTo(AuxCordSettings.Create(8, 15, 120).Value));
 
         _room.ChooseMode(_room.HostToken, GameMode.DropTheNeedle);
-        Assert.That(_room.Settings, Is.EqualTo(DropTheNeedleSettings.Create(5, 20).Value));
+        Assert.That(_room.Settings, Is.EqualTo(DropTheNeedleSettings.Create(5, 20, "rock").Value));
     }
 
     [TestCase(null)]
@@ -80,7 +80,7 @@ public sealed class GameRoomModeTests
     [Test]
     public void UpdateSettings_ForAnotherModeThanTheChosen_ReturnsInvalidSettings()
     {
-        var result = _room.UpdateSettings<DropTheNeedleSettings>(_room.HostToken, settings => settings.With(5, null));
+        var result = _room.UpdateSettings<DropTheNeedleSettings>(_room.HostToken, settings => settings.With(5, null, null));
 
         Assert.That(result.Error, Is.EqualTo(RoomErrors.InvalidSettings));
         Assert.That(_room.Settings, Is.EqualTo(AuxCordSettings.Default));
@@ -132,6 +132,20 @@ public sealed class GameRoomModeTests
         _room.PlayAgain(_room.HostToken);
 
         Assert.That(_room.Settings, Is.EqualTo(AuxCordSettings.Create(3, 15, 90).Value));
+    }
+
+    [Test]
+    public void StartGame_KeepsTheHistoryInTheOrderItWasLastUsed()
+    {
+        JoinPlayers(3);
+        _room.UpdateSettings<AuxCordSettings>(_room.HostToken, settings => settings.With(3, null, null));
+        _room.StartGame(_room.HostToken, ["A", "B", "C"], Now);
+        _room.End(_room.HostToken, Now);
+        _room.PlayAgain(_room.HostToken);
+
+        _room.StartGame(_room.HostToken, ["D", "A", "E"], Now);
+
+        Assert.That(_room.UsedContent<AuxCordGame>(), Is.EqualTo(new[] { "B", "C", "D", "A", "E" }));
     }
 
     private void JoinPlayers(int count)
