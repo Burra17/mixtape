@@ -9,7 +9,7 @@ namespace Mixtape.Tests.Domain;
 public sealed class DropTheNeedleScoringTests
 {
     private static readonly DateTimeOffset Now = new(2026, 10, 30, 20, 0, 0, TimeSpan.Zero);
-    private static readonly TimeSpan Clip = TimeSpan.FromSeconds(DropTheNeedleSettings.Default.ClipSeconds);
+    private static readonly TimeSpan Guessing = DropTheNeedleSettings.Default.GuessLength;
     private static readonly TimeSpan Reveal = DropTheNeedleGame.RevealingDuration;
     private static readonly IReadOnlyList<SubmittedTrack> TwoSongs = [TestTrack.Of(11, "Yellow", "Coldplay"), TestTrack.Of(12, "In the End", "Linkin Park")];
 
@@ -48,7 +48,7 @@ public sealed class DropTheNeedleScoringTests
     {
         GuessAs(_anna, TestTrack.Of(90, "Yellow", "Coldplay"), Now.AddSeconds(5));
         GuessAs(_bertil, TestTrack.Of(91, "Yellow - Remastered", "Coldplay"), Now.AddSeconds(3));
-        _room.Tick(Now + Clip);
+        _room.Tick(Now + Guessing);
 
         Assert.That(_anna.Score, Is.EqualTo(2));
         Assert.That(_bertil.Score, Is.EqualTo(3));
@@ -59,7 +59,7 @@ public sealed class DropTheNeedleScoringTests
     {
         GuessAs(_anna, TestTrack.Of(90, "Yellow", "Coldplay"), Now.AddSeconds(4));
         GuessAs(_bertil, TestTrack.Of(91, "Yellow", "Coldplay"), Now.AddSeconds(4));
-        _room.Tick(Now + Clip);
+        _room.Tick(Now + Guessing);
 
         Assert.That(_anna.Score, Is.EqualTo(3));
         Assert.That(_bertil.Score, Is.EqualTo(3));
@@ -70,7 +70,7 @@ public sealed class DropTheNeedleScoringTests
     {
         GuessAs(_anna, TestTrack.Of(90, "Yellow", "Coldplay"), Now.AddSeconds(1));
         GuessAs(_bertil, TestTrack.Of(91, "Fix You", "Coldplay"), Now.AddSeconds(2));
-        _room.Tick(Now + Clip);
+        _room.Tick(Now + Guessing);
 
         var results = Game.LastResults;
         Assert.That(results.Single(result => result.PlayerId == _anna.Id), Is.EqualTo(new SongResult(_anna.Id, GuessScore.Song, true, 3, TestTrack.Of(90, "Yellow", "Coldplay"))));
@@ -106,9 +106,9 @@ public sealed class DropTheNeedleScoringTests
     public void AGameEndedDuringTheReveal_KeepsThePointsForTheSong()
     {
         GuessAs(_anna, TestTrack.Of(90, "Yellow", "Coldplay"), Now.AddSeconds(1));
-        _room.Tick(Now + Clip);
+        _room.Tick(Now + Guessing);
 
-        _room.End(_room.HostToken, Now + Clip + TimeSpan.FromSeconds(2));
+        _room.End(_room.HostToken, Now + Guessing + TimeSpan.FromSeconds(2));
 
         Assert.That(_anna.Score, Is.EqualTo(3));
         Assert.That(_room.Stage, Is.EqualTo(RoomStage.GameOver));
@@ -117,13 +117,13 @@ public sealed class DropTheNeedleScoringTests
     [Test]
     public void TheNextSong_AddsToTheScore()
     {
-        var secondSong = Now + Clip + Reveal;
+        var secondSong = Now + Guessing + Reveal;
         GuessAs(_anna, TestTrack.Of(90, "Yellow", "Coldplay"), Now.AddSeconds(1));
-        _room.Tick(Now + Clip);
+        _room.Tick(Now + Guessing);
         _room.Tick(secondSong);
 
         GuessAs(_anna, TestTrack.Of(93, "In The End", "Linkin Park"), secondSong + TimeSpan.FromSeconds(1));
-        _room.Tick(secondSong + Clip);
+        _room.Tick(secondSong + Guessing);
 
         Assert.That(_anna.Score, Is.EqualTo(6));
         Assert.That(Game.Phase, Is.EqualTo(DropTheNeedlePhase.Revealing));

@@ -11,7 +11,7 @@ import { usePlayerLobby } from '../hooks/usePlayerLobby.ts';
 const settingsLine = (settings: SettingsState, categories: CategoryOption[]) =>
   settings.mode === 'auxCord'
     ? `${settings.rounds} rundor · ${settings.clipSeconds} s klipp · ${settings.submittingSeconds} s betänketid`
-    : `${categoryName(categories, settings.categoryId)} · ${settings.songs} låtar · ${settings.clipSeconds} s klipp`;
+    : `${categoryName(categories, settings.categoryId)} · ${settings.songs} låtar · ${settings.clipSeconds} s klipp · +${settings.thinkingSeconds} s betänketid`;
 
 // Mobilen i lobbyn: ditt namn stort i din färg, hur många som är med, läget med inställningarna och "Lämna".
 export const PlayerLobby = ({ session }: { session: PlayerSession }) => {

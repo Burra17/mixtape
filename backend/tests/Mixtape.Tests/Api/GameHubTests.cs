@@ -353,10 +353,10 @@ public sealed class GameHubTests
 
         var created = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
         await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.ChooseMode), created, "dropTheNeedle");
-        var rock = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.UpdateDropTheNeedleSettings), created, null, null, "rock");
-        var disco = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.UpdateDropTheNeedleSettings), created, null, null, "disco");
+        var rock = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.UpdateDropTheNeedleSettings), created, null, null, null, "rock");
+        var disco = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.UpdateDropTheNeedleSettings), created, null, null, null, "disco");
 
-        Assert.That(rock.Value!.Settings, Is.EqualTo(new DropTheNeedleSettingsState(10, 30, "rock")));
+        Assert.That(rock.Value!.Settings, Is.EqualTo(new DropTheNeedleSettingsState(10, 30, 30, "rock")));
         Assert.That(disco.Error?.Code, Is.EqualTo("room.invalid_settings"));
     }
 

@@ -5,6 +5,7 @@ import { Label } from '../../../shared/components/label.tsx';
 import { PausedNotice } from '../../../shared/components/pausedNotice.tsx';
 import { TrackRow } from '../../../shared/components/trackRow.tsx';
 import { TrackSearch } from '../../../shared/components/trackSearch.tsx';
+import { useClipEnded } from '../../../shared/hooks/useClipEnded.ts';
 import { useTrackPicker } from '../../../shared/hooks/useTrackPicker.ts';
 import { useRoundText } from '../../../shared/hooks/useRoundText.ts';
 import { useRoomGame } from '../../../store/gameStore.ts';
@@ -16,6 +17,7 @@ export const PlayerGuessing = () => {
   const game = useRoomGame(session?.roomCode);
   const round = useRoundText();
   const picker = useTrackPicker(guess);
+  const clipEnded = useClipEnded();
 
   if (!game?.song) return null;
 
@@ -27,6 +29,11 @@ export const PlayerGuessing = () => {
       <Label>{round}</Label>
       <h1 className='text-3xl text-display leading-[1.08]'>Vilken låt är det?</h1>
       <Countdown screen='player' />
+      {clipEnded && (
+        <p role='status' className='text-lg font-bold'>
+          Klippet är slut – sista chansen att gissa
+        </p>
+      )}
       {game.isPaused && <PausedNotice />}
 
       {hasGuessed ? (

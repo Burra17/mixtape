@@ -187,9 +187,9 @@ public sealed class GameHub(
         return await SendToRoomAsync(await updateAuxCordSettings.HandleAsync(host, rounds, clipSeconds, submittingSeconds));
     }
 
-    public async Task<HubResponse<GameState>> UpdateDropTheNeedleSettings(HostSession host, int? songs, int? clipSeconds, string? categoryId)
+    public async Task<HubResponse<GameState>> UpdateDropTheNeedleSettings(HostSession host, int? songs, int? clipSeconds, int? thinkingSeconds, string? categoryId)
     {
-        return await SendToRoomAsync(await updateDropTheNeedleSettings.HandleAsync(host, songs, clipSeconds, categoryId));
+        return await SendToRoomAsync(await updateDropTheNeedleSettings.HandleAsync(host, songs, clipSeconds, thinkingSeconds, categoryId));
     }
 
     // Storskärmen och mobilerna hämtar kategorierna själva, eftersom de inte ändras och därför inte behöver finnas i varje bild.

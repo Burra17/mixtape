@@ -9,7 +9,7 @@ namespace Mixtape.Tests.Domain;
 public sealed class DropTheNeedleGameTests
 {
     private static readonly DateTimeOffset Now = new(2026, 10, 30, 20, 0, 0, TimeSpan.Zero);
-    private static readonly TimeSpan Clip = TimeSpan.FromSeconds(DropTheNeedleSettings.Default.ClipSeconds);
+    private static readonly TimeSpan Guessing = DropTheNeedleSettings.Default.GuessLength;
     private static readonly TimeSpan Reveal = DropTheNeedleGame.RevealingDuration;
     private static readonly IReadOnlyList<SubmittedTrack> ThreeSongs = [TestTrack.Of(11, "Yellow"), TestTrack.Of(12, "In the End"), TestTrack.Of(13, "Hey Ya!")];
 
@@ -30,12 +30,12 @@ public sealed class DropTheNeedleGameTests
     private DropTheNeedleGame Game => (DropTheNeedleGame)_room.Game!;
 
     [Test]
-    public void Start_BeginsGuessingTheFirstSongForTheClipLength()
+    public void Start_BeginsGuessingTheFirstSongForTheClipAndTheTimeToThink()
     {
         Assert.That(Game.Phase, Is.EqualTo(DropTheNeedlePhase.Guessing));
         Assert.That(Game.SongNumber, Is.EqualTo(1));
         Assert.That(Game.SongCount, Is.EqualTo(3));
-        Assert.That(_room.RemainingTime(Now), Is.EqualTo(Clip));
+        Assert.That(_room.RemainingTime(Now), Is.EqualTo(Guessing));
     }
 
     [Test]
@@ -66,7 +66,7 @@ public sealed class DropTheNeedleGameTests
     [Test]
     public void Guess_DuringTheReveal_IsRejected()
     {
-        _room.Tick(Now + Clip);
+        _room.Tick(Now + Guessing);
 
         Assert.That(GuessAs(_anna, 1, TestTrack.Of(11, "Yellow")).Error, Is.EqualTo(RoomErrors.WrongPhase));
         Assert.That(Game.HasGuessed(_anna.Id), Is.False);
@@ -75,7 +75,7 @@ public sealed class DropTheNeedleGameTests
     [Test]
     public void GetCurrentClip_DuringTheReveal_ReturnsWrongPhase()
     {
-        _room.Tick(Now + Clip);
+        _room.Tick(Now + Guessing);
 
         Assert.That(Game.GetCurrentClip().Error, Is.EqualTo(RoomErrors.WrongPhase));
         Assert.That(Game.CanGuess(_anna.Id).Error, Is.EqualTo(RoomErrors.WrongPhase));
@@ -116,34 +116,34 @@ public sealed class DropTheNeedleGameTests
     [Test]
     public void Tick_AtTheEndOfTheClip_RevealsTheSong()
     {
-        Assert.That(_room.Tick(Now + Clip - TimeSpan.FromMilliseconds(1)), Is.False);
-        Assert.That(_room.Tick(Now + Clip), Is.True);
+        Assert.That(_room.Tick(Now + Guessing - TimeSpan.FromMilliseconds(1)), Is.False);
+        Assert.That(_room.Tick(Now + Guessing), Is.True);
 
         Assert.That(Game.Phase, Is.EqualTo(DropTheNeedlePhase.Revealing));
         Assert.That(Game.SongNumber, Is.EqualTo(1));
-        Assert.That(_room.RemainingTime(Now + Clip), Is.EqualTo(Reveal));
+        Assert.That(_room.RemainingTime(Now + Guessing), Is.EqualTo(Reveal));
     }
 
     [Test]
     public void Tick_AtTheEndOfTheReveal_StartsTheNextSong()
     {
-        _room.Tick(Now + Clip);
+        _room.Tick(Now + Guessing);
 
-        Assert.That(_room.Tick(Now + Clip + Reveal - TimeSpan.FromMilliseconds(1)), Is.False);
-        Assert.That(_room.Tick(Now + Clip + Reveal), Is.True);
+        Assert.That(_room.Tick(Now + Guessing + Reveal - TimeSpan.FromMilliseconds(1)), Is.False);
+        Assert.That(_room.Tick(Now + Guessing + Reveal), Is.True);
 
         Assert.That(Game.Phase, Is.EqualTo(DropTheNeedlePhase.Guessing));
         Assert.That(Game.SongNumber, Is.EqualTo(2));
-        Assert.That(_room.RemainingTime(Now + Clip + Reveal), Is.EqualTo(Clip));
+        Assert.That(_room.RemainingTime(Now + Guessing + Reveal), Is.EqualTo(Guessing));
     }
 
     [Test]
     public void Tick_DuringAPausedReveal_DoesNotMoveOn()
     {
-        _room.Tick(Now + Clip);
-        _room.Pause(_room.HostToken, Now + Clip);
+        _room.Tick(Now + Guessing);
+        _room.Pause(_room.HostToken, Now + Guessing);
 
-        _room.Tick(Now + Clip + Reveal * 2);
+        _room.Tick(Now + Guessing + Reveal * 2);
 
         Assert.That(Game.Phase, Is.EqualTo(DropTheNeedlePhase.Revealing));
     }
@@ -152,12 +152,12 @@ public sealed class DropTheNeedleGameTests
     public void Tick_AfterTheLastSong_RevealsItBeforeTheGameEnds()
     {
         var lastSong = SongStart(3);
-        _room.Tick(lastSong + Clip);
+        _room.Tick(lastSong + Guessing);
 
         Assert.That(_room.Stage, Is.EqualTo(RoomStage.InGame));
         Assert.That(Game.Phase, Is.EqualTo(DropTheNeedlePhase.Revealing));
 
-        _room.Tick(lastSong + Clip + Reveal);
+        _room.Tick(lastSong + Guessing + Reveal);
 
         Assert.That(_room.Stage, Is.EqualTo(RoomStage.GameOver));
     }
@@ -196,7 +196,7 @@ public sealed class DropTheNeedleGameTests
         Assert.That(Game.ClipNumber, Is.EqualTo(3));
         Assert.That(Game.GetCurrentClip().Value.Track.Id, Is.EqualTo(13));
         Assert.That(Game.GetCurrentClip().Value.Number, Is.EqualTo(3));
-        Assert.That(_room.RemainingTime(secondSong + TimeSpan.FromSeconds(2)), Is.EqualTo(Clip));
+        Assert.That(_room.RemainingTime(secondSong + TimeSpan.FromSeconds(2)), Is.EqualTo(Guessing));
         Assert.That(_room.Revision, Is.GreaterThan(revision));
     }
 
@@ -232,9 +232,9 @@ public sealed class DropTheNeedleGameTests
     [Test]
     public void SkipUnplayableClip_DuringTheReveal_DoesNothing()
     {
-        _room.Tick(Now + Clip);
+        _room.Tick(Now + Guessing);
 
-        _room.SkipUnplayableClip(_room.HostToken, 11, Now + Clip);
+        _room.SkipUnplayableClip(_room.HostToken, 11, Now + Guessing);
 
         Assert.That(Game.Phase, Is.EqualTo(DropTheNeedlePhase.Revealing));
         Assert.That(Game.SongCount, Is.EqualTo(3));
@@ -252,7 +252,7 @@ public sealed class DropTheNeedleGameTests
     {
         Assert.That(_room.WithGame<ISearchesTracks>(game => game.CanSearch()).IsSuccess, Is.True);
 
-        _room.Tick(Now + Clip);
+        _room.Tick(Now + Guessing);
 
         Assert.That(_room.WithGame<ISearchesTracks>(game => game.CanSearch()).Error, Is.EqualTo(RoomErrors.WrongPhase));
 
@@ -267,7 +267,7 @@ public sealed class DropTheNeedleGameTests
         var at = Now;
         for (var i = 1; i < song; i++)
         {
-            _room.Tick(at += Clip);
+            _room.Tick(at += Guessing);
             _room.Tick(at += Reveal);
         }
 

@@ -74,7 +74,7 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
     public Step Start(IReadOnlyList<Player> players)
     {
         _players = players;
-        return Step.Next(ClipLength);
+        return Step.Next(_settings.GuessLength);
     }
 
     public Result CanSearch() => Phase == DropTheNeedlePhase.Guessing ? Result.Success() : RoomErrors.WrongPhase;
@@ -187,8 +187,7 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
 
         _index++;
         Phase = DropTheNeedlePhase.Guessing;
-        return Step.Next(ClipLength);
+        return Step.Next(_settings.GuessLength);
     }
 
-    private TimeSpan ClipLength => TimeSpan.FromSeconds(_settings.ClipSeconds);
 }
