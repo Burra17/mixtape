@@ -8,5 +8,6 @@ public enum GamePhase
     Playing,
     Voting,
     Revealing,
+    Guessing,
     GameOver,
 }

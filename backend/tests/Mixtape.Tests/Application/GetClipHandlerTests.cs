@@ -1,7 +1,7 @@
 using Mixtape.Application.Music;
 using Mixtape.Application.Rooms;
 using Mixtape.Domain.Common;
-using Mixtape.Domain.Games.AuxCord;
+using Mixtape.Domain.Games;
 using Mixtape.Domain.Rooms;
 using Mixtape.Infrastructure.Connections;
 using Mixtape.Infrastructure.Rooms;
@@ -24,7 +24,7 @@ public sealed class GetClipHandlerTests
         _rooms = new InMemoryGameRoomRepository();
         _connections = new InMemoryConnectionRegistry();
         _catalog = new CountingCatalog();
-        _handler = new GetClipHandler(_rooms, _catalog, _time);
+        _handler = new GetClipHandler(_rooms, _catalog, new RecordingNotifier(), _time);
     }
 
     [Test]
@@ -111,7 +111,7 @@ public sealed class GetClipHandlerTests
             room.DisconnectHost(_time.GetUtcNow());
             return Result.Success();
         });
-        _time.Advance(Entry.LinkMaxAge);
+        _time.Advance(CurrentClip.LinkMaxAge);
         await new ResumeRoomHandler(_rooms, _connections, _time).HandleAsync(game.Host, "host");
     }
 

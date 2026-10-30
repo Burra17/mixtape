@@ -26,6 +26,7 @@ public sealed class GameHub(
     SubmitTrackHandler submitTrack,
     GetClipHandler getClip,
     VoteHandler vote,
+    GuessHandler guess,
     GetBallotHandler getBallot,
     PlayAgainHandler playAgain,
     PauseGameHandler pauseGame,
@@ -111,6 +112,12 @@ public sealed class GameHub(
     public async Task<HubResponse<GameState>> Vote(int entry)
     {
         return await SendToRoomAsync(await vote.HandleAsync(Context.ConnectionId, entry));
+    }
+
+    // Spelaren känns igen via anslutningen, som vid inskicket. Bilden går till hela rummet, så att storskärmen bockar av spelaren.
+    public async Task<HubResponse<GameState>> Guess(long trackId)
+    {
+        return await SendToRoomAsync(await guess.HandleAsync(Context.ConnectionId, trackId));
     }
 
     // Bara till spelaren själv: det egna bidraget och den egna rösten. Mobilen hämtar dem när röstningen börjar och efter en återanslutning.

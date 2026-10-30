@@ -1,7 +1,7 @@
 using Mixtape.Application.Connections;
 using Mixtape.Application.Rooms;
 using Mixtape.Domain.Common;
-using Mixtape.Domain.Games.AuxCord;
+using Mixtape.Domain.Games;
 using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Application.Music;
@@ -23,7 +23,7 @@ public sealed class SearchTracksHandler(IMusicCatalog catalog, IConnectionRegist
         }
 
         // Fasen läses med rummets lås, men sökningen görs efter att låset släppts.
-        var allowed = await rooms.WithRoomAsync(owner.RoomCode, room => room.WithGame<AuxCordGame>(game => game.CanChooseTrack()));
+        var allowed = await rooms.WithRoomAsync(owner.RoomCode, room => room.WithGame<ISearchesTracks>(game => game.CanSearch()));
         if (!allowed.IsSuccess)
         {
             return allowed.Error!;

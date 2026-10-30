@@ -1,4 +1,5 @@
 using Mixtape.Domain.Games.AuxCord;
+using Mixtape.Domain.Games.DropTheNeedle;
 using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Application.Rooms;
@@ -14,6 +15,7 @@ public sealed record GameState(
     string? Prompt,
     bool SkippedRound,
     NowPlaying? NowPlaying,
+    SongState? Song,
     IReadOnlyList<BallotEntry>? Ballot,
     IReadOnlyList<RevealedEntry>? Reveal,
     IReadOnlyList<GameStanding>? Standings,
@@ -26,52 +28,64 @@ public sealed record GameState(
     bool CanStart)
 {
     // Tiden som är kvar räknas om för varje bild, så att mobilens nedräkning inte beror på mobilens klocka.
-    // Aux Cord Battles är det enda spelläget, så spelet läses som AuxCordGame. Kontraktet för fler lägen bestäms i #68 och #70.
+    // Varje läge fyller sina egna fält, och de andra lägenas är null eller tomma.
     public static GameState From(GameRoom room, DateTimeOffset now)
     {
-        var game = room.Game as AuxCordGame;
-        var phase = PhaseOf(room.Stage, game);
+        var aux = room.Game as AuxCordGame;
+        var needle = room.Game as DropTheNeedleGame;
+        var phase = PhaseOf(room.Stage, room.Game);
         return new(
             room.Code.Value,
             room.Revision,
             phase,
             room.IsPaused,
             room.PauseReason,
-            game?.Round ?? 0,
-            room.Stage == RoomStage.InGame ? game!.Prompt : null,
-            room.Stage == RoomStage.InGame && game!.SkippedRound,
-            phase == GamePhase.Playing && game!.CurrentClip is { Track: var track } ? new NowPlaying(game.ClipNumber, game.Entries.Count, track.Title, track.Artist, track.Album, track.CoverUrl) : null,
+            aux?.Round ?? 0,
+            room.Stage == RoomStage.InGame ? aux?.Prompt : null,
+            room.Stage == RoomStage.InGame && aux is { SkippedRound: true },
+            phase == GamePhase.Playing && aux!.CurrentClip is { Track: var track } ? new NowPlaying(aux.ClipNumber, aux.Entries.Count, track.Title, track.Artist, track.Album, track.CoverUrl) : null,
+            // Under gissningen bara låtens nummer, aldrig titel, artist eller omslag, eftersom bilden går att läsa i nätverksfliken.
+            phase == GamePhase.Guessing ? new SongState(needle!.SongNumber, needle.SongCount, needle.CategoryId) : null,
             phase == GamePhase.Voting
-                ? game!.Entries.Select((entry, index) => new BallotEntry(index + 1, entry.Track.Title, entry.Track.Artist, entry.Track.CoverUrl)).ToList()
+                ? aux!.Entries.Select((entry, index) => new BallotEntry(index + 1, entry.Track.Title, entry.Track.Artist, entry.Track.CoverUrl)).ToList()
                 : null,
             // Vem som valde vad lämnar servern först här, när röstningen är slut.
             phase == GamePhase.Revealing
-                ? game!.Entries.Select((entry, index) => new RevealedEntry(index + 1, entry.Track.Title, entry.Track.Artist, entry.Track.CoverUrl, entry.PlayerId, game.VotesFor(index + 1))).ToList()
+                ? aux!.Entries.Select((entry, index) => new RevealedEntry(index + 1, entry.Track.Title, entry.Track.Artist, entry.Track.CoverUrl, entry.PlayerId, aux.VotesFor(index + 1))).ToList()
                 : null,
             phase is GamePhase.Revealing or GamePhase.GameOver
-                ? room.Standings.Select(standing => new GameStanding(standing.Player.Id, standing.Player.Score, game?.RoundPointsOf(standing.Player.Id) ?? 0, standing.Place)).ToList()
+                ? room.Standings.Select(standing => new GameStanding(standing.Player.Id, standing.Player.Score, aux?.RoundPointsOf(standing.Player.Id) ?? 0, standing.Place)).ToList()
                 : null,
             room.RemainingTime(now) is { } remaining ? (int)Math.Ceiling(remaining.TotalMilliseconds) : null,
             SettingsState.From(room.Settings),
             ModeOptions.All,
-            room.Players.Select(player => new GamePlayer(player.Id, player.Name.Value, player.ColorIndex, player.IsConnected, game?.HasSubmitted(player.Id) ?? false, game?.HasVoted(player.Id) ?? false)).ToList(),
+            room.Players.Select(player => new GamePlayer(
+                player.Id,
+                player.Name.Value,
+                player.ColorIndex,
+                player.IsConnected,
+                aux?.HasSubmitted(player.Id) ?? false,
+                aux?.HasVoted(player.Id) ?? false,
+                needle?.HasGuessed(player.Id) ?? false)).ToList(),
             room.Settings.MinPlayers,
             GameRoom.MaxPlayers,
             room.CanStart);
     }
 
     // Kontraktets fas är rummets läge, och under spelet spelets egen fas.
-    private static GamePhase PhaseOf(RoomStage stage, AuxCordGame? game) =>
+    private static GamePhase PhaseOf(RoomStage stage, IGame? game) =>
         stage switch
         {
             RoomStage.Lobby => GamePhase.Lobby,
             RoomStage.GameOver => GamePhase.GameOver,
-            _ => game!.Phase switch
+            _ => game switch
             {
-                AuxCordPhase.Submitting => GamePhase.Submitting,
-                AuxCordPhase.Playing => GamePhase.Playing,
-                AuxCordPhase.Voting => GamePhase.Voting,
-                _ => GamePhase.Revealing,
+                AuxCordGame { Phase: AuxCordPhase.Submitting } => GamePhase.Submitting,
+                AuxCordGame { Phase: AuxCordPhase.Playing } => GamePhase.Playing,
+                AuxCordGame { Phase: AuxCordPhase.Voting } => GamePhase.Voting,
+                AuxCordGame => GamePhase.Revealing,
+                DropTheNeedleGame => GamePhase.Guessing,
+                _ => throw new InvalidOperationException($"Spelet {game?.GetType().Name} saknar faser i kontraktet."),
             },
         };
 }

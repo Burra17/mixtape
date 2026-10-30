@@ -84,15 +84,4 @@ public sealed class AdvancePhasesHandlerTests
             room.SubmitTrack(game.Players[1].PlayerId, TestTrack.Of(2, "Två", "Artist"), _time.GetUtcNow());
             return true;
         });
-
-    private sealed class RecordingNotifier : IGameNotifier
-    {
-        public List<GameState> Sent { get; } = [];
-
-        public Task GameStateUpdatedAsync(GameState state)
-        {
-            Sent.Add(state);
-            return Task.CompletedTask;
-        }
-    }
 }

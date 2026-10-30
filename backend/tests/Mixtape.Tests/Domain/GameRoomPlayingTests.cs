@@ -1,5 +1,5 @@
 using Mixtape.Application.Rooms;
-using Mixtape.Domain.Games.AuxCord;
+using Mixtape.Domain.Games;
 using Mixtape.Domain.Music;
 using Mixtape.Domain.Rooms;
 
@@ -114,8 +114,8 @@ public sealed class GameRoomPlayingTests
         var entry = _room.Entries.Single();
         Assert.That(entry.Track.PreviewUrl, Is.EqualTo("https://klipp/1"));
         Assert.That(entry.LinkFetchedAt, Is.EqualTo(_now));
-        Assert.That(entry.NeedsNewLink(_now + Entry.LinkMaxAge - TimeSpan.FromSeconds(1)), Is.False);
-        Assert.That(entry.NeedsNewLink(_now + Entry.LinkMaxAge), Is.True);
+        Assert.That(new CurrentClip(1, entry.Track, entry.LinkFetchedAt).NeedsNewLink(_now + CurrentClip.LinkMaxAge - TimeSpan.FromSeconds(1)), Is.False);
+        Assert.That(new CurrentClip(1, entry.Track, entry.LinkFetchedAt).NeedsNewLink(_now + CurrentClip.LinkMaxAge), Is.True);
     }
 
     [Test]

@@ -359,6 +359,38 @@ public sealed class TrackHubTests
         return (room, sessions);
     }
 
+    [Test]
+    public async Task DropTheNeedle_SendsGuessingWithoutTheAnswerAndLetsThePlayerSearchAndGuess()
+    {
+        await using var host = CreateConnection();
+        await using var anna = CreateConnection();
+        var guessing = new TaskCompletionSource<string>();
+        // Den råa texten på tråden, oberoende av klientens converter, så att inget i bilden kan dölja ett svar.
+        anna.On<JsonElement>(nameof(IGameClient.GameStateUpdated), state =>
+        {
+            if (state.GetProperty("phase").GetString() == "guessing")
+            {
+                guessing.TrySetResult(state.GetRawText());
+            }
+        });
+        await Task.WhenAll(host.StartAsync(), anna.StartAsync());
+        var room = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
+        await anna.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), room.RoomCode, "Anna");
+        await host.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), room.RoomCode, "Bertil");
+        await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.ChooseMode), room, "dropTheNeedle");
+
+        var start = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.StartGame), room);
+        var raw = await guessing.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var search = await anna.InvokeAsync<HubResponse<IReadOnlyList<Track>>>(nameof(GameHub.Search), "Coldplay");
+        var guess = await anna.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.Guess), 44112901L);
+
+        Assert.That(start.Error, Is.Null);
+        Assert.That(raw, Does.Contain("\"song\":{\"index\":1,\"count\":10,\"categoryId\":\"00s\"}"));
+        Assert.That(raw, Does.Not.Contain("Hemlig"));
+        Assert.That(search.Value, Is.EqualTo(FixedCatalog.Tracks));
+        Assert.That(guess.Value!.Players.Single(player => player.Name == "Anna").HasGuessed, Is.True);
+    }
+
     // Anna har en egen anslutning. Storskärmens anslutning går med som Bertil och sedan Cecilia, så att spelet kan starta,
     // och anropar därefter som Cecilia. Ger Annas id.
     private static async Task<string> StartGameAsync(HubConnection host, HubConnection anna)
@@ -392,5 +424,14 @@ public sealed class TrackHubTests
 
         public override Task<Result<PlayableTrack>> GetPlayableTrackAsync(long trackId, CancellationToken cancellationToken = default) =>
             Task.FromResult(Result<PlayableTrack>.Success(new PlayableTrack(trackId, $"Låt {trackId}", "Artist", "Album", "omslag", $"https://klipp/{trackId}")));
+
+        // Låtarna heter "Hemlig 1" och så vidare, så att testet ser om svaret läckt ut i bilden.
+        public override Task<Result<IReadOnlyList<PlayableTrack>>> GetPlaylistTracksAsync(long playlistId, CancellationToken cancellationToken = default)
+        {
+            IReadOnlyList<PlayableTrack> tracks = Enumerable.Range(1, 30)
+                .Select(id => new PlayableTrack(id, $"Hemlig {id}", $"Artist {id}", "Album", "omslag", $"https://klipp/{id}"))
+                .ToList();
+            return Task.FromResult(Result<IReadOnlyList<PlayableTrack>>.Success(tracks));
+        }
     }
 }
