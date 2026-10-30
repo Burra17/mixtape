@@ -5,5 +5,7 @@ export const useRoundText = () =>
   useGameStore((state) => {
     const game = state.game;
     if (!game || game.phase === 'lobby') return null;
-    return game.phase === 'gameOver' ? 'Slutställning' : `Runda ${game.round} av ${game.settings.rounds}`;
+    if (game.phase === 'gameOver') return 'Slutställning';
+    // Bara Aux Cord Battles har rundor. Drop the Needle får sin egen rad i #70.
+    return game.settings.mode === 'auxCord' ? `Runda ${game.round} av ${game.settings.rounds}` : null;
   });
