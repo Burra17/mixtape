@@ -266,7 +266,7 @@ public sealed class GameHubTests
         await anna.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Anna");
         await host.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Bertil");
         await host.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Cecilia");
-        var settings = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.UpdateSettings), created, 3, 10, 60);
+        var settings = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.UpdateAuxCordSettings), created, 3, 10, 60);
         var start = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.StartGame), created);
         var state = await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
@@ -274,7 +274,7 @@ public sealed class GameHubTests
         Assert.That(start.Error, Is.Null);
         Assert.That(state.Round, Is.EqualTo(1));
         Assert.That(state.Prompt, Is.Not.Null.And.Not.Empty);
-        Assert.That(state.Settings, Is.EqualTo(new SettingsState(3, 10, 60)));
+        Assert.That(state.Settings, Is.EqualTo(new AuxCordSettingsState(3, 10, 60)));
         Assert.That(state.RemainingMs, Is.InRange(55_000, 60_000));
     }
 
@@ -291,6 +291,7 @@ public sealed class GameHubTests
         var state = await raw.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
         Assert.That(state.GetProperty("phase").GetString(), Is.EqualTo("lobby"));
+        Assert.That(state.GetProperty("settings").GetProperty("mode").GetString(), Is.EqualTo("auxCord"));
     }
 
     [Test]
@@ -303,6 +304,46 @@ public sealed class GameHubTests
         var start = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.StartGame), created);
 
         Assert.That(start.Error?.Code, Is.EqualTo("room.not_enough_players"));
+    }
+
+    [Test]
+    public async Task ChooseMode_SendsTheModesSettingsWithTheModeAsDiscriminator()
+    {
+        await using var host = CreateConnection();
+        var raw = new TaskCompletionSource<JsonElement>();
+        host.On<JsonElement>(nameof(IGameClient.GameStateUpdated), state =>
+        {
+            if (state.GetProperty("settings").GetProperty("mode").GetString() == "dropTheNeedle")
+            {
+                raw.TrySetResult(state);
+            }
+        });
+        await host.StartAsync();
+
+        var created = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
+        var chosen = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.ChooseMode), created, "dropTheNeedle");
+        var state = await raw.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.That(chosen.Error, Is.Null);
+        Assert.That(state.GetProperty("settings").GetProperty("songs").GetInt32(), Is.EqualTo(10));
+        Assert.That(state.GetProperty("settings").GetProperty("clipSeconds").GetInt32(), Is.EqualTo(30));
+        Assert.That(state.GetProperty("minPlayers").GetInt32(), Is.EqualTo(2));
+        Assert.That(state.GetProperty("modes").EnumerateArray().Select(mode => mode.GetProperty("mode").GetString()), Is.EqualTo(new[] { "auxCord", "dropTheNeedle" }));
+    }
+
+    [Test]
+    public async Task StartGame_WithDropTheNeedle_ReturnsNotReady()
+    {
+        await using var host = CreateConnection();
+        await host.StartAsync();
+
+        var created = (await host.InvokeAsync<HubResponse<HostSession>>(nameof(GameHub.CreateRoom), null)).Value!;
+        await host.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Anna");
+        await host.InvokeAsync<HubResponse<PlayerSession>>(nameof(GameHub.JoinRoom), created.RoomCode, "Bertil");
+        await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.ChooseMode), created, "dropTheNeedle");
+        var start = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.StartGame), created);
+
+        Assert.That(start.Error?.Code, Is.EqualTo("mode.not_ready"));
     }
 
     [Test]

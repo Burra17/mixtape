@@ -11,7 +11,7 @@ public static class RoomErrors
 
     public static readonly Error AlreadyStarted = new("room.already_started", "Spelet har redan börjat.");
 
-    public static readonly Error NotEnoughPlayers = new("room.not_enough_players", $"Det behövs minst {GameRoom.MinPlayers} spelare.");
+    public static readonly Error NotEnoughPlayers = new("room.not_enough_players", "Det behövs fler spelare.");
 
     // Spelaren gör något som inte hör till fasen, till exempel söker under röstningen.
     public static readonly Error WrongPhase = new("room.wrong_phase", "Det går inte just nu.");

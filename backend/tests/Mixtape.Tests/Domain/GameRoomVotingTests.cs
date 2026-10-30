@@ -22,7 +22,7 @@ public sealed class GameRoomVotingTests
         _anna = _room.Join("Anna").Value;
         _bertil = _room.Join("Bertil").Value;
         _cecilia = _room.Join("Cecilia").Value;
-        _room.StartGame(_room.HostToken, Enumerable.Range(1, _room.Settings.Rounds).Select(round => $"Prompt {round}").ToList(), _now);
+        _room.StartGame(_room.HostToken, Enumerable.Range(1, _room.AuxSettings.Rounds).Select(round => $"Prompt {round}").ToList(), _now);
     }
 
     [Test]
@@ -93,7 +93,7 @@ public sealed class GameRoomVotingTests
     public void Vote_ByAPlayerWithoutAnEntry_IsAccepted()
     {
         SubmitFor(_anna, _bertil);
-        _now += GameSettings.Default.SubmittingDuration;
+        _now += AuxCordSettings.Default.SubmittingDuration;
         _room.Tick(_now);
         PlayAllClips();
 
@@ -215,7 +215,7 @@ public sealed class GameRoomVotingTests
     {
         while (_room.Phase == GamePhase.Playing)
         {
-            _now += _room.Settings.ClipLength;
+            _now += _room.AuxSettings.ClipLength;
             _room.Tick(_now);
         }
 

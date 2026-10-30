@@ -22,7 +22,7 @@ public sealed class GameRoomRevealingTests
         _anna = _room.Join("Anna").Value;
         _bertil = _room.Join("Bertil").Value;
         _cecilia = _room.Join("Cecilia").Value;
-        _room.StartGame(_room.HostToken, Enumerable.Range(1, _room.Settings.Rounds).Select(round => $"Prompt {round}").ToList(), _now);
+        _room.StartGame(_room.HostToken, Enumerable.Range(1, _room.AuxSettings.Rounds).Select(round => $"Prompt {round}").ToList(), _now);
     }
 
     [Test]
@@ -139,13 +139,13 @@ public sealed class GameRoomRevealingTests
 
         if (_room.Phase == GamePhase.Submitting)
         {
-            _now += GameSettings.Default.SubmittingDuration;
+            _now += AuxCordSettings.Default.SubmittingDuration;
             _room.Tick(_now);
         }
 
         while (_room.Phase == GamePhase.Playing)
         {
-            _now += _room.Settings.ClipLength;
+            _now += _room.AuxSettings.ClipLength;
             _room.Tick(_now);
         }
 

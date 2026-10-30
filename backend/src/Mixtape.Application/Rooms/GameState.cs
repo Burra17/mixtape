@@ -19,9 +19,7 @@ public sealed record GameState(
     IReadOnlyList<GameStanding>? Standings,
     int? RemainingMs,
     SettingsState Settings,
-    IReadOnlyList<int> RoundOptions,
-    IReadOnlyList<int> ClipSecondsOptions,
-    IReadOnlyList<int> SubmittingSecondsOptions,
+    IReadOnlyList<ModeOptions> Modes,
     IReadOnlyList<GamePlayer> Players,
     int MinPlayers,
     int MaxPlayers,
@@ -54,12 +52,10 @@ public sealed record GameState(
                 ? room.Standings.Select(standing => new GameStanding(standing.Player.Id, standing.Player.Score, game?.RoundPointsOf(standing.Player.Id) ?? 0, standing.Place)).ToList()
                 : null,
             room.RemainingTime(now) is { } remaining ? (int)Math.Ceiling(remaining.TotalMilliseconds) : null,
-            new SettingsState(room.Settings.Rounds, room.Settings.ClipSeconds, room.Settings.SubmittingSeconds),
-            GameSettings.RoundOptions,
-            GameSettings.ClipSecondsOptions,
-            GameSettings.SubmittingSecondsOptions,
+            SettingsState.From(room.Settings),
+            ModeOptions.All,
             room.Players.Select(player => new GamePlayer(player.Id, player.Name.Value, player.ColorIndex, player.IsConnected, game?.HasSubmitted(player.Id) ?? false, game?.HasVoted(player.Id) ?? false)).ToList(),
-            GameRoom.MinPlayers,
+            room.Settings.MinPlayers,
             GameRoom.MaxPlayers,
             room.CanStart);
     }

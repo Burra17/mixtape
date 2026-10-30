@@ -24,7 +24,7 @@ public sealed class GameRoomPlayingTests
             _room.Join(name);
         }
 
-        _room.StartGame(_room.HostToken, Enumerable.Range(1, _room.Settings.Rounds).Select(round => $"Prompt {round}").ToList(), _now);
+        _room.StartGame(_room.HostToken, Enumerable.Range(1, _room.AuxSettings.Rounds).Select(round => $"Prompt {round}").ToList(), _now);
     }
 
     [Test]
@@ -45,7 +45,7 @@ public sealed class GameRoomPlayingTests
     public void Tick_GoesToTheNextClipAfterTheClipLengthAndThenToVoting()
     {
         SubmitForAll();
-        var clip = _room.Settings.ClipLength;
+        var clip = _room.AuxSettings.ClipLength;
 
         for (var number = 2; number <= 3; number++)
         {
@@ -94,7 +94,7 @@ public sealed class GameRoomPlayingTests
         var back = _now.AddMinutes(20);
         _room.ResumeHost(_room.HostToken, back);
 
-        Assert.That(_room.RemainingTime(back), Is.EqualTo(_room.Settings.ClipLength - TimeSpan.FromSeconds(4)));
+        Assert.That(_room.RemainingTime(back), Is.EqualTo(_room.AuxSettings.ClipLength - TimeSpan.FromSeconds(4)));
     }
 
     [Test]

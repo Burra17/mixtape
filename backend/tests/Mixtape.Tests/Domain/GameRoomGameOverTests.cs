@@ -1,4 +1,5 @@
 using Mixtape.Application.Rooms;
+using Mixtape.Domain.Games.AuxCord;
 using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Tests.Domain;
@@ -65,7 +66,7 @@ public sealed class GameRoomGameOverTests
 
         Assert.That(_room.Players, Is.EqualTo(new[] { _anna, _bertil, _cecilia }));
         Assert.That(_cecilia.IsConnected, Is.False);
-        Assert.That(_room.Settings, Is.EqualTo(GameSettings.Create(3, 10, 120).Value));
+        Assert.That(_room.Settings, Is.EqualTo(AuxCordSettings.Create(3, 10, 120).Value));
         Assert.That(_room.UsedPrompts, Is.EquivalentTo(new[] { "Prompt 1", "Prompt 2", "Prompt 3" }));
     }
 
@@ -102,7 +103,7 @@ public sealed class GameRoomGameOverTests
     // De två första rundorna hoppas över och den sista spelas, så att slutställningen har bidrag och röster kvar som PlayAgain måste tömma.
     private void PlayToTheEnd()
     {
-        while (_room.Round < _room.Settings.Rounds)
+        while (_room.Round < _room.AuxSettings.Rounds)
         {
             _now += _room.RemainingTime(_now)!.Value;
             _room.Tick(_now);

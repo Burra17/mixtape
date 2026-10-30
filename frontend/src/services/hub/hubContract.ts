@@ -9,7 +9,9 @@ export const serverMethods = {
   rejoinRoom: 'RejoinRoom',
   leaveRoom: 'LeaveRoom',
   removePlayer: 'RemovePlayer',
-  updateSettings: 'UpdateSettings',
+  chooseMode: 'ChooseMode',
+  updateAuxCordSettings: 'UpdateAuxCordSettings',
+  updateDropTheNeedleSettings: 'UpdateDropTheNeedleSettings',
   startGame: 'StartGame',
   search: 'Search',
   submitTrack: 'SubmitTrack',
@@ -71,12 +73,17 @@ export type GamePlayer = {
   hasVoted: boolean;
 };
 
-// SettingsState i Application/Rooms.
-export type SettingsState = {
-  rounds: number;
-  clipSeconds: number;
-  submittingSeconds: number;
-};
+// GameMode i Domain/Games.
+export type GameMode = 'auxCord' | 'dropTheNeedle';
+
+// SettingsState i Application/Rooms: det valda lägets inställningar. mode skiljer lägena åt.
+export type SettingsState =
+  { mode: 'auxCord'; rounds: number; clipSeconds: number; submittingSeconds: number } | { mode: 'dropTheNeedle'; songs: number; clipSeconds: number };
+
+// ModeOptions i Application/Rooms: ett läge som värden kan välja, med gränsen för antal spelare och valen för inställningarna.
+export type ModeOptions =
+  | { mode: 'auxCord'; minPlayers: number; roundOptions: number[]; clipSecondsOptions: number[]; submittingSecondsOptions: number[] }
+  | { mode: 'dropTheNeedle'; minPlayers: number; songOptions: number[]; clipSecondsOptions: number[] };
 
 // PauseReason i Domain/Rooms.
 export type PauseReason = 'hostAway' | 'pausedByHost';
@@ -107,10 +114,10 @@ export type GameState = {
   // Tiden som var kvar av fasen när bilden skapades, eller null i faser utan deadline. Oberoende av mobilens klocka.
   remainingMs: number | null;
   settings: SettingsState;
-  roundOptions: number[];
-  clipSecondsOptions: number[];
-  submittingSecondsOptions: number[];
+  // Alla lägen, i den ordning de visas i lobbyn.
+  modes: ModeOptions[];
   players: GamePlayer[];
+  // Det valda lägets gräns.
   minPlayers: number;
   maxPlayers: number;
   canStart: boolean;

@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Mixtape.Application.Rooms;
-using Mixtape.Domain.Rooms;
+using Mixtape.Domain.Games.AuxCord;
 
 namespace Mixtape.Infrastructure.Prompts;
 
@@ -21,7 +21,7 @@ public sealed class PromptBank : IPromptProvider
     }
 
     // Ett spel kan ha flest rundor av alla val, och varje runda behöver en egen prompt.
-    public static int MinPrompts => GameSettings.RoundOptions.Max();
+    public static int MinPrompts => AuxCordSettings.RoundOptions.Max();
 
     public static PromptBank LoadEmbedded(Random random)
     {

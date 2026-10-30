@@ -88,7 +88,7 @@ public sealed class GameRoomEndTests
 
         Assert.That(_room.IsPaused, Is.False);
         Assert.That(_room.PauseReason, Is.Null);
-        Assert.That(_room.Tick(_now + _room.Settings.SubmittingDuration), Is.True);
+        Assert.That(_room.Tick(_now + _room.AuxSettings.SubmittingDuration), Is.True);
     }
 
     [Test]
@@ -106,7 +106,7 @@ public sealed class GameRoomEndTests
         var back = _now.AddHours(1);
         _room.ResumeHost(_room.HostToken, back);
 
-        Assert.That(_room.Tick(back + _room.Settings.SubmittingDuration), Is.True);
+        Assert.That(_room.Tick(back + _room.AuxSettings.SubmittingDuration), Is.True);
     }
 
     [Test]
@@ -136,7 +136,7 @@ public sealed class GameRoomEndTests
     }
 
     private void Start() =>
-        _room.StartGame(_room.HostToken, Enumerable.Range(1, _room.Settings.Rounds).Select(round => $"Prompt {round}").ToList(), _now);
+        _room.StartGame(_room.HostToken, Enumerable.Range(1, _room.AuxSettings.Rounds).Select(round => $"Prompt {round}").ToList(), _now);
 
     // Alla tre skickar in och klippen spelas klart, så att rummet röstar.
     private void StartVoting()

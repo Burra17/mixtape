@@ -4,6 +4,7 @@ using Mixtape.Application.Music;
 using Mixtape.Application.Network;
 using Mixtape.Application.Rooms;
 using Mixtape.Domain.Common;
+using Mixtape.Domain.Games;
 
 namespace Mixtape.Api.Hubs;
 
@@ -15,7 +16,9 @@ public sealed class GameHub(
     RejoinRoomHandler rejoinRoom,
     LeaveRoomHandler leaveRoom,
     RemovePlayerHandler removePlayer,
-    UpdateSettingsHandler updateSettings,
+    ChooseModeHandler chooseMode,
+    UpdateAuxCordSettingsHandler updateAuxCordSettings,
+    UpdateDropTheNeedleSettingsHandler updateDropTheNeedleSettings,
     StartGameHandler startGame,
     DisconnectHandler disconnect,
     SearchTracksHandler searchTracks,
@@ -165,10 +168,20 @@ public sealed class GameHub(
         }
     }
 
-    // Klienten läser bara felet, och bilden går till hela rummet eftersom mobilerna också visar inställningarna.
-    public async Task<HubResponse<GameState>> UpdateSettings(HostSession host, int? rounds, int? clipSeconds, int? submittingSeconds)
+    // Klienten läser bara felet, och bilden går till hela rummet eftersom mobilerna också visar läget och inställningarna.
+    public async Task<HubResponse<GameState>> ChooseMode(HostSession host, GameMode mode)
     {
-        return await SendToRoomAsync(await updateSettings.HandleAsync(host, rounds, clipSeconds, submittingSeconds));
+        return await SendToRoomAsync(await chooseMode.HandleAsync(host, mode));
+    }
+
+    public async Task<HubResponse<GameState>> UpdateAuxCordSettings(HostSession host, int? rounds, int? clipSeconds, int? submittingSeconds)
+    {
+        return await SendToRoomAsync(await updateAuxCordSettings.HandleAsync(host, rounds, clipSeconds, submittingSeconds));
+    }
+
+    public async Task<HubResponse<GameState>> UpdateDropTheNeedleSettings(HostSession host, int? songs, int? clipSeconds)
+    {
+        return await SendToRoomAsync(await updateDropTheNeedleSettings.HandleAsync(host, songs, clipSeconds));
     }
 
     public async Task<HubResponse<GameState>> StartGame(HostSession host)

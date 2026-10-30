@@ -8,6 +8,7 @@ import {
   serverMethods,
   type Ballot,
   type Clip,
+  type GameMode,
   type HostSession,
   type GameState,
   type HubResponse,
@@ -136,9 +137,15 @@ export const leaveRoom = (session: PlayerSession) => connection.invoke(serverMet
 export const removePlayer = (host: HostSession, playerId: string) =>
   connection.invoke(serverMethods.removePlayer, host, playerId).catch(() => undefined);
 
-// null behåller inställningen som den är. Den nya bilden kommer med GameStateUpdated.
-export const updateSettings = (host: HostSession, rounds: number | null, clipSeconds: number | null, submittingSeconds: number | null) =>
-  connection.invoke<HubResponse<GameState>>(serverMethods.updateSettings, host, rounds, clipSeconds, submittingSeconds);
+// Den nya bilden kommer med GameStateUpdated till hela rummet.
+export const chooseMode = (host: HostSession, mode: GameMode) => connection.invoke<HubResponse<GameState>>(serverMethods.chooseMode, host, mode);
+
+// null behåller inställningen som den är.
+export const updateAuxCordSettings = (host: HostSession, rounds: number | null, clipSeconds: number | null, submittingSeconds: number | null) =>
+  connection.invoke<HubResponse<GameState>>(serverMethods.updateAuxCordSettings, host, rounds, clipSeconds, submittingSeconds);
+
+export const updateDropTheNeedleSettings = (host: HostSession, songs: number | null, clipSeconds: number | null) =>
+  connection.invoke<HubResponse<GameState>>(serverMethods.updateDropTheNeedleSettings, host, songs, clipSeconds);
 
 export const startGame = (host: HostSession) => connection.invoke<HubResponse<GameState>>(serverMethods.startGame, host);
 

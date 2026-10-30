@@ -136,7 +136,7 @@ public sealed class GameRoomSubmitTests
         _room.SubmitTrack(_cecilia.Id, Track(3, "Tre"), Now.AddSeconds(5));
 
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Playing));
-        Assert.That(_room.RemainingTime(Now.AddSeconds(5)), Is.EqualTo(GameSettings.Default.ClipLength));
+        Assert.That(_room.RemainingTime(Now.AddSeconds(5)), Is.EqualTo(AuxCordSettings.Default.ClipLength));
     }
 
     [Test]
@@ -204,7 +204,7 @@ public sealed class GameRoomSubmitTests
         }
 
         Assert.That(_room.Tick(Now.AddSeconds(1)), Is.False);
-        Assert.That(_room.Tick(Now + GameSettings.Default.SubmittingDuration), Is.True);
+        Assert.That(_room.Tick(Now + AuxCordSettings.Default.SubmittingDuration), Is.True);
     }
 
     [TestCase(0)]
@@ -217,7 +217,7 @@ public sealed class GameRoomSubmitTests
             _room.SubmitTrack(player.Id, Track(player.ColorIndex, "Ensam"), Now);
         }
 
-        _room.Tick(Now + GameSettings.Default.SubmittingDuration);
+        _room.Tick(Now + AuxCordSettings.Default.SubmittingDuration);
 
         Assert.That(_room.Phase, Is.EqualTo(GamePhase.Submitting));
         Assert.That(_room.Round, Is.EqualTo(2));
@@ -250,7 +250,7 @@ public sealed class GameRoomSubmitTests
     public void SkippedRound_IsClearedWhenTheRoundMovesOn()
     {
         Start();
-        _room.Tick(Now + GameSettings.Default.SubmittingDuration);
+        _room.Tick(Now + AuxCordSettings.Default.SubmittingDuration);
 
         _room.SubmitTrack(_anna.Id, Track(1, "Ett"), Now);
         _room.SubmitTrack(_bertil.Id, Track(2, "Två"), Now);
@@ -269,7 +269,7 @@ public sealed class GameRoomSubmitTests
         var now = Now;
         for (var round = 1; round <= 3; round++)
         {
-            now += GameSettings.Default.SubmittingDuration;
+            now += AuxCordSettings.Default.SubmittingDuration;
             Assert.That(_room.Tick(now), Is.True);
         }
 
@@ -298,7 +298,7 @@ public sealed class GameRoomSubmitTests
     }
 
     private void Start() =>
-        _room.StartGame(_room.HostToken, Enumerable.Range(1, _room.Settings.Rounds).Select(round => $"Prompt {round}").ToList(), Now);
+        _room.StartGame(_room.HostToken, Enumerable.Range(1, _room.AuxSettings.Rounds).Select(round => $"Prompt {round}").ToList(), Now);
 
     private void SubmitForAll()
     {

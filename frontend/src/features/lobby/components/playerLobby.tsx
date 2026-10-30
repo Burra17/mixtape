@@ -1,12 +1,18 @@
-import type { PlayerSession } from '../../../services/hub/hubContract.ts';
+import type { PlayerSession, SettingsState } from '../../../services/hub/hubContract.ts';
 import { Button } from '../../../shared/components/button.tsx';
+import { GAME_MODES } from '../gameModes.ts';
 import { Label } from '../../../shared/components/label.tsx';
 import { PausedNotice } from '../../../shared/components/pausedNotice.tsx';
 import { playerText } from '../../../shared/components/playerColors.ts';
 import { useIsConnected } from '../../../store/connectionStore.ts';
 import { usePlayerLobby } from '../hooks/usePlayerLobby.ts';
 
-// Mobilen i lobbyn: ditt namn stort i din färg, hur många som är med och "Lämna".
+const settingsLine = (settings: SettingsState) =>
+  settings.mode === 'auxCord'
+    ? `${settings.rounds} rundor · ${settings.clipSeconds} s klipp · ${settings.submittingSeconds} s betänketid`
+    : `${settings.songs} låtar · ${settings.clipSeconds} s klipp`;
+
+// Mobilen i lobbyn: ditt namn stort i din färg, hur många som är med, läget med inställningarna och "Lämna".
 export const PlayerLobby = ({ session }: { session: PlayerSession }) => {
   const { game, me, leave } = usePlayerLobby(session);
   const isConnected = useIsConnected();
@@ -21,9 +27,10 @@ export const PlayerLobby = ({ session }: { session: PlayerSession }) => {
             <p className='text-2xl font-extrabold'>
               {game.players.length} av {game.maxPlayers} spelare
             </p>
-            <p className='text-lg font-bold'>
-              {game.settings.rounds} rundor · {game.settings.clipSeconds} s klipp · {game.settings.submittingSeconds} s betänketid
-            </p>
+            <div className='flex flex-col gap-1'>
+              <p className='text-2xl font-black uppercase'>{GAME_MODES[game.settings.mode].name}</p>
+              <p className='text-lg font-bold'>{settingsLine(game.settings)}</p>
+            </div>
             <p className='text-lg font-medium text-muted'>Väntar på att spelet startar</p>
             {game.isPaused && <PausedNotice />}
           </>

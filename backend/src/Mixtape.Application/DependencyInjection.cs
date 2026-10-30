@@ -20,7 +20,9 @@ public static class DependencyInjection
         services.AddTransient<RejoinRoomHandler>();
         services.AddTransient<LeaveRoomHandler>();
         services.AddTransient<RemovePlayerHandler>();
-        services.AddTransient<UpdateSettingsHandler>();
+        services.AddTransient<ChooseModeHandler>();
+        services.AddTransient<UpdateAuxCordSettingsHandler>();
+        services.AddTransient<UpdateDropTheNeedleSettingsHandler>();
         services.AddTransient<StartGameHandler>();
         services.AddTransient<AdvancePhasesHandler>();
         services.AddTransient<DisconnectHandler>();
