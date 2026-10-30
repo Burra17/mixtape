@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
 using Mixtape.Domain.Common;
@@ -136,7 +137,7 @@ public sealed class GameRoom
         used.UnionWith(game.UsedContent);
         Game = game;
         Stage = RoomStage.InGame;
-        Apply(game.Start(_players, now), now);
+        Apply(game.Start(_players), now);
         return Result.Success();
     }
 
@@ -171,7 +172,7 @@ public sealed class GameRoom
     public Result Act<TGame>(string playerId, DateTimeOffset now, Func<TGame, Result> command)
         where TGame : IGame
     {
-        if (Stage != RoomStage.InGame || Game is not TGame game)
+        if (!TryGetGame<TGame>(out var game))
         {
             return RoomErrors.WrongPhase;
         }
@@ -199,11 +200,16 @@ public sealed class GameRoom
     // Läser eller ändrar spelet utan att bilden ändras, till exempel en fråga om fasen eller en ny klipplänk.
     public Result<T> WithGame<TGame, T>(Func<TGame, Result<T>> use)
         where TGame : IGame =>
-        Stage == RoomStage.InGame && Game is TGame game ? use(game) : RoomErrors.WrongPhase;
+        TryGetGame<TGame>(out var game) ? use(game) : RoomErrors.WrongPhase;
 
     public Result WithGame<TGame>(Func<TGame, Result> use)
         where TGame : IGame =>
-        Stage == RoomStage.InGame && Game is TGame game ? use(game) : RoomErrors.WrongPhase;
+        TryGetGame<TGame>(out var game) ? use(game) : RoomErrors.WrongPhase;
+
+    // Som WithGame, men bara för storskärmen. Värd-token kontrolleras före fasen, så att den som inte är värd bara får veta att rummet inte finns.
+    public Result<T> WithGameForHost<TGame, T>(string? hostToken, Func<TGame, Result<T>> use)
+        where TGame : IGame =>
+        IsHost(hostToken) ? WithGame(use) : RoomErrors.NotFound;
 
     // Anropas av klockan på servern. Ger true när fasen bytts, så att bilden bara skickas vid en ändring.
     // Fasen tar också slut här när alla är klara, eftersom den sista som inte var klar kan ha tappat anslutningen.
@@ -391,6 +397,19 @@ public sealed class GameRoom
         return Result.Success();
     }
 
+    private bool TryGetGame<TGame>([MaybeNullWhen(false)] out TGame game)
+        where TGame : IGame
+    {
+        if (Stage == RoomStage.InGame && Game is TGame current)
+        {
+            game = current;
+            return true;
+        }
+
+        game = default;
+        return false;
+    }
+
     // Alla spelets faser har en nedräkning, men inte lobbyn och slutställningen.
     private bool HasDeadline => Stage == RoomStage.InGame;
 
@@ -401,7 +420,7 @@ public sealed class GameRoom
     private bool IsEveryoneDone => Stage == RoomStage.InGame && Game!.IsEveryoneDone(_players.Where(player => player.IsConnected).ToList());
 
     // Fasen är slut, vid sin deadline eller när alla är klara, och spelet säger vad som händer sedan.
-    private void CompletePhase(DateTimeOffset now) => Apply(Game!.CompletePhase(now), now);
+    private void CompletePhase(DateTimeOffset now) => Apply(Game!.CompletePhase(), now);
 
     // Nästa fas börjar med en ny klocka, eller så är spelet slut.
     private void Apply(Step step, DateTimeOffset now)

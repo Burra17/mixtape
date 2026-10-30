@@ -79,10 +79,10 @@ public sealed class AuxCordGame : IGame
     public int VotesFor(int entry) => _votes.Values.Count(vote => vote == entry);
 
     // Rösterna på spelarens eget bidrag i rundan, alltså rundans poäng. 0 för den som inte skickade in.
-    // Avsteg från #22, som ville spara rundans poäng i rummet: de räknas ur rösterna, som ligger kvar tills nästa runda börjar och även efter sista rundan, så en egen kopia kan aldrig skilja sig från dem.
+    // Avsteg från #22, som ville spara rundans poäng för sig: de räknas ur rösterna, som ligger kvar tills nästa runda börjar och även efter sista rundan, så en egen kopia kan aldrig skilja sig från dem.
     public int RoundPointsOf(string playerId) => EntryNumberOf(playerId) is { } entry ? VotesFor(entry) : 0;
 
-    public Step Start(IReadOnlyList<Player> players, DateTimeOffset now)
+    public Step Start(IReadOnlyList<Player> players)
     {
         _players = players;
         return StartRound(1, skippedPrevious: false);
@@ -172,7 +172,7 @@ public sealed class AuxCordGame : IGame
             _ => false,
         };
 
-    public Step CompletePhase(DateTimeOffset now)
+    public Step CompletePhase()
     {
         switch (Phase)
         {

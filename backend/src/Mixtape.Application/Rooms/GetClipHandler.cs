@@ -1,7 +1,6 @@
 using Mixtape.Application.Music;
 using Mixtape.Domain.Common;
 using Mixtape.Domain.Games.AuxCord;
-using Mixtape.Domain.Rooms;
 
 namespace Mixtape.Application.Rooms;
 
@@ -10,15 +9,12 @@ public sealed class GetClipHandler(IGameRoomRepository rooms, IMusicCatalog cata
     // En länk som är för gammal efter en lång paus förnyas utanför rummets lås, så att ingen väntar på Deezer med rummet låst.
     public async Task<Result<Clip>> HandleAsync(HostSession host)
     {
-        // Värd-token kontrolleras före fasen, som i rummets egna värdmetoder.
         var current = await rooms.WithRoomAsync<(int Index, Entry Entry)>(host.RoomCode, room =>
-            room.IsHost(host.HostToken)
-                ? room.WithGame<AuxCordGame, (int, Entry)>(game =>
-                {
-                    var clip = game.GetCurrentClip();
-                    return clip.IsSuccess ? (game.ClipNumber, clip.Value) : clip.Error!;
-                })
-                : RoomErrors.NotFound);
+            room.WithGameForHost<AuxCordGame, (int, Entry)>(host.HostToken, game =>
+            {
+                var clip = game.GetCurrentClip();
+                return clip.IsSuccess ? (game.ClipNumber, clip.Value) : clip.Error!;
+            }));
         if (!current.IsSuccess)
         {
             return current.Error!;

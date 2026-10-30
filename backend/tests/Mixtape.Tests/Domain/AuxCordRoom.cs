@@ -55,7 +55,7 @@ public static class AuxCordRoom
         public Result Vote(string playerId, int entry, DateTimeOffset now) => room.Act<AuxCordGame>(playerId, now, game => game.Vote(playerId, entry));
 
         public Result<Entry> CurrentClipFor(string? hostToken) =>
-            room.IsHost(hostToken) ? room.WithGame<AuxCordGame, Entry>(game => game.GetCurrentClip()) : RoomErrors.NotFound;
+            room.WithGameForHost<AuxCordGame, Entry>(hostToken, game => game.GetCurrentClip());
 
         public Result RenewLink(long trackId, string previewUrl, DateTimeOffset now) =>
             room.WithGame<AuxCordGame>(game => game.RenewLink(trackId, previewUrl, now));
