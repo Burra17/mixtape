@@ -13,8 +13,6 @@ public sealed record DropTheNeedleSettings : IGameSettings
 
     public static readonly DropTheNeedleSettings Default = new(10, 30);
 
-    public const int MinimumPlayers = 2;
-
     private DropTheNeedleSettings(int songs, int clipSeconds)
     {
         Songs = songs;
@@ -23,7 +21,7 @@ public sealed record DropTheNeedleSettings : IGameSettings
 
     public GameMode Mode => GameMode.DropTheNeedle;
 
-    public int MinPlayers => MinimumPlayers;
+    public int MinPlayers => 2;
 
     public int Songs { get; }
 

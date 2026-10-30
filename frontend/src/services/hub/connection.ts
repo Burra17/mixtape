@@ -137,9 +137,10 @@ export const leaveRoom = (session: PlayerSession) => connection.invoke(serverMet
 export const removePlayer = (host: HostSession, playerId: string) =>
   connection.invoke(serverMethods.removePlayer, host, playerId).catch(() => undefined);
 
-// null behåller inställningen som den är. Den nya bilden kommer med GameStateUpdated.
+// Den nya bilden kommer med GameStateUpdated till hela rummet.
 export const chooseMode = (host: HostSession, mode: GameMode) => connection.invoke<HubResponse<GameState>>(serverMethods.chooseMode, host, mode);
 
+// null behåller inställningen som den är.
 export const updateAuxCordSettings = (host: HostSession, rounds: number | null, clipSeconds: number | null, submittingSeconds: number | null) =>
   connection.invoke<HubResponse<GameState>>(serverMethods.updateAuxCordSettings, host, rounds, clipSeconds, submittingSeconds);
 

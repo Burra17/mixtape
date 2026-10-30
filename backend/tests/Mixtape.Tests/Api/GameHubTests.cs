@@ -291,6 +291,7 @@ public sealed class GameHubTests
         var state = await raw.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
         Assert.That(state.GetProperty("phase").GetString(), Is.EqualTo("lobby"));
+        Assert.That(state.GetProperty("settings").GetProperty("mode").GetString(), Is.EqualTo("auxCord"));
     }
 
     [Test]
@@ -331,7 +332,7 @@ public sealed class GameHubTests
     }
 
     [Test]
-    public async Task StartGame_WithDropTheNeedle_ReturnsModeNotReady()
+    public async Task StartGame_WithDropTheNeedle_ReturnsNotReady()
     {
         await using var host = CreateConnection();
         await host.StartAsync();
@@ -342,7 +343,7 @@ public sealed class GameHubTests
         await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.ChooseMode), created, "dropTheNeedle");
         var start = await host.InvokeAsync<HubResponse<GameState>>(nameof(GameHub.StartGame), created);
 
-        Assert.That(start.Error?.Code, Is.EqualTo("room.mode_not_ready"));
+        Assert.That(start.Error?.Code, Is.EqualTo("mode.not_ready"));
     }
 
     [Test]

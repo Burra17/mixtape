@@ -21,6 +21,6 @@ public sealed class StartGameHandler(IGameRoomRepository rooms, IPromptProvider 
         settings switch
         {
             AuxCordSettings aux => Result<IGame>.Success(new AuxCordGame(prompts.Draw(aux.Rounds, room.UsedContent<AuxCordGame>()), aux, Random.Shared)),
-            _ => RoomErrors.ModeNotReady,
+            _ => GameModeErrors.NotReady,
         };
 }

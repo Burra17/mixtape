@@ -17,7 +17,4 @@ public static class RoomErrors
     public static readonly Error WrongPhase = new("room.wrong_phase", "Det går inte just nu.");
 
     public static readonly Error InvalidSettings = new("room.invalid_settings", "Inställningen finns inte.");
-
-    // Läget går att välja innan spelet finns. Tas bort när Drop the Needle går att spela (#70).
-    public static readonly Error ModeNotReady = new("room.mode_not_ready", "Drop the Needle är inte klart än.");
 }

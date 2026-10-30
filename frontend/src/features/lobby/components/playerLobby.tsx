@@ -1,6 +1,6 @@
 import type { PlayerSession, SettingsState } from '../../../services/hub/hubContract.ts';
 import { Button } from '../../../shared/components/button.tsx';
-import { GAME_MODES } from '../../../shared/components/gameModes.ts';
+import { GAME_MODES } from '../gameModes.ts';
 import { Label } from '../../../shared/components/label.tsx';
 import { PausedNotice } from '../../../shared/components/pausedNotice.tsx';
 import { playerText } from '../../../shared/components/playerColors.ts';

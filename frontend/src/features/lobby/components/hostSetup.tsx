@@ -1,7 +1,7 @@
 import type { ModeOptions, SettingsState } from '../../../services/hub/hubContract.ts';
 import { Button } from '../../../shared/components/button.tsx';
 import { Card } from '../../../shared/components/card.tsx';
-import { GAME_MODES } from '../../../shared/components/gameModes.ts';
+import { GAME_MODES } from '../gameModes.ts';
 import { Label } from '../../../shared/components/label.tsx';
 import { useIsConnected } from '../../../store/connectionStore.ts';
 import { useRoomGame } from '../../../store/gameStore.ts';
@@ -70,7 +70,7 @@ export const HostSetup = () => {
   const session = useHostStore((state) => state.session);
   const game = useRoomGame(session?.roomCode);
   const isConnected = useIsConnected();
-  const { pickMode, chooseAuxCord, chooseDropTheNeedle, start, error } = useGameSetup();
+  const { selectMode, setAuxCordSettings, setDropTheNeedleSettings, start, error } = useGameSetup();
 
   if (!game) return null;
 
@@ -88,7 +88,7 @@ export const HostSetup = () => {
               options={options}
               selected={options.mode === game.settings.mode}
               disabled={!isConnected}
-              onChoose={() => pickMode(options.mode)}
+              onChoose={() => selectMode(options.mode)}
             />
           ))}
         </div>
@@ -97,8 +97,8 @@ export const HostSetup = () => {
         settings={game.settings}
         modes={game.modes}
         disabled={!isConnected}
-        onAuxCord={chooseAuxCord}
-        onDropTheNeedle={chooseDropTheNeedle}
+        onAuxCord={setAuxCordSettings}
+        onDropTheNeedle={setDropTheNeedleSettings}
       />
       {!game.canStart && <p className='font-medium text-muted'>Minst {game.minPlayers} spelare behövs.</p>}
       {error && (

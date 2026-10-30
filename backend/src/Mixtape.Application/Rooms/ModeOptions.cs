@@ -13,7 +13,7 @@ public abstract record ModeOptions(int MinPlayers)
     // I den ordning lägena visas i lobbyn.
     public static readonly IReadOnlyList<ModeOptions> All =
     [
-        new AuxCordModeOptions(AuxCordSettings.MinimumPlayers, AuxCordSettings.RoundOptions, AuxCordSettings.ClipSecondsOptions, AuxCordSettings.SubmittingSecondsOptions),
-        new DropTheNeedleModeOptions(DropTheNeedleSettings.MinimumPlayers, DropTheNeedleSettings.SongOptions, DropTheNeedleSettings.ClipSecondsOptions),
+        new AuxCordModeOptions(AuxCordSettings.Default.MinPlayers, AuxCordSettings.RoundOptions, AuxCordSettings.ClipSecondsOptions, AuxCordSettings.SubmittingSecondsOptions),
+        new DropTheNeedleModeOptions(DropTheNeedleSettings.Default.MinPlayers, DropTheNeedleSettings.SongOptions, DropTheNeedleSettings.ClipSecondsOptions),
     ];
 }

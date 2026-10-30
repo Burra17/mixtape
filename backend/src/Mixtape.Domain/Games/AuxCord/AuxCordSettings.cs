@@ -14,9 +14,6 @@ public sealed record AuxCordSettings : IGameSettings
 
     public static readonly AuxCordSettings Default = new(5, 15, 90);
 
-    // Man kan inte rösta på sin egen låt, så med två spelare finns bara ett bidrag att rösta på.
-    public const int MinimumPlayers = 3;
-
     private AuxCordSettings(int rounds, int clipSeconds, int submittingSeconds)
     {
         Rounds = rounds;
@@ -26,7 +23,8 @@ public sealed record AuxCordSettings : IGameSettings
 
     public GameMode Mode => GameMode.AuxCord;
 
-    public int MinPlayers => MinimumPlayers;
+    // Man kan inte rösta på sin egen låt, så med två spelare finns bara ett bidrag att rösta på.
+    public int MinPlayers => 3;
 
     public int Rounds { get; }
 

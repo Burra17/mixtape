@@ -22,9 +22,10 @@ Varje lager registrerar sina tjänster i en egen `Add<Lager>()`-metod, och `Prog
 
 ## Spelreglerna bor i Domain
 
-`GameRoom` äger det som är gemensamt för alla spellägen: spelarna, värden, lobbyn, klockan, pausen och ställningen. Rummet har tre lägen (`RoomStage`): lobbyn, spelet och slutställningen. Själva spelet är ett `IGame`, till exempel `AuxCordGame`, med egna faser och regler. Rummet känner inte till något spelläge:
+`GameRoom` äger det som är gemensamt för alla spellägen: spelarna, värden, lobbyn, klockan, pausen och ställningen. Rummet har tre lägen (`RoomStage`): lobbyn, spelet och slutställningen. Själva spelet är ett `IGame`, till exempel `AuxCordGame`, med egna faser och regler. Rummet har ingen kod per spelläge:
 
-- Handlern skapar spelet och lämnar det till `room.StartGame`.
+- Varje läge (`GameMode`) har en egen inställningstyp under `Games/`, som `AuxCordSettings`, med sina val och sitt minsta antal spelare (`IGameSettings`). Rummet håller det valda lägets inställningar och minns de andra lägenas under kvällen. Värden byter läge med `room.ChooseMode` och ändrar inställningarna med `room.UpdateSettings<TSettings>(...)`. Standardvalen för ett läge står i `GameModes`.
+- `room.StartGame` tar en fabrik som rummet anropar med inställningarna först när värden, lobbyn och antalet spelare är kontrollerade. Fabriken i `StartGameHandler` är det enda stället som kopplar ett läge till sitt spel.
 - När en fas är slut svarar spelet med ett `Step`: nästa fas med sin tid, eller att spelet är slut. Rummet startar klockan.
 - En spelares kommando går genom `room.Act<TGame>(...)`. Rummet kontrollerar att ett spel av rätt typ pågår och att spelaren finns, räknar upp `Revision` och går vidare direkt när alla är klara.
 - Det som inte ändrar bilden, som en fråga om fasen eller en ny klipplänk, går genom `room.WithGame<TGame>(...)`.
@@ -63,6 +64,7 @@ Fasernas klocka:
 - Servern skickar ögonblicksbilder av state, inte små ändrings-events. Den som återansluter behöver då bara den senaste bilden. Hela rummet är en bild, `GameState`, som skickas med `GameStateUpdated` till alla i rummet. Det som bara gäller en spelare går till `player:{id}`.
 - `GameState` har tiden som är kvar av fasen (`RemainingMs`), inte en tidpunkt, så att en mobil vars klocka går fel ändå räknar ned rätt.
 - Enums skickas som text i camelCase (`"submitting"`), via `JsonStringEnumConverter` i `Program.cs`.
+- Det som skiljer sig per spelläge, som `SettingsState` och `ModeOptions`, är en abstrakt record med `[JsonPolymorphic]` och `mode` som diskriminator. I `hubContract.ts` blir den en union som skiljs åt på `mode`.
 - Ögonblicksbilden skickas efter att rummets lås släppts, så två bilder kan komma fram i fel ordning. Därför har den rummets `Revision`, och klienten kastar en bild som är äldre än den den har.
 - En enskild spelare nås via gruppen `player:{id}`, inte via `ConnectionId`. Anslutningen läggs i gruppen när spelaren går med och när den återansluter.
 - Vem en anslutning tillhör står i `IConnectionRegistry`, som bara hubben och handlers använder. Domänen vet bara om en spelare är ansluten (`IsConnected`). Handlers kopplar en ny anslutning med rummets lås, och `DisconnectHandler` kontrollerar andra anslutningar med samma lås, så att en sen disconnect inte markerar en mobil som redan återanslutit.

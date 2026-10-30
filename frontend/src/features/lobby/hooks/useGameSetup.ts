@@ -14,12 +14,12 @@ export const useGameSetup = () => {
     if (session) void run(() => call(session));
   };
 
-  const pickMode = (mode: GameMode) => send((session) => chooseMode(session, mode));
+  const selectMode = (mode: GameMode) => send((session) => chooseMode(session, mode));
 
-  const chooseAuxCord = (rounds: number | null, clipSeconds: number | null, submittingSeconds: number | null) =>
+  const setAuxCordSettings = (rounds: number | null, clipSeconds: number | null, submittingSeconds: number | null) =>
     send((session) => updateAuxCordSettings(session, rounds, clipSeconds, submittingSeconds));
 
-  const chooseDropTheNeedle = (songs: number | null, clipSeconds: number | null) =>
+  const setDropTheNeedleSettings = (songs: number | null, clipSeconds: number | null) =>
     send((session) => updateDropTheNeedleSettings(session, songs, clipSeconds));
 
   // Ljudet låses upp först, medan webbläsaren fortfarande räknar anropet som en del av klicket.
@@ -28,5 +28,5 @@ export const useGameSetup = () => {
     send(startGame);
   };
 
-  return { pickMode, chooseAuxCord, chooseDropTheNeedle, start, error };
+  return { selectMode, setAuxCordSettings, setDropTheNeedleSettings, start, error };
 };
