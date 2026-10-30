@@ -32,6 +32,9 @@ export const useClipPlayback = () => {
     let cancelled = false;
 
     const start = async () => {
+      // Avslöjandet låter klippet från gissningen spela vidare. Startar effekten om där, efter en paus eller ett avbrott, förblir det tyst,
+      // eftersom servern bara lämnar ut klippet under gissningen.
+      if (useGameStore.getState().game?.phase === 'songReveal') return;
       const response = await getClip(session).catch(() => null);
       if (cancelled) return;
       // Ett svar för ett klipp som redan bytts ut kastas. Bilden för det nya klippet startar sin egen hämtning.

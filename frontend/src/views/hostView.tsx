@@ -5,6 +5,7 @@ import { HostStart } from '../features/lobby/components/hostStart.tsx';
 import { useHostRoom } from '../features/lobby/hooks/useHostRoom.ts';
 import { HostPlaying } from '../features/playing/components/hostPlaying.tsx';
 import { HostRevealing } from '../features/revealing/components/hostRevealing.tsx';
+import { HostSongReveal } from '../features/songReveal/components/hostSongReveal.tsx';
 import { HostSubmitting } from '../features/submitting/components/hostSubmitting.tsx';
 import { HostVoting } from '../features/voting/components/hostVoting.tsx';
 import type { Phase } from '../services/hub/hubContract.ts';
@@ -13,7 +14,7 @@ import { useRoomGame } from '../store/gameStore.ts';
 import { useHostStore } from '../store/hostStore.ts';
 
 // Faserna med nedräkning, som är de enda som går att pausa.
-const PAUSABLE: Phase[] = ['submitting', 'playing', 'voting', 'revealing', 'guessing'];
+const PAUSABLE: Phase[] = ['submitting', 'playing', 'voting', 'revealing', 'guessing', 'songReveal'];
 
 // Storskärmens vy. Väljer skärm utifrån var värden är i flödet, och i rummet utifrån spelets fas.
 export const HostView = () => {
@@ -32,6 +33,7 @@ export const HostView = () => {
         {phase === 'voting' && <HostVoting />}
         {phase === 'revealing' && <HostRevealing />}
         {phase === 'guessing' && <HostGuessing />}
+        {phase === 'songReveal' && <HostSongReveal />}
         <PauseControls />
       </div>
     );

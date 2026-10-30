@@ -59,7 +59,7 @@ export type PlayerSession = {
 };
 
 // GamePhase i Domain/Rooms. Servern skickar enums som text i camelCase.
-export const PHASES = ['lobby', 'submitting', 'playing', 'voting', 'revealing', 'guessing', 'gameOver'] as const;
+export const PHASES = ['lobby', 'submitting', 'playing', 'voting', 'revealing', 'guessing', 'songReveal', 'gameOver'] as const;
 export type Phase = (typeof PHASES)[number];
 
 // GamePlayer i Application/Rooms. colorIndex är 1–8, en plats i paletten player-1 till player-8.
@@ -116,8 +116,10 @@ export type GameState = {
   skippedRound: boolean;
   // Klippet som spelas, eller null utanför uppspelningen.
   nowPlaying: NowPlaying | null;
-  // Låten som ska gissas i Drop the Needle, eller null utanför gissningen. Aldrig titel, artist eller omslag.
+  // Låten i Drop the Needle under gissningen och avslöjandet, eller null. Aldrig titel, artist eller omslag.
   song: SongState | null;
+  // Rätt svar och vad varje spelare fick i Drop the Needles avslöjande, eller null utanför det.
+  answer: SongAnswer | null;
   // Bidragen att rösta på, i uppspelningens ordning, eller null utanför röstningen.
   ballot: BallotEntry[] | null;
   // Bidragen med vem som valde dem och antal röster, i uppspelningens ordning, eller null utanför avslöjandet.
@@ -143,6 +145,32 @@ export type SongState = {
   categoryId: string;
   // Byts vid varje nytt klipp, också när en låt hoppas över, och är det som GetClip svarar med.
   clip: number;
+};
+
+// GuessScore i Domain/Games/DropTheNeedle. song betyder rätt titel och artist.
+export type GuessScore = 'none' | 'artist' | 'song';
+
+// RevealedSong i Application/Rooms. Det rätta svaret eller en spelares gissning, utan länk.
+export type RevealedSong = {
+  title: string;
+  artist: string;
+  album: string;
+  coverUrl: string;
+};
+
+// SongResultState i Application/Rooms. guess är null om spelaren inte gissade. fastest är den eller de som snabbast fick rätt låt.
+export type SongResultState = {
+  playerId: string;
+  score: GuessScore;
+  fastest: boolean;
+  points: number;
+  guess: RevealedSong | null;
+};
+
+// SongAnswer i Application/Rooms. results är i spelarnas ordning och lämnar servern först när gissningen är slut.
+export type SongAnswer = {
+  song: RevealedSong;
+  results: SongResultState[];
 };
 
 // NowPlaying i Application/Rooms. Ingen länk och ingenting om vem som valde låten. index är 1 för det första klippet.
