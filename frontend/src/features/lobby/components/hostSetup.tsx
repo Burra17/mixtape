@@ -121,7 +121,13 @@ type ModeSettingsProps = {
   categories: CategoryOption[];
   disabled: boolean;
   onAuxCord: (rounds: number | null, clipSeconds: number | null, submittingSeconds: number | null) => void;
-  onDropTheNeedle: (songs: number | null, clipSeconds: number | null, thinkingSeconds: number | null, categoryId: string | null) => void;
+  onDropTheNeedle: (
+    songs: number | null,
+    clipSeconds: number | null,
+    thinkingSeconds: number | null,
+    fastestBonus: boolean | null,
+    categoryId: string | null,
+  ) => void;
 };
 
 // Det valda lägets inställningar, med valen för samma läge.
@@ -169,7 +175,7 @@ const ModeSettings = ({ settings, modes, categories, disabled, onAuxCord, onDrop
         selected={settings.categoryId}
         format={(id) => categoryName(categories, id)}
         disabled={disabled}
-        onChoose={(categoryId) => onDropTheNeedle(null, null, null, categoryId)}
+        onChoose={(categoryId) => onDropTheNeedle(null, null, null, null, categoryId)}
       />
       <OptionRow
         label='Låtar'
@@ -177,7 +183,7 @@ const ModeSettings = ({ settings, modes, categories, disabled, onAuxCord, onDrop
         selected={settings.songs}
         format={String}
         disabled={disabled}
-        onChoose={(songs) => onDropTheNeedle(songs, null, null, null)}
+        onChoose={(songs) => onDropTheNeedle(songs, null, null, null, null)}
       />
       <OptionRow
         label='Klipplängd'
@@ -185,7 +191,7 @@ const ModeSettings = ({ settings, modes, categories, disabled, onAuxCord, onDrop
         selected={settings.clipSeconds}
         format={seconds}
         disabled={disabled}
-        onChoose={(clipSeconds) => onDropTheNeedle(null, clipSeconds, null, null)}
+        onChoose={(clipSeconds) => onDropTheNeedle(null, clipSeconds, null, null, null)}
       />
       {/* Plustecknet visar att tiden läggs till efter klippet. */}
       <OptionRow
@@ -194,7 +200,15 @@ const ModeSettings = ({ settings, modes, categories, disabled, onAuxCord, onDrop
         selected={settings.thinkingSeconds}
         format={(value) => `+${seconds(value)}`}
         disabled={disabled}
-        onChoose={(thinkingSeconds) => onDropTheNeedle(null, null, thinkingSeconds, null)}
+        onChoose={(thinkingSeconds) => onDropTheNeedle(null, null, thinkingSeconds, null, null)}
+      />
+      <OptionRow
+        label='Snabbastbonus'
+        options={['on', 'off']}
+        selected={settings.fastestBonus ? 'on' : 'off'}
+        format={(value) => (value === 'on' ? 'På' : 'Av')}
+        disabled={disabled}
+        onChoose={(value) => onDropTheNeedle(null, null, null, value === 'on', null)}
       />
     </>
   );
