@@ -45,13 +45,13 @@ public sealed class GameRoomModeTests
     {
         _room.UpdateSettings<AuxCordSettings>(_room.HostToken, settings => settings.With(8, null, 120));
         _room.ChooseMode(_room.HostToken, GameMode.DropTheNeedle);
-        _room.UpdateSettings<DropTheNeedleSettings>(_room.HostToken, settings => settings.With(5, 20, null, null, "rock"));
+        _room.UpdateSettings<DropTheNeedleSettings>(_room.HostToken, settings => settings.With(5, 20, null, false, "rock"));
 
         _room.ChooseMode(_room.HostToken, GameMode.AuxCord);
         Assert.That(_room.Settings, Is.EqualTo(AuxCordSettings.Create(8, 15, 120).Value));
 
         _room.ChooseMode(_room.HostToken, GameMode.DropTheNeedle);
-        Assert.That(_room.Settings, Is.EqualTo(DropTheNeedleSettings.Create(5, 20, 30, true, "rock").Value));
+        Assert.That(_room.Settings, Is.EqualTo(DropTheNeedleSettings.Create(5, 20, 30, false, "rock").Value));
     }
 
     [TestCase(null)]

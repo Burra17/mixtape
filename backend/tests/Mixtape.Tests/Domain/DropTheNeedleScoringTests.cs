@@ -81,20 +81,24 @@ public sealed class DropTheNeedleScoringTests
     }
 
     [Test]
-    public void WithoutTheFastestBonus_TheRightSongGivesTwoAndNobodyIsFastest()
+    public void TheEndOfTheSong_WithoutTheFastestBonus_GivesTwoForTheSongOneForTheArtistAndNoExtra()
     {
-        var room = GameRoom.Create(RoomCode.Parse("GHJK")!);
-        room.ChooseMode(room.HostToken, GameMode.DropTheNeedle);
-        var anna = room.Join("Anna").Value;
-        room.Join("Bertil");
-        room.UpdateSettings<DropTheNeedleSettings>(room.HostToken, settings => settings.With(null, null, null, false, null));
-        room.StartGame(room.HostToken, settings => Result<IGame>.Success(new DropTheNeedleGame(TwoSongs, (DropTheNeedleSettings)settings)), Now);
+        _room = GameRoom.Create(RoomCode.Parse("GHJK")!);
+        _room.ChooseMode(_room.HostToken, GameMode.DropTheNeedle);
+        _anna = _room.Join("Anna").Value;
+        _bertil = _room.Join("Bertil").Value;
+        _cecilia = _room.Join("Cecilia").Value;
+        _room.UpdateSettings<DropTheNeedleSettings>(_room.HostToken, settings => settings.With(null, null, null, false, null));
+        _room.StartGame(_room.HostToken, settings => Result<IGame>.Success(new DropTheNeedleGame(TwoSongs, (DropTheNeedleSettings)settings)), Now);
 
-        room.Act<DropTheNeedleGame>(anna.Id, Now.AddSeconds(1), game => game.Guess(anna.Id, game.ClipNumber, TestTrack.Of(90, "Yellow", "Coldplay"), Now.AddSeconds(1)));
-        room.Tick(Now + Guessing);
+        GuessAs(_anna, TestTrack.Of(90, "Yellow", "Coldplay"), Now.AddSeconds(1));
+        GuessAs(_bertil, TestTrack.Of(91, "Yellow", "Coldplay"), Now.AddSeconds(5));
+        GuessAs(_cecilia, TestTrack.Of(92, "Fix You", "Coldplay"), Now.AddSeconds(2));
 
-        Assert.That(anna.Score, Is.EqualTo(2));
-        Assert.That(((DropTheNeedleGame)room.Game!).LastResults.Any(result => result.Fastest), Is.False);
+        Assert.That(_anna.Score, Is.EqualTo(2));
+        Assert.That(_bertil.Score, Is.EqualTo(2));
+        Assert.That(_cecilia.Score, Is.EqualTo(1));
+        Assert.That(Game.LastResults.Any(result => result.Fastest), Is.False);
     }
 
     [Test]

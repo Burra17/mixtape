@@ -14,8 +14,7 @@ public sealed record DropTheNeedleSettings : IGameSettings
     // Betänketiden läggs till efter klippet, så att man hinner söka fram en låt man känner igen sent i klippet.
     public static readonly IReadOnlyList<int> ThinkingSecondsOptions = [0, 15, 30];
 
-    // 00-talet är standard, eftersom de flesta i sällskapet känner igen den eran. Med 30 s klipp och 30 s betänketid har man en minut på sig,
-    // och snabbastbonusen är på tills någon väljer en lugnare kväll.
+    // 00-talet är standard, eftersom de flesta i sällskapet känner igen den eran. Med 30 s klipp och 30 s betänketid har man en minut på sig.
     public static readonly DropTheNeedleSettings Default = new(10, 30, 30, true, "00s");
 
     private DropTheNeedleSettings(int songs, int clipSeconds, int thinkingSeconds, bool fastestBonus, string categoryId)

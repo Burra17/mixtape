@@ -13,7 +13,7 @@ import { useGameSetup } from '../hooks/useGameSetup.ts';
 const choiceStyle = (selected: boolean) =>
   `border-2 border-ink focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-50 ${selected ? 'bg-ink text-paper' : 'bg-card text-ink'}`;
 
-type OptionRowProps<T extends string | number> = {
+type OptionRowProps<T extends string | number | boolean> = {
   label: string;
   options: T[];
   selected: T;
@@ -22,13 +22,13 @@ type OptionRowProps<T extends string | number> = {
   onChoose: (value: T) => void;
 };
 
-const OptionRow = <T extends string | number>({ label, options, selected, format, disabled, onChoose }: OptionRowProps<T>) => (
+const OptionRow = <T extends string | number | boolean>({ label, options, selected, format, disabled, onChoose }: OptionRowProps<T>) => (
   <div role='group' aria-label={label} className='flex flex-col gap-2'>
     <Label>{label}</Label>
     <div className='flex flex-wrap gap-3'>
       {options.map((option) => (
         <button
-          key={option}
+          key={String(option)}
           type='button'
           aria-pressed={option === selected}
           disabled={disabled}
@@ -204,11 +204,11 @@ const ModeSettings = ({ settings, modes, categories, disabled, onAuxCord, onDrop
       />
       <OptionRow
         label='Snabbastbonus'
-        options={['on', 'off']}
-        selected={settings.fastestBonus ? 'on' : 'off'}
-        format={(value) => (value === 'on' ? 'På' : 'Av')}
+        options={[true, false]}
+        selected={settings.fastestBonus}
+        format={(on) => (on ? 'På' : 'Av')}
         disabled={disabled}
-        onChoose={(value) => onDropTheNeedle(null, null, null, value === 'on', null)}
+        onChoose={(fastestBonus) => onDropTheNeedle(null, null, null, fastestBonus, null)}
       />
     </>
   );
