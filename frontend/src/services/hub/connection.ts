@@ -152,8 +152,18 @@ export const updateDropTheNeedleSettings = (
   songs: number | null,
   clipSeconds: number | null,
   thinkingSeconds: number | null,
+  fastestBonus: boolean | null,
   categoryId: string | null,
-) => connection.invoke<HubResponse<GameState>>(serverMethods.updateDropTheNeedleSettings, host, songs, clipSeconds, thinkingSeconds, categoryId);
+) =>
+  connection.invoke<HubResponse<GameState>>(
+    serverMethods.updateDropTheNeedleSettings,
+    host,
+    songs,
+    clipSeconds,
+    thinkingSeconds,
+    fastestBonus,
+    categoryId,
+  );
 
 export const startGame = (host: HostSession) => connection.invoke<HubResponse<GameState>>(serverMethods.startGame, host);
 

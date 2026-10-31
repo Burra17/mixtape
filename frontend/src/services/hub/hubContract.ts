@@ -89,7 +89,7 @@ export type GameMode = 'auxCord' | 'dropTheNeedle';
 // SettingsState i Application/Rooms: det valda lägets inställningar. mode skiljer lägena åt.
 export type SettingsState =
   | { mode: 'auxCord'; rounds: number; clipSeconds: number; submittingSeconds: number }
-  | { mode: 'dropTheNeedle'; songs: number; clipSeconds: number; thinkingSeconds: number; categoryId: string };
+  | { mode: 'dropTheNeedle'; songs: number; clipSeconds: number; thinkingSeconds: number; fastestBonus: boolean; categoryId: string };
 
 // ModeOptions i Application/Rooms: ett läge som värden kan välja, med gränsen för antal spelare och valen för inställningarna.
 export type ModeOptions =

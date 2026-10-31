@@ -13,7 +13,7 @@ import { useGameSetup } from '../hooks/useGameSetup.ts';
 const choiceStyle = (selected: boolean) =>
   `border-2 border-ink focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-50 ${selected ? 'bg-ink text-paper' : 'bg-card text-ink'}`;
 
-type OptionRowProps<T extends string | number> = {
+type OptionRowProps<T extends string | number | boolean> = {
   label: string;
   options: T[];
   selected: T;
@@ -22,13 +22,13 @@ type OptionRowProps<T extends string | number> = {
   onChoose: (value: T) => void;
 };
 
-const OptionRow = <T extends string | number>({ label, options, selected, format, disabled, onChoose }: OptionRowProps<T>) => (
+const OptionRow = <T extends string | number | boolean>({ label, options, selected, format, disabled, onChoose }: OptionRowProps<T>) => (
   <div role='group' aria-label={label} className='flex flex-col gap-2'>
     <Label>{label}</Label>
     <div className='flex flex-wrap gap-3'>
       {options.map((option) => (
         <button
-          key={option}
+          key={String(option)}
           type='button'
           aria-pressed={option === selected}
           disabled={disabled}
@@ -121,7 +121,13 @@ type ModeSettingsProps = {
   categories: CategoryOption[];
   disabled: boolean;
   onAuxCord: (rounds: number | null, clipSeconds: number | null, submittingSeconds: number | null) => void;
-  onDropTheNeedle: (songs: number | null, clipSeconds: number | null, thinkingSeconds: number | null, categoryId: string | null) => void;
+  onDropTheNeedle: (
+    songs: number | null,
+    clipSeconds: number | null,
+    thinkingSeconds: number | null,
+    fastestBonus: boolean | null,
+    categoryId: string | null,
+  ) => void;
 };
 
 // Det valda lägets inställningar, med valen för samma läge.
@@ -169,7 +175,7 @@ const ModeSettings = ({ settings, modes, categories, disabled, onAuxCord, onDrop
         selected={settings.categoryId}
         format={(id) => categoryName(categories, id)}
         disabled={disabled}
-        onChoose={(categoryId) => onDropTheNeedle(null, null, null, categoryId)}
+        onChoose={(categoryId) => onDropTheNeedle(null, null, null, null, categoryId)}
       />
       <OptionRow
         label='Låtar'
@@ -177,7 +183,7 @@ const ModeSettings = ({ settings, modes, categories, disabled, onAuxCord, onDrop
         selected={settings.songs}
         format={String}
         disabled={disabled}
-        onChoose={(songs) => onDropTheNeedle(songs, null, null, null)}
+        onChoose={(songs) => onDropTheNeedle(songs, null, null, null, null)}
       />
       <OptionRow
         label='Klipplängd'
@@ -185,7 +191,7 @@ const ModeSettings = ({ settings, modes, categories, disabled, onAuxCord, onDrop
         selected={settings.clipSeconds}
         format={seconds}
         disabled={disabled}
-        onChoose={(clipSeconds) => onDropTheNeedle(null, clipSeconds, null, null)}
+        onChoose={(clipSeconds) => onDropTheNeedle(null, clipSeconds, null, null, null)}
       />
       {/* Plustecknet visar att tiden läggs till efter klippet. */}
       <OptionRow
@@ -194,7 +200,15 @@ const ModeSettings = ({ settings, modes, categories, disabled, onAuxCord, onDrop
         selected={settings.thinkingSeconds}
         format={(value) => `+${seconds(value)}`}
         disabled={disabled}
-        onChoose={(thinkingSeconds) => onDropTheNeedle(null, null, thinkingSeconds, null)}
+        onChoose={(thinkingSeconds) => onDropTheNeedle(null, null, thinkingSeconds, null, null)}
+      />
+      <OptionRow
+        label='Snabbastbonus'
+        options={[true, false]}
+        selected={settings.fastestBonus}
+        format={(on) => (on ? 'På' : 'Av')}
+        disabled={disabled}
+        onChoose={(fastestBonus) => onDropTheNeedle(null, null, null, fastestBonus, null)}
       />
     </>
   );

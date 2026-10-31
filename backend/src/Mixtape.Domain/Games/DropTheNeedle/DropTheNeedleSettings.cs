@@ -15,13 +15,14 @@ public sealed record DropTheNeedleSettings : IGameSettings
     public static readonly IReadOnlyList<int> ThinkingSecondsOptions = [0, 15, 30];
 
     // 00-talet är standard, eftersom de flesta i sällskapet känner igen den eran. Med 30 s klipp och 30 s betänketid har man en minut på sig.
-    public static readonly DropTheNeedleSettings Default = new(10, 30, 30, "00s");
+    public static readonly DropTheNeedleSettings Default = new(10, 30, 30, true, "00s");
 
-    private DropTheNeedleSettings(int songs, int clipSeconds, int thinkingSeconds, string categoryId)
+    private DropTheNeedleSettings(int songs, int clipSeconds, int thinkingSeconds, bool fastestBonus, string categoryId)
     {
         Songs = songs;
         ClipSeconds = clipSeconds;
         ThinkingSeconds = thinkingSeconds;
+        FastestBonus = fastestBonus;
         CategoryId = categoryId;
     }
 
@@ -38,14 +39,17 @@ public sealed record DropTheNeedleSettings : IGameSettings
     // Hur länge man kan gissa: klippet och sedan betänketiden.
     public TimeSpan GuessLength => TimeSpan.FromSeconds(ClipSeconds + ThinkingSeconds);
 
+    // Om den som snabbast får rätt låt får en extra poäng.
+    public bool FastestBonus { get; }
+
     public string CategoryId { get; }
 
-    public static Result<DropTheNeedleSettings> Create(int songs, int clipSeconds, int thinkingSeconds, string categoryId) =>
+    public static Result<DropTheNeedleSettings> Create(int songs, int clipSeconds, int thinkingSeconds, bool fastestBonus, string categoryId) =>
         SongOptions.Contains(songs) && ClipSecondsOptions.Contains(clipSeconds) && ThinkingSecondsOptions.Contains(thinkingSeconds) && !string.IsNullOrWhiteSpace(categoryId)
-            ? new DropTheNeedleSettings(songs, clipSeconds, thinkingSeconds, categoryId)
+            ? new DropTheNeedleSettings(songs, clipSeconds, thinkingSeconds, fastestBonus, categoryId)
             : RoomErrors.InvalidSettings;
 
     // Som för Aux Cord Battles: null behåller inställningen.
-    public Result<DropTheNeedleSettings> With(int? songs, int? clipSeconds, int? thinkingSeconds, string? categoryId) =>
-        Create(songs ?? Songs, clipSeconds ?? ClipSeconds, thinkingSeconds ?? ThinkingSeconds, categoryId ?? CategoryId);
+    public Result<DropTheNeedleSettings> With(int? songs, int? clipSeconds, int? thinkingSeconds, bool? fastestBonus, string? categoryId) =>
+        Create(songs ?? Songs, clipSeconds ?? ClipSeconds, thinkingSeconds ?? ThinkingSeconds, fastestBonus ?? FastestBonus, categoryId ?? CategoryId);
 }

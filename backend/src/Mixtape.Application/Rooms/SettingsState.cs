@@ -15,7 +15,7 @@ public abstract record SettingsState
         settings switch
         {
             AuxCordSettings aux => new AuxCordSettingsState(aux.Rounds, aux.ClipSeconds, aux.SubmittingSeconds),
-            DropTheNeedleSettings needle => new DropTheNeedleSettingsState(needle.Songs, needle.ClipSeconds, needle.ThinkingSeconds, needle.CategoryId),
+            DropTheNeedleSettings needle => new DropTheNeedleSettingsState(needle.Songs, needle.ClipSeconds, needle.ThinkingSeconds, needle.FastestBonus, needle.CategoryId),
             _ => throw new ArgumentOutOfRangeException(nameof(settings), settings.Mode, "Spelläget saknar inställningar i kontraktet."),
         };
 }
