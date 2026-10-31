@@ -162,7 +162,8 @@ public sealed class DropTheNeedleGame : IPlaysClips, ISearchesTracks
         var song = _songs[_index].Track;
         var scores = _guesses.Values.ToDictionary(guess => guess.PlayerId, guess => (guess.ReceivedAt, Score: SongMatcher.Score(guess.Track, song)));
         var rightSongs = scores.Values.Where(score => score.Score == GuessScore.Song).ToList();
-        DateTimeOffset? fastest = rightSongs.Count > 0 ? rightSongs.Min(score => score.ReceivedAt) : null;
+        // Utan snabbastbonus finns ingen snabbast, varken i poängen eller i avslöjandet.
+        DateTimeOffset? fastest = _settings.FastestBonus && rightSongs.Count > 0 ? rightSongs.Min(score => score.ReceivedAt) : null;
 
         LastSong = song;
         LastResults = _players

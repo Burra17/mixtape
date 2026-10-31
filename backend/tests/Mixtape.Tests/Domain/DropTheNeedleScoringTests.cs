@@ -81,6 +81,23 @@ public sealed class DropTheNeedleScoringTests
     }
 
     [Test]
+    public void WithoutTheFastestBonus_TheRightSongGivesTwoAndNobodyIsFastest()
+    {
+        var room = GameRoom.Create(RoomCode.Parse("GHJK")!);
+        room.ChooseMode(room.HostToken, GameMode.DropTheNeedle);
+        var anna = room.Join("Anna").Value;
+        room.Join("Bertil");
+        room.UpdateSettings<DropTheNeedleSettings>(room.HostToken, settings => settings.With(null, null, null, false, null));
+        room.StartGame(room.HostToken, settings => Result<IGame>.Success(new DropTheNeedleGame(TwoSongs, (DropTheNeedleSettings)settings)), Now);
+
+        room.Act<DropTheNeedleGame>(anna.Id, Now.AddSeconds(1), game => game.Guess(anna.Id, game.ClipNumber, TestTrack.Of(90, "Yellow", "Coldplay"), Now.AddSeconds(1)));
+        room.Tick(Now + Guessing);
+
+        Assert.That(anna.Score, Is.EqualTo(2));
+        Assert.That(((DropTheNeedleGame)room.Game!).LastResults.Any(result => result.Fastest), Is.False);
+    }
+
+    [Test]
     public void ASkippedSong_GivesNoPoints()
     {
         GuessAs(_anna, TestTrack.Of(90, "Yellow", "Coldplay"), Now.AddSeconds(1));

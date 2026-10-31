@@ -73,7 +73,7 @@ public sealed class DropTheNeedleHandlersTests
     [Test]
     public async Task Start_WhenTheCategoryChangesWhileLoading_ReturnsSettingsChanged()
     {
-        _catalog.WhileLoading = () => new UpdateDropTheNeedleSettingsHandler(_rooms, Categories, _time).HandleAsync(_host, null, null, null, "rock").Wait();
+        _catalog.WhileLoading = () => new UpdateDropTheNeedleSettingsHandler(_rooms, Categories, _time).HandleAsync(_host, null, null, null, null, "rock").Wait();
 
         var result = await StartAsync();
 
